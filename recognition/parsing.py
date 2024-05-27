@@ -9,7 +9,7 @@ def parse_llm_response(text):
     length = len(tokens)
 
     if length != 2:
-        print("ResponseParser.parse: unexpected number of tokens,",
+        print("parse_llm_response: unexpected number of tokens,",
               "expected 2, found", length)
         return None
 
