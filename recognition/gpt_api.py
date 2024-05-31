@@ -8,7 +8,7 @@ client = OpenAI(api_key=key)
 MODEL = "gpt-3.5-turbo"
 # MODEL = "gpt-4"
 #MODEL = "gpt-4-turbo" # more hazardous results
-#MODEL = "gpt-4o" # DOES NOT WORK, PERMISSION DENIED
+#MODEL = "gpt-4o"
 
 chose_prompt="""
 We would like to animate a character according to people's emotions. We have
