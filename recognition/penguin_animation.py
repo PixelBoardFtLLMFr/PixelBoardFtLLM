@@ -25,6 +25,11 @@ def draw_rotated_rectangle(draw, x1, y1, x2, y2, cx, cy, angle, fill):
     rotated_corners = [rotate_point(x, y, cx, cy, angle) for x, y in corners]
     draw.polygon(rotated_corners, fill=fill)
 
+def draw_rotated_ellipse(draw, x1, y1, r, cx, cy, angle, fill, outline=None):
+    x2, y2 = rotate_point(x1 + r, y1 + r, cx, cy, angle)
+    draw.ellipse([x2 - r, y2 - r, x2 + r, y2 + r], fill=fill, outline=outline)
+
+
 def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foot, angle_right_foot, angle_head):
     draw = ImageDraw.Draw(image)
 
@@ -51,43 +56,17 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
     hand_size = 10
 
     draw.rectangle([body_x, body_y, body_x + body_width, body_y + body_height], fill=white, outline=black)
-    # Center of head when idle
-    head_cx0 = head_x + head_size // 2
-    head_cy0 = head_y + head_size // 2
-    # Anchor head -- body
+
     head_cx = head_x + head_size // 2
     head_cy = head_y + head_size
-    # Center of head after rotation
-    head_cx1, head_cy1 = rotate_point(head_cx0, head_cy0, head_cx, head_cy, angle_head)
-    # Corners of square around head  after rotation
-    head_x1 = head_cx1 - head_size // 2
-    head_y1 = head_cy1 - head_size // 2
-    head_x2 = head_cx1 + head_size // 2
-    head_y2 = head_cy1 + head_size // 2
+    draw_rotated_ellipse(draw, head_x, head_y, head_size//2, head_cx, head_cy, angle_head, fill=white, outline=black)
 
-    draw.ellipse([head_x1, head_y1, head_x2, head_y2], fill=white, outline=black)
-
-    # Centers of eyes when idle
-    eye_left_cx0 = head_cx - eye_x_offset
-    eye_left_cy0 = head_cy - 3*eye_y_offset
-    eye_right_cx0 = head_cx + eye_x_offset
-    eye_right_cy0 = eye_left_cy0
-    # Center of eye after rotation
-    eye_left_cx1, eye_left_cy1 = rotate_point(eye_left_cx0, eye_left_cy0, head_cx, head_cy, angle_head)
-    eye_right_cx1, eye_right_cy1 = rotate_point(eye_right_cx0, eye_right_cy0, head_cx, head_cy, angle_head)
-    # Corners of square after rotation
-    eye_left_x1 = eye_left_cx1 - eye_size // 2
-    eye_left_y1 = eye_left_cy1 - eye_size // 2
-    eye_left_x2 = eye_left_cx1 + eye_size // 2
-    eye_left_y2 = eye_left_cy1 + eye_size // 2
-    eye_right_x1 = eye_right_cx1 - eye_size // 2
-    eye_right_y1 = eye_right_cy1 - eye_size // 2
-    eye_right_x2 = eye_right_cx1 + eye_size // 2
-    eye_right_y2 = eye_right_cy1 + eye_size // 2
-
-    draw.ellipse([eye_left_x1, eye_left_y1, eye_left_x2, eye_left_y2], fill=black)
-    draw.ellipse([eye_right_x1, eye_right_y1, eye_right_x2, eye_right_y2], fill=black)
-
+    eye_left_x = head_cx - eye_x_offset
+    eye_left_y = head_cy - 3*eye_y_offset
+    eye_right_x = head_cx + eye_x_offset
+    eye_right_y = eye_left_y
+    draw_rotated_ellipse(draw, eye_left_x, eye_left_y, eye_size//2, head_cx, head_cy, angle_head, fill=black)
+    draw_rotated_ellipse(draw, eye_right_x, eye_right_y, eye_size//2, head_cx, head_cy, angle_head, fill=black)
 
     beak_width, beak_height = 10, 8
     beak_x, beak_y = head_x + (head_size - beak_width) // 2, head_y + head_size // 2
