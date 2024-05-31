@@ -1,6 +1,8 @@
 import tkinter as tk
 from PIL import Image, ImageTk, ImageDraw
 import math
+import gpt_api
+import ast
 
 def rotate_point(x, y, cx, cy, angle):
     radians = math.radians(angle)
@@ -51,8 +53,6 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm):
     arm_width, arm_height = 10, 40
     arm_y = body_y + 20
 
-    hand_size = 10
-
     draw.rectangle([body_x, body_y, body_x + body_width, body_y + body_height], fill=white, outline=black)
     draw.ellipse([head_x, head_y, head_x + head_size, head_y + head_size], fill=white, outline=black)
 
@@ -88,8 +88,21 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm):
     return image
 
 def update_image():
-    global frame_index, angles
-    frame_index = (frame_index + 1) % len(angles)
+    global frame_index, angles, root
+    frame_index += 1
+
+    if frame_index >= len(angles):
+        prompt = input("What should I do next ? ")
+        if prompt == "quit":
+            root.quit()
+            return
+        response = gpt_api.get_angle_from_prompt(prompt)
+        try:
+            angles = ast.literal_eval(response)
+        except SyntaxError:
+            print(f"GPT returned an invalid synthax : {response}")
+        frame_index = 0
+
 
     angle_left_arm, angle_right_arm = angles[frame_index]
 
@@ -102,32 +115,13 @@ def update_image():
 
     root.after(50, update_image)
 
-# Définir les dimensions de l'image
 width, height = 200, 300
 
-# Définir un tableau d'angles pour les bras (exemple)
 angles = [
     (0, 0),
-    (15, 45),
-    (30, 90),
-    (45, 135),
-    (60, 180),
-    (75, 225),
-    (90, 270),
-    (105, 315),
-    (120, 0),
-    (135, 45),
-    (150, 90),
-    (165, 135),
-    (180, 180),
-    (195, 225),
-    (210, 270),
-    (225, 315),
-    (240, 0),
-    (255, 45),
-    (270, 90),
-    (285, 135)
 ]
+
+
 
 
 frame_index = 0
