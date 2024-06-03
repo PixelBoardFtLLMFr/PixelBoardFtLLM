@@ -32,6 +32,24 @@ do you advise ? Your response should look like this :
 ANIMATION;PARTICLE
 """
 
+rank_prompt_arms = """
+In python, a character arms are controlled by an array of angle with (0, 0) being their neutral position.
+You will be given 3 arrays and you must choose one that fit the action given by the user the best.
+Write only a number between 0 and 2 representing the index of the chosen array.
+"""
+
+rank_prompt_legs = """
+In python, a character legs are controlled by an array of angle with (0, 0) being their neutral position.
+You will be given 3 arrays and you must choose one that fit the action given by the user the best.
+Write only a number between 0 and 2 representing the index of the chosen array.
+"""
+
+rank_prompt_head = """
+In python, a character head are controlled by an array of angle with 0 being its neutral position.
+You will be given 3 arrays and you must choose one that fit the action given by the user the best.
+Write only a number between 0 and 2 representing the index of the chosen array.
+"""
+
 angle_promt = """
 In Python you will need to generate a table of angles controlling the angles of the arms of a character.
 When the arms are by the body, they're at (0, 0) angle.
@@ -65,4 +83,4 @@ def get_angle_from_prompt(prompt : str):
         ]
     )
 
-    return completion.choices[0].message.content 
+    return completion.choices[0].message.content
