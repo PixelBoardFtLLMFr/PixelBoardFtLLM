@@ -35,14 +35,17 @@ ANIMATION;PARTICLE
 angle_promt = """
 In Python you will need to generate a table of angles controlling the angles of the arms of a character.
 When the arms are by the body, they're at (0, 0) angle.
+When the legs are by the body, they're at (0, 0) angle.
+When the head of the penguin is straight up, it is at an angle of (0).
+An element of the array should then look like this : (angle_left_arm, angle_right_arm, angle_left_leg, angle_right_leg, angle_head)
 You will write the table for the character doing a specific action given by the user.
 The table should have at least 20 entries, each representing a different frame of animation.
-Remember, for the right arm, negative angles make it move away from the body.
+Remember, for the right arm and right leg, negative angles make it move away from the body.
 The arms should make big movements, like raising them completely (which is at a 180-degree angle).
-Remember to always end on a neutral position (0, 0)
+Remember to always end on a neutral position (0, 0, 0, 0, 0)
 Do not write comments and return only the array. Here is an exemple of the synthax you should generate : 
 
-[ (0, 0), (0, -30), (0, -60), (0, -90), (0, -90), (0, -60), (0, -30), (0, 0) ]
+[ (0, 0, 0, 0, 0), (0, -30, 10, -10, 10), (0, -60, 30, -30, 20), (0, -90, 90, -90, 10), (0, -90, 90, -90, 0), (0, -60, 60, -60, 10), (0, -30, 10, -10, 0), (0, 0, 0 ,0, 0) ]
 """
 
 def get_animation_from_emotion(emotion : str):
