@@ -1,5 +1,6 @@
 from openai import OpenAI
 import ast
+import numpy as np
 
 key_file = open('key.txt', 'r')
 key = str(key_file.readline().strip())
@@ -48,11 +49,11 @@ array. Here is an exemple of what you should generate :
 """
 
 arm_example = """
-[(0, 0), (10, -30), (15, -60), (10, -30), (0, 0)]
+[[0, 0], [10, -30], [15, -60], [10, -30], [0, 0]]
 """
 
 arm_prompt = """
-When in neutral position, the angles are (0, 0).  Remember, for the right arm,
+When in neutral position, the angles are [0, 0].  Remember, for the right arm,
 the first angle in an entry, negative angles make it move away from the body.
 The arms should make big movements, like raising them completely (which is at a
 180-degree angle).
@@ -61,11 +62,11 @@ The arms should make big movements, like raising them completely (which is at a
 leg_example = arm_example
 
 leg_prompt = """
-When in neutral position, the angles are (0, 0).
+When in neutral position, the angles are [0, 0].
 """
 
 head_example = """
-[0, 5, 5, 0, -5, 0]
+[[0], [5], [5], [0], [-5], [0]]
 """
 
 head_prompt = """
@@ -109,7 +110,7 @@ def interprete_gpt(code_as_str):
     res = None
 
     try:
-        res = ast.literal_eval(code_as_str)
+        res = np.array(ast.literal_eval(code_as_str))
     except:
         print(f"ChatGPT returned an invalid syntax : {code_as_str}")
 
@@ -118,15 +119,17 @@ def interprete_gpt(code_as_str):
 
 def array_setlength(array, newlen):
     """
-    Set ARRAY to length NEWLEN, either by truncating it if it is too long, or
-    by repeating the last element if it is too short.
+    Set numpy array ARRAY to length NEWLEN, either by truncating it if it is too
+    long, or by repeating the last element if it is too short.
     """
-    currlen = len(array)
+    currlen = np.shape(array)[0]
     if currlen >= newlen:
-        del array[newlen:]
+        return np.resize(array, (newlen, np.shape(array)[1]))
     else:
+        res = np.copy(array)
         for i in range(newlen - currlen):
-            array.append(array[currlen-1])
+            res = np.append(res, np.array([array[currlen-1]]), axis=0)
+        return res
 
 def get_angle_from_prompt(prompt : str):
     """
@@ -137,9 +140,23 @@ def get_angle_from_prompt(prompt : str):
     arm_angles_as_str = ask_gpt(build_prompt(PromptType.ARM),
                                 f"The requested motion is : {prompt}")
     arm_angles = interprete_gpt(arm_angles_as_str)
+    # print(arm_angles)
+    # print(np.shape(arm_angles))
+    # print(type(arm_angles))
 
-    leg_angles = [(0, 0)]*20
+    leg_angles = np.array([[0, 0]])
 
-    head_angle = [0]*20
+    head_angles = np.array([[0]])
 
-    return [(0, 0, 0, 0, 0)]*20
+    # make them all the same length
+    maxlen = max(np.shape(arm_angles)[0],
+                 np.shape(leg_angles)[0],
+                 np.shape(head_angles)[0])
+    arm_angles = array_setlength(arm_angles, maxlen)
+    leg_angles = array_setlength(leg_angles, maxlen)
+    head_angles = array_setlength(head_angles, maxlen)
+    print(arm_angles)
+    print(leg_angles)
+    print(head_angles)
+
+    return np.concatenate((arm_angles, leg_angles, head_angles), axis=1)
