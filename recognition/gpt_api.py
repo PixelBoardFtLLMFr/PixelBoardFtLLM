@@ -1,11 +1,12 @@
-from openai import OpenAI
+from openai import OpenAI, AsyncOpenAI
 import ast
 import numpy as np
+import asyncio
 
 key_file = open('key.txt', 'r')
 key = str(key_file.readline().strip())
 
-client = OpenAI(api_key=key)
+client = AsyncOpenAI(api_key=key)
 
 MODEL = "gpt-3.5-turbo"
 # MODEL = "gpt-4"
@@ -54,9 +55,11 @@ Write only a number between 0 and 2 representing the index of the chosen array, 
 
 # Sort of enum
 class PromptType:
-    ARM = 1
-    LEG = 2
-    HEAD = 3
+    ARM = 0
+    LEG = 1
+    HEAD = 2
+    count = 3
+    allTypes = (ARM, LEG, HEAD)
 
 angle_base_promt = """In Python, you will need to generate a table of angles
 controlling the motion of a character.  You will write the table for the
@@ -108,29 +111,35 @@ def get_animation_from_emotion(emotion : str):
         ]
     ).choices[0].message.content
 
-def ask_gpt(system, user):
+async def ask_gpt(system, user):
     """
     Get a raw string form ChatGPT using SYSTEM and USER as prompt.
     """
-    return client.chat.completions.create(
+    response = await client.chat.completions.create(
         model=MODEL,
         messages= [
             {"role" : "system", "content" : system},
             {"role" : "user", "content" : user}
         ]
-    ).choices[0].message.content
+    )
 
-def rank_angle(prompt_type : PromptType, prompt, angles):
+    return response.choices[0].message.content
+
+async def rank_angle(prompt_type : PromptType, prompt, angles):
     system_prompt = None
+
     if prompt_type == PromptType.ARM:
         system_prompt = rank_prompt_arms
     elif prompt_type == PromptType.LEG:
         system_prompt = rank_prompt_legs
     elif prompt_type == PromptType.HEAD:
         system_prompt = rank_prompt_head
-    response = int(interprete_gpt(ask_gpt(system_prompt, f"The action is : {prompt}. Choose between :\n 0 : {angles[0]}\n1 : {angles[1]}\n2 : {angles[2]}")))
+
+    response = int(interprete_gpt(await ask_gpt(system_prompt, f"The action is : {prompt}. Choose between :\n 0 : {angles[0]}\n1 : {angles[1]}\n2 : {angles[2]}")))
+
     if isinstance(response, int) and response >= 0 and response < 3:
         return response
+
     print("Could not interprete GPT response : ", response)
     return 0
 
@@ -162,19 +171,43 @@ def array_setlength(array, newlen):
             res = np.append(res, np.array([array[currlen-1]]), axis=0)
         return res
 
-def get_angle_from_prompt(prompt : str):
+async def get_angle_from_prompt_async(prompt : str):
     """
     PROMPT is the user input, for example 'say hi', not the actual prompt given
     to ChatGPT. The result is a 1x5 array of angles :
     [(right_arm, left_arm, right_leg, left_leg, head)]
     """
-    angles = {}
-    for kind in (PromptType.ARM, PromptType.LEG, PromptType.HEAD):
-        angles[kind] = []
-        for i in range(3):
-            angles[kind] += [interprete_gpt(ask_gpt(build_prompt(kind), f"The requested motion is : {prompt}"))]
-        angles[kind] = angles[kind][rank_angle(kind, prompt, angles[kind])]
+    prompt_count = 3
+    angles_tasks = [None]*(prompt_count*PromptType.count)
+
+    for kind in PromptType.allTypes:
+        for i in range(prompt_count):
+            angles_tasks[kind*3 + i] = ask_gpt(build_prompt(kind), f"The requested motion is : {prompt}")
+
+    angles = await asyncio.gather(*angles_tasks)
+
+    for kind in PromptType.allTypes:
+        for i in range(prompt_count):
+            angles[kind*3 + i] = interprete_gpt(angles[kind*3 + i])
+
+    rank_tasks = [None]*PromptType.count
+
+    for kind in PromptType.allTypes:
+            rank_tasks[kind] = rank_angle(kind, prompt, angles[kind])
+
+    ranks = await asyncio.gather(*rank_tasks)
+
+    bests = [None]*PromptType.count
+    for i in PromptType.allTypes:
+        bests[i] = angles[i*3 + ranks[i]]
+
+    return bests
+
+def get_angle_from_prompt(prompt: str):
     # make them all the same length
+    angles = asyncio.run(get_angle_from_prompt_async(prompt))
+    # print("=== ANGLES ===")
+    # print(angles)
     maxlen = max(np.shape(angles[PromptType.ARM])[0],
                  np.shape(angles[PromptType.LEG])[0],
                  np.shape(angles[PromptType.HEAD])[0])
@@ -183,8 +216,8 @@ def get_angle_from_prompt(prompt : str):
     angles[PromptType.LEG] = array_setlength(angles[PromptType.LEG], maxlen)
     angles[PromptType.HEAD] = array_setlength(angles[PromptType.HEAD], maxlen)
 
-    print(angles[PromptType.ARM])
-    print(angles[PromptType.LEG])
-    print(angles[PromptType.HEAD])
+    # print(angles[PromptType.ARM])
+    # print(angles[PromptType.LEG])
+    # print(angles[PromptType.HEAD])
 
     return np.concatenate((angles[PromptType.ARM], angles[PromptType.LEG], angles[PromptType.HEAD]), axis=1)
