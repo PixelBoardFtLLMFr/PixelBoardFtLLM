@@ -39,7 +39,7 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
 
     black = (0, 0, 0)
     white = (255, 255, 255)
-    #orange = (255, 165, 0)
+    orange = (255, 165, 0)
 
     #Oscar colors
     green = (169,218,195)
@@ -87,7 +87,7 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
     draw_rotated_rectangle(draw, foot_left_x, foot_y, foot_left_x + foot_width, foot_y + foot_height, foot_left_x, foot_y, angle_left_foot, fill=orange)
     draw_rotated_rectangle(draw, foot_right_x, foot_y, foot_right_x + foot_width, foot_y + foot_height, foot_right_x + foot_width, foot_y, angle_right_foot, fill=orange)
 
-    draw_rotated_rectangle(draw, foot_left_x1, foot_left_y1, foot_left_x2, foot_left_y2, foot_center_left_x, foot_center_left_y, angle_left_leg, fill=yellow)
+    # draw_rotated_rectangle(draw, foot_left_x1, foot_left_y1, foot_left_x2, foot_left_y2, foot_center_left_x, foot_center_left_y, angle_left_leg, fill=yellow)
 
     # Right foot rotation
     foot_right_x1 = body_x + body_width - foot_width
@@ -96,7 +96,7 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
     foot_right_y2 = foot_right_y1 + foot_height
     foot_center_right_x, foot_center_right_y = (foot_right_x1 + foot_right_x2) / 2, foot_right_y1
 
-    draw_rotated_rectangle(draw, foot_right_x1, foot_right_y1, foot_right_x2, foot_right_y2, foot_center_right_x, foot_center_right_y, angle_right_leg, fill=yellow)
+    # draw_rotated_rectangle(draw, foot_right_x1, foot_right_y1, foot_right_x2, foot_right_y2, foot_center_right_x, foot_center_right_y, angle_right_leg, fill=yellow)
 
     # Left arm
     arm_left_x1 = body_x - arm_width

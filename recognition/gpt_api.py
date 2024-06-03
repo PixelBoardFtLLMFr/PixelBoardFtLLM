@@ -97,7 +97,7 @@ def build_prompt(kind):
     elif kind == PromptType.LEG:
         return angle_base_promt + leg_example + leg_prompt
     elif kind == PromptType.HEAD:
-        return angle_base_promt + leg_example + leg_prompt
+        return angle_base_promt + head_example + head_prompt
 
 def get_animation_from_emotion(emotion : str):
     completion = client.chat.completions.create(
@@ -128,7 +128,7 @@ def rank_angle(prompt_type : PromptType, prompt, angles):
         system_prompt = rank_prompt_legs
     elif prompt_type == PromptType.HEAD:
         system_prompt = rank_prompt_head
-    response = interprete_gpt(ask_gpt(system_prompt, f"The action is : {prompt}. Choose between :\n 0 : {angles[0]}\n1 : {angles[1]}\n2 : {angles[2]}"))
+    response = int(interprete_gpt(ask_gpt(system_prompt, f"The action is : {prompt}. Choose between :\n 0 : {angles[0]}\n1 : {angles[1]}\n2 : {angles[2]}")))
     if isinstance(response, int) and response >= 0 and response < 3:
         return response
     print("Could not interprete GPT response : ", response)
@@ -172,17 +172,19 @@ def get_angle_from_prompt(prompt : str):
     for kind in (PromptType.ARM, PromptType.LEG, PromptType.HEAD):
         angles[kind] = []
         for i in range(3):
-            angles[kind] += [interprete_gpt(ask_gpt(build_prompt(kind, f"The requested motion is : {prompt}")))]
+            angles[kind] += [interprete_gpt(ask_gpt(build_prompt(kind), f"The requested motion is : {prompt}"))]
         angles[kind] = angles[kind][rank_angle(kind, prompt, angles[kind])]
     # make them all the same length
-    maxlen = max(np.shape(arm_angles)[0],
-                 np.shape(leg_angles)[0],
-                 np.shape(head_angles)[0])
-    arm_angles = array_setlength(arm_angles, maxlen)
-    leg_angles = array_setlength(leg_angles, maxlen)
-    head_angles = array_setlength(head_angles, maxlen)
-    print(arm_angles)
-    print(leg_angles)
-    print(head_angles)
+    maxlen = max(np.shape(angles[PromptType.ARM])[0],
+                 np.shape(angles[PromptType.LEG])[0],
+                 np.shape(angles[PromptType.HEAD])[0])
 
-    return np.concatenate((arm_angles, leg_angles, head_angles), axis=1)
+    angles[PromptType.ARM] = array_setlength(angles[PromptType.ARM], maxlen)
+    angles[PromptType.LEG] = array_setlength(angles[PromptType.LEG], maxlen)
+    angles[PromptType.HEAD] = array_setlength(angles[PromptType.HEAD], maxlen)
+
+    print(angles[PromptType.ARM])
+    print(angles[PromptType.LEG])
+    print(angles[PromptType.HEAD])
+
+    return np.concatenate((angles[PromptType.ARM], angles[PromptType.LEG], angles[PromptType.HEAD]), axis=1)
