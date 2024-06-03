@@ -8,13 +8,13 @@ def rotate_point(x, y, cx, cy, angle):
     radians = math.radians(angle)
     cos_angle = math.cos(radians)
     sin_angle = math.sin(radians)
-    
+
     tx = x - cx
     ty = y - cy
-    
+
     rx = tx * cos_angle - ty * sin_angle
     ry = tx * sin_angle + ty * cos_angle
-    
+
     return rx + cx, ry + cy
 
 def draw_rotated_rectangle(draw, x1, y1, x2, y2, cx, cy, angle, fill):
@@ -27,12 +27,15 @@ def draw_rotated_rectangle(draw, x1, y1, x2, y2, cx, cy, angle, fill):
     rotated_corners = [rotate_point(x, y, cx, cy, angle) for x, y in corners]
     draw.polygon(rotated_corners, fill=fill)
 
-def draw_rotated_ellipse(draw, x1, y1, r, cx, cy, angle, fill, outline):
+def draw_rotated_ellipse(draw, x1, y1, r, cx, cy, angle, fill, outline=None):
     x2, y2 = rotate_point(x1 + r, y1 + r, cx, cy, angle)
     draw.ellipse([x2 - r, y2 - r, x2 + r, y2 + r], fill=fill, outline=outline)
 
-def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_head, angle_left_leg, angle_right_leg):
+
+def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foot, angle_right_foot, angle_head):
     draw = ImageDraw.Draw(image)
+
+    global penguin_height, penguin_width
 
     black = (0, 0, 0)
     white = (255, 255, 255)
@@ -42,56 +45,47 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_head, an
     green = (169,218,195)
     yellow = (250,222,12)
 
-    body_width, body_height = 60, 100
+    body_width, body_height = penguin_width * 0.8 * 0.6, penguin_height * 0.8
     body_x, body_y = (width - body_width) // 2, (height - body_height) // 2
 
-    head_size = 40
+    head_size = body_height * 0.4
     head_x, head_y = body_x + (body_width - head_size) // 2, body_y - head_size
 
-    eye_size = 5
-    eye_y_offset = 10
-    eye_x_offset = 10
+    eye_size = body_height * 0.04
+    eye_y_offset = body_height * 0.1
+    eye_x_offset = body_height * 0.1
 
-    beak_width, beak_height = 10, 8
-    beak_x, beak_y = head_x + (head_size - beak_width) // 2, head_y + head_size // 2
-
-    foot_width, foot_height = 20, 10
+    foot_width, foot_height = body_height * 0.2, body_height * 0.1
     foot_y = body_y + body_height
 
-    arm_width, arm_height = 10, 40
-    arm_y = body_y + 20
+    arm_width, arm_height = body_height * 0.1, body_height * 0.4
+    arm_y = body_y + body_height * 0.2
 
-    draw.rectangle([body_x, body_y, body_x + body_width, body_y + body_height], fill=white, outline=green, width = 10)
+    draw.rectangle([body_x, body_y, body_x + body_width, body_y + body_height], fill=white, outline=black)
 
-    # Head rotation
-    head_center_x, head_center_y = head_x + head_size / 2, head_y + head_size / 2
-    draw_rotated_ellipse(draw, head_x, head_y, head_x + head_size, head_y + head_size, head_center_x, head_center_y, angle_head, fill=white, outline=green)
+    head_cx = head_x + head_size // 2
+    head_cy = head_y + head_size
+    draw_rotated_ellipse(draw, head_x, head_y, head_size//2, head_cx, head_cy, angle_head, fill=white, outline=black)
 
-    # Eyes rotation
-    eye_left_x = head_x + eye_x_offset
-    eye_right_x = head_x + head_size - eye_x_offset - eye_size
-    eye_y = head_y + eye_y_offset
-    eye_left_center_x, eye_left_center_y = eye_left_x + eye_size / 2, eye_y + eye_size / 2
-    eye_right_center_x, eye_right_center_y = eye_right_x + eye_size / 2, eye_y + eye_size / 2
-    draw_rotated_ellipse(draw, eye_left_x, eye_y, eye_left_x + eye_size, eye_y + eye_size, eye_left_center_x, eye_left_center_y, angle_head, fill=black, outline=black)
-    draw_rotated_ellipse(draw, eye_right_x, eye_y, eye_right_x + eye_size, eye_y + eye_size, eye_right_center_x, eye_right_center_y, angle_head, fill=black, outline=black)
+    eye_left_x = round(head_cx - eye_x_offset)
+    eye_left_y = head_cy - 3 * eye_y_offset
+    eye_right_x = round(head_cx + eye_x_offset)
+    eye_right_y = eye_left_y
+    draw_rotated_ellipse(draw, eye_left_x, eye_left_y, eye_size//2, head_cx, head_cy, angle_head, fill=black)
+    draw_rotated_ellipse(draw, eye_right_x, eye_right_y, eye_size//2, head_cx, head_cy, angle_head, fill=black)
 
-    # Beak rotation
-    beak_center_x, beak_center_y = beak_x + beak_width / 2, beak_y + beak_height / 2
-    beak_corners = [
-        (beak_x, beak_y),
-        (beak_x + beak_width, beak_y),
-        (beak_x + beak_width / 2, beak_y + beak_height)
-    ]
-    rotated_beak_corners = [rotate_point(x, y, beak_center_x, beak_center_y, angle_head) for x, y in beak_corners]
-    draw.polygon(rotated_beak_corners, fill=yellow)
+    beak_width, beak_height = body_height * 0.1, body_height * 0.08
+    beak_x, beak_y = round(head_x + (head_size - beak_width) / 2), head_y + head_size // 2
+    # Rotation
+    beak_x0, beak_y0 = rotate_point(beak_x, beak_y, head_cx, head_cy, angle_head)
+    beak_x1, beak_y1 = rotate_point(beak_x + beak_width, beak_y, head_cx, head_cy, angle_head)
+    beak_x2, beak_y2 = rotate_point(beak_x + beak_width // 2, beak_y + beak_height, head_cx, head_cy, angle_head)
+    draw.polygon([(beak_x0, beak_y0), (beak_x1, beak_y1), (beak_x2, beak_y2)], fill=orange)
 
-    # Left foot rotation
-    foot_left_x1 = body_x
-    foot_left_y1 = foot_y
-    foot_left_x2 = foot_left_x1 + foot_width
-    foot_left_y2 = foot_left_y1 + foot_height
-    foot_center_left_x, foot_center_left_y = (foot_left_x1 + foot_left_x2) / 2, foot_left_y1
+    foot_left_x = body_x
+    foot_right_x = body_x + body_width - foot_width
+    draw_rotated_rectangle(draw, foot_left_x, foot_y, foot_left_x + foot_width, foot_y + foot_height, foot_left_x, foot_y, angle_left_foot, fill=orange)
+    draw_rotated_rectangle(draw, foot_right_x, foot_y, foot_right_x + foot_width, foot_y + foot_height, foot_right_x + foot_width, foot_y, angle_right_foot, fill=orange)
 
     draw_rotated_rectangle(draw, foot_left_x1, foot_left_y1, foot_left_x2, foot_left_y2, foot_center_left_x, foot_center_left_y, angle_left_leg, fill=yellow)
 
@@ -133,17 +127,14 @@ def update_image():
         if prompt == "quit":
             root.quit()
             return
-        response = gpt_api.get_angle_from_prompt(prompt)
-        try:
-            angles = ast.literal_eval(response)
-        except SyntaxError:
-            print(f"GPT returned an invalid syntax: {response}")
+        angles = gpt_api.get_angle_from_prompt(prompt)
         frame_index = 0
 
-    angle_left_arm, angle_right_arm, angle_head, angle_left_leg, angle_right_leg = angles[frame_index]
+
+    angle_left_arm, angle_right_arm, angle_left_foot, angle_right_foot, angle_head = angles[frame_index]
 
     image = Image.new("RGB", (width, height), "white")
-    image = draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_head, angle_left_leg, angle_right_leg)
+    image = draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foot, angle_right_foot, angle_head)
 
     tk_image = ImageTk.PhotoImage(image)
     canvas.itemconfig(image_on_canvas, image=tk_image)
@@ -153,8 +144,10 @@ def update_image():
 
 width, height = 200, 300
 
+penguin_height, penguin_width = 64, 64
+
 angles = [
-    (0, 0, 0, 0, 0),
+    (0, 0, 0, 0, 0)
 ]
 
 frame_index = 0
