@@ -66,32 +66,36 @@ controlling the motion of a character.  You will write the table for the
 character doing a specific action given by the user.  The table should have at
 least 20 entries, each representing a different frame of animation. Remember to
 always end on the neutral position.  Do not write comments and return only the
-array. Here is an exemple of what you should generate :
+array.  Also, do not move the body part you are in charge of if it is not
+required.  Here is an exemple of what you should generate :
 """
 
 arm_example = """
-[[0, 0], [10, -30], [15, -60], [10, -30], [0, 0]]
+[[0, 0], [10, -30], [15, -30], [10, -30], [0, 0], [0, 0], [0, 0], [0, 0]]
 """
 
 arm_prompt = """
-When in neutral position, the angles are [0, 0].  Remember, for the right arm,
-the first angle in an entry, negative angles make it move away from the body.
-The arms should make big movements, like raising them completely (which is at a
-180-degree angle).
+You are responsible for moving the arms. When in neutral position, the angles
+are [0, 0].  Remember, for the right arm, the first angle in an entry, negative
+angles make it move away from the body.  The arms should make big movements,
+like raising them completely (which is at a 180-degree angle).
 """
 
 leg_example = arm_example
 
 leg_prompt = """
-When in neutral position, the angles are [0, 0].
+You are responsible for moving the legs. When in neutral position, the angles
+are [0, 0].  Leg movements are usually small, try not to exceed 90 degrees.
 """
 
 head_example = """
-[[0], [5], [5], [0], [-5], [0]]
+[[0], [5], [5], [0], [0], [0], [0], [0], [0], [0], [0], [-5], [0], [0], [0]]
 """
 
 head_prompt = """
-When in neutral position, the angle is 0.
+You are responsible for moving the head .When in neutral position, the angle is
+0.  Make sure to return to that position after every move.  Do not go beyond -90
+and 90 degrees.
 """
 
 def build_prompt(kind):
