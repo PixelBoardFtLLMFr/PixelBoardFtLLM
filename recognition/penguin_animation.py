@@ -110,11 +110,7 @@ def update_image():
         if prompt == "quit":
             root.quit()
             return
-        response = gpt_api.get_angle_from_prompt(prompt)
-        try:
-            angles = ast.literal_eval(response)
-        except SyntaxError:
-            print(f"GPT returned an invalid synthax : {response}")
+        angles = gpt_api.get_angle_from_prompt(prompt)
         frame_index = 0
 
 
@@ -134,19 +130,7 @@ width, height = 200, 300
 penguin_height, penguin_width = 64, 64
 
 angles = [
-    (0, 0, 0, 0, 0),
-    (10, -10, 5, -5, 5),
-    (20, -20, 10, -5, 10),
-    (30, -30, 15, 0, 15),
-    (40, -40, 10, 0, 20),
-    (50, -50, 5, 0, 25),
-    (60, -60, 0, 0, 30),
-    (50, -50, 0, 0, 25),
-    (40, -40, 0, 0, 20),
-    (30, -30, 0, 0, 15),
-    (20, -20, 0, 0, 10),
-    (10, -10, 0, 0, 5),
-    (0, 0, 0, 0, 0),
+    (0, 0, 0, 0, 0)
 ]
 
 frame_index = 0
