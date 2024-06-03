@@ -34,6 +34,24 @@ do you advise ? Your response should look like this :
 ANIMATION;PARTICLE
 """
 
+rank_prompt_arms = """
+In python, a character arms are controlled by an array of angle with (0, 0) being their neutral position.
+You will be given 3 arrays and you must choose one that fit the action given by the user the best.
+Write only a number between 0 and 2 representing the index of the chosen array, no punctuation, no comment.
+"""
+
+rank_prompt_legs = """
+In python, a character legs are controlled by an array of angle with (0, 0) being their neutral position.
+You will be given 3 arrays and you must choose one that fit the action given by the user the best.
+Write only a number between 0 and 2 representing the index of the chosen array, no punctuation, no comment.
+"""
+
+rank_prompt_head = """
+In python, a character head are controlled by an array of angle with 0 being its neutral position.
+You will be given 3 arrays and you must choose one that fit the action given by the user the best.
+Write only a number between 0 and 2 representing the index of the chosen array, no punctuation, no comment.
+"""
+
 # Sort of enum
 class PromptType:
     ARM = 1
@@ -102,6 +120,20 @@ def ask_gpt(system, user):
         ]
     ).choices[0].message.content
 
+def rank_angle(prompt_type : PromptType, prompt, angles):
+    system_prompt = None
+    if prompt_type == PromptType.ARM:
+        system_prompt = rank_prompt_arms
+    elif prompt_type == PromptType.LEG:
+        system_prompt = rank_prompt_legs
+    elif prompt_type == PromptType.HEAD:
+        system_prompt = rank_prompt_head
+    response = interprete_gpt(ask_gpt(system_prompt, f"The action is : {prompt}. Choose between :\n 0 : {angles[0]}\n1 : {angles[1]}\n2 : {angles[2]}"))
+    if isinstance(response, int) and response >= 0 and response < 3:
+        return response
+    print("Could not interprete GPT response : ", response)
+    return 0
+
 def interprete_gpt(code_as_str):
     """
     Interprete the raw response CODE_AS_STR from ChatGPT, and return the value
@@ -115,7 +147,6 @@ def interprete_gpt(code_as_str):
         print(f"ChatGPT returned an invalid syntax : {code_as_str}")
 
     return res
-
 
 def array_setlength(array, newlen):
     """
@@ -137,17 +168,12 @@ def get_angle_from_prompt(prompt : str):
     to ChatGPT. The result is a 1x5 array of angles :
     [(right_arm, left_arm, right_leg, left_leg, head)]
     """
-    arm_angles_as_str = ask_gpt(build_prompt(PromptType.ARM),
-                                f"The requested motion is : {prompt}")
-    arm_angles = interprete_gpt(arm_angles_as_str)
-    # print(arm_angles)
-    # print(np.shape(arm_angles))
-    # print(type(arm_angles))
-
-    leg_angles = np.array([[0, 0]])
-
-    head_angles = np.array([[0]])
-
+    angles = {}
+    for kind in (PromptType.ARM, PromptType.LEG, PromptType.HEAD):
+        angles[kind] = []
+        for i in range(3):
+            angles[kind] += [interprete_gpt(ask_gpt(build_prompt(kind, f"The requested motion is : {prompt}")))]
+        angles[kind] = angles[kind][rank_angle(kind, prompt, angles[kind])]
     # make them all the same length
     maxlen = max(np.shape(arm_angles)[0],
                  np.shape(leg_angles)[0],

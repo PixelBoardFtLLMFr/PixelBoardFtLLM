@@ -39,7 +39,11 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
 
     black = (0, 0, 0)
     white = (255, 255, 255)
-    orange = (255, 165, 0)
+    #orange = (255, 165, 0)
+
+    #Oscar colors
+    green = (169,218,195)
+    yellow = (250,222,12)
 
     body_width, body_height = penguin_width * 0.8 * 0.6, penguin_height * 0.8
     body_x, body_y = (width - body_width) // 2, (height - body_height) // 2
@@ -83,21 +87,34 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
     draw_rotated_rectangle(draw, foot_left_x, foot_y, foot_left_x + foot_width, foot_y + foot_height, foot_left_x, foot_y, angle_left_foot, fill=orange)
     draw_rotated_rectangle(draw, foot_right_x, foot_y, foot_right_x + foot_width, foot_y + foot_height, foot_right_x + foot_width, foot_y, angle_right_foot, fill=orange)
 
+    draw_rotated_rectangle(draw, foot_left_x1, foot_left_y1, foot_left_x2, foot_left_y2, foot_center_left_x, foot_center_left_y, angle_left_leg, fill=yellow)
+
+    # Right foot rotation
+    foot_right_x1 = body_x + body_width - foot_width
+    foot_right_y1 = foot_y
+    foot_right_x2 = foot_right_x1 + foot_width
+    foot_right_y2 = foot_right_y1 + foot_height
+    foot_center_right_x, foot_center_right_y = (foot_right_x1 + foot_right_x2) / 2, foot_right_y1
+
+    draw_rotated_rectangle(draw, foot_right_x1, foot_right_y1, foot_right_x2, foot_right_y2, foot_center_right_x, foot_center_right_y, angle_right_leg, fill=yellow)
+
+    # Left arm
     arm_left_x1 = body_x - arm_width
     arm_left_y1 = arm_y
     arm_left_x2 = arm_left_x1 + arm_width
     arm_left_y2 = arm_y + arm_height
     arm_center_left_x, arm_center_left_y = (arm_left_x1 + arm_left_x2) / 2, arm_left_y1
 
-    draw_rotated_rectangle(draw, arm_left_x1, arm_left_y1, arm_left_x2, arm_left_y2, arm_center_left_x, arm_center_left_y, angle_left_arm, fill=black)
+    draw_rotated_rectangle(draw, arm_left_x1, arm_left_y1, arm_left_x2, arm_left_y2, arm_center_left_x, arm_center_left_y, angle_left_arm, fill=green)
 
+    # Right arm
     arm_right_x1 = body_x + body_width
     arm_right_y1 = arm_y
     arm_right_x2 = arm_right_x1 + arm_width
     arm_right_y2 = arm_y + arm_height
     arm_center_right_x, arm_center_right_y = (arm_right_x1 + arm_right_x2) / 2, arm_right_y1
 
-    draw_rotated_rectangle(draw, arm_right_x1, arm_right_y1, arm_right_x2, arm_right_y2, arm_center_right_x, arm_center_right_y, angle_right_arm, fill=black)
+    draw_rotated_rectangle(draw, arm_right_x1, arm_right_y1, arm_right_x2, arm_right_y2, arm_center_right_x, arm_center_right_y, angle_right_arm, fill=green)
 
     return image
 
@@ -135,12 +152,12 @@ angles = [
 
 frame_index = 0
 
-# Créer la fenêtre tkinter
+# Create the tkinter window
 root = tk.Tk()
 canvas = tk.Canvas(root, width=width, height=height)
 canvas.pack()
 
-# Initialiser l'image
+# Initialize the image
 image = Image.new("RGB", (width, height), "white")
 image = draw_penguin_with_arm(image, angles[0][0], angles[0][1], angles[0][2], angles[0][3], angles[0][4])
 
@@ -148,8 +165,8 @@ tk_image = ImageTk.PhotoImage(image)
 image_on_canvas = canvas.create_image(0, 0, anchor=tk.NW, image=tk_image)
 canvas.image = tk_image
 
-# Démarrer l'animation
+# Start the animation
 root.after(50, update_image)
 
-# Lancer la boucle principale de tkinter
+# Launch the main tkinter loop
 root.mainloop()
