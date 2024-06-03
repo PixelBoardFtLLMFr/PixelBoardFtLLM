@@ -35,25 +35,27 @@ def draw_rotated_ellipse(draw, x1, y1, r, cx, cy, angle, fill, outline=None):
 def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foot, angle_right_foot, angle_head):
     draw = ImageDraw.Draw(image)
 
+    global penguin_height, penguin_width
+
     black = (0, 0, 0)
     white = (255, 255, 255)
     orange = (255, 165, 0)
 
-    body_width, body_height = 60, 100
+    body_width, body_height = penguin_width * 0.8 * 0.6, penguin_height * 0.8
     body_x, body_y = (width - body_width) // 2, (height - body_height) // 2
 
-    head_size = 40
+    head_size = body_height * 0.4
     head_x, head_y = body_x + (body_width - head_size) // 2, body_y - head_size
 
-    eye_size = 5
-    eye_y_offset = 10
-    eye_x_offset = 10
+    eye_size = body_height * 0.04
+    eye_y_offset = body_height * 0.1
+    eye_x_offset = body_height * 0.1
 
-    foot_width, foot_height = 20, 10
+    foot_width, foot_height = body_height * 0.2, body_height * 0.1
     foot_y = body_y + body_height
 
-    arm_width, arm_height = 10, 40
-    arm_y = body_y + 20
+    arm_width, arm_height = body_height * 0.1, body_height * 0.4
+    arm_y = body_y + body_height * 0.2
 
     draw.rectangle([body_x, body_y, body_x + body_width, body_y + body_height], fill=white, outline=black)
 
@@ -61,15 +63,15 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
     head_cy = head_y + head_size
     draw_rotated_ellipse(draw, head_x, head_y, head_size//2, head_cx, head_cy, angle_head, fill=white, outline=black)
 
-    eye_left_x = head_cx - eye_x_offset
-    eye_left_y = head_cy - 3*eye_y_offset
-    eye_right_x = head_cx + eye_x_offset
+    eye_left_x = round(head_cx - eye_x_offset)
+    eye_left_y = head_cy - 3 * eye_y_offset
+    eye_right_x = round(head_cx + eye_x_offset)
     eye_right_y = eye_left_y
     draw_rotated_ellipse(draw, eye_left_x, eye_left_y, eye_size//2, head_cx, head_cy, angle_head, fill=black)
     draw_rotated_ellipse(draw, eye_right_x, eye_right_y, eye_size//2, head_cx, head_cy, angle_head, fill=black)
 
-    beak_width, beak_height = 10, 8
-    beak_x, beak_y = head_x + (head_size - beak_width) // 2, head_y + head_size // 2
+    beak_width, beak_height = body_height * 0.1, body_height * 0.08
+    beak_x, beak_y = round(head_x + (head_size - beak_width) / 2), head_y + head_size // 2
     # Rotation
     beak_x0, beak_y0 = rotate_point(beak_x, beak_y, head_cx, head_cy, angle_head)
     beak_x1, beak_y1 = rotate_point(beak_x + beak_width, beak_y, head_cx, head_cy, angle_head)
@@ -129,6 +131,8 @@ def update_image():
 
 width, height = 200, 300
 
+penguin_height, penguin_width = 64, 64
+
 angles = [
     (0, 0, 0, 0, 0),
     (10, -10, 5, -5, 5),
@@ -144,64 +148,6 @@ angles = [
     (10, -10, 0, 0, 5),
     (0, 0, 0, 0, 0),
 ]
-
-# angles = [
-#     (0, 0, 0, 0, 0),
-#     (10, -10, 0, 0, 0),
-#     (20, -20, 0, 0, 0),
-#     (30, -30, 0, 0, 0),
-#     (20, -20, 0, 0, 0),
-#     (10, -10, 0, 0, 0),
-#     (0, 0, 0, 0, 0),
-#     (-10, 10, 0, 0, 0),
-#     (-20, 20, 0, 0, 0),
-#     (-30, 30, 0, 0, 0),
-#     (-20, 20, 0, 0, 0),
-#     (-10, 10, 0, 0, 0),
-#     (0, 0, 0, 0, 0),
-# ]
-
-# angles = [
-#     (0, 0),
-#     (5, -5),
-#     (10, -10),
-#     (15, -15),
-#     (20, -20),
-#     (25, -25),
-#     (30, -30),
-#     (35, -35),
-#     (40, -40),
-#     (35, -35),
-#     (30, -30),
-#     (25, -25),
-#     (20, -20),
-#     (15, -15),
-#     (10, -10),
-#     (5, -5),
-#     (0, 0),
-#     (-5, 5),
-#     (-10, 10),
-#     (-15, 15),
-#     (-20, 20),
-#     (-25, 25),
-#     (-30, 30),
-#     (-35, 35),
-#     (-40, 40),
-#     (-35, 35),
-#     (-30, 30),
-#     (-25, 25),
-#     (-20, 20),
-#     (-15, 15),
-#     (-10, 10),
-#     (-5, 5),
-#     (0, 0),
-# ]
-
-# rx, ry = rotate_point(20, 10, 10, 10, -90)
-# print("rotate_point(20, 10, 10, 10, 90) =", rx, ",", ry)
-# exit(0)
-
-
 
 frame_index = 0
 
