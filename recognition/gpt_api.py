@@ -28,7 +28,7 @@ Write only a number between 0 and 2 representing the index of the chosen array, 
 rank_prompt_head = """
 In python, a character head are controlled by an array of angle with 0 being its neutral position.
 You will be given 3 arrays and you must choose one that fit the action given by the user the best.
-Write only a number between 0 and 2 representing the index of the chosen array, no punctuation, no comment.
+Write only the number representing the index of the chosen array, no punctuation, no comment.
 """
 
 # Sort of enum
@@ -100,7 +100,9 @@ async def ask_gpt(system, user):
 
     return response.choices[0].message.content
 
-async def rank_angle(prompt_type : PromptType, prompt, angles):
+async def rank_angle(prompt_type : PromptType, prompt, angles, nb_prompt):
+    if nb_prompt == 1:
+        return 0
     system_prompt = None
 
     if prompt_type == PromptType.ARM:
@@ -110,7 +112,10 @@ async def rank_angle(prompt_type : PromptType, prompt, angles):
     elif prompt_type == PromptType.HEAD:
         system_prompt = rank_prompt_head
 
-    response = int(interprete_gpt(await ask_gpt(system_prompt, f"The action is : {prompt}. Choose between :\n 0 : {angles[0]}\n1 : {angles[1]}\n2 : {angles[2]}")))
+    user_prompt = f"The action is : {prompt}. Choose between :\n"
+    for i in range(nb_prompt):
+        user_prompt += f"{i} : {angles[i]}\n"
+    response = int(interprete_gpt(await ask_gpt(system_prompt,  user_prompt)))
 
     if isinstance(response, int) and response >= 0 and response < 3:
         return response
@@ -168,7 +173,7 @@ async def get_angle_from_prompt_async(prompt : str):
     rank_tasks = [None]*PromptType.count
 
     for kind in PromptType.allTypes:
-            rank_tasks[kind] = rank_angle(kind, prompt, angles[kind])
+            rank_tasks[kind] = rank_angle(kind, prompt, angles[kind], 1)
 
     ranks = await asyncio.gather(*rank_tasks)
 

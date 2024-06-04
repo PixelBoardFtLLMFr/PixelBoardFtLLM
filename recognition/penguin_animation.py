@@ -69,6 +69,7 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
 
     arm_width, arm_height = body_height * 0.1, body_height * 0.6
     arm_y = body_y + body_height * 0.2
+    arm_inside_width, arm_inside_height = arm_width * 0.6, arm_height * 0.6
 
     draw.rectangle([body_x, body_y, body_x + body_width, body_y + body_height], fill=green)
     draw.rectangle([body_x + 0.1*body_width, body_y+0.1*body_height, body_x + body_width*0.9, body_y + body_height*0.9], fill=white)
@@ -87,6 +88,7 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
 
     beak_width, beak_height = body_height * 0.1, body_height * 0.08
     beak_x, beak_y = round(head_x + (head_size - beak_width) / 2), head_y + head_size // 2
+
     # Rotation
     beak_x0, beak_y0 = rotate_point(beak_x, beak_y, head_cx, head_cy, angle_head)
     beak_x1, beak_y1 = rotate_point(beak_x + beak_width, beak_y, head_cx, head_cy, angle_head)
@@ -98,17 +100,6 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
     draw_rotated_rectangle(draw, foot_left_x, foot_y, foot_left_x + foot_width, foot_y + foot_height, foot_left_x, foot_y, angle_left_foot, fill=yellow)
     draw_rotated_rectangle(draw, foot_right_x, foot_y, foot_right_x + foot_width, foot_y + foot_height, foot_right_x + foot_width, foot_y, angle_right_foot, fill=yellow)
 
-    #draw_rotated_rectangle(draw, foot_left_x1, foot_left_y1, foot_left_x2, foot_left_y2, foot_center_left_x, foot_center_left_y, angle_left_leg, fill=yellow)
-
-    # Right foot rotation
-    foot_right_x1 = body_x + body_width - foot_width
-    foot_right_y1 = foot_y
-    foot_right_x2 = foot_right_x1 + foot_width
-    foot_right_y2 = foot_right_y1 + foot_height
-    foot_center_right_x, foot_center_right_y = (foot_right_x1 + foot_right_x2) / 2, foot_right_y1
-
-    draw_rotated_rectangle(draw, foot_right_x1, foot_right_y1, foot_right_x2, foot_right_y2, foot_center_right_x, foot_center_right_y, angle_right_leg, fill=yellow)
-
     # Left arm
     arm_left_x1 = body_x - arm_width
     arm_left_y1 = arm_y
@@ -116,7 +107,10 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
     arm_left_y2 = arm_y + arm_height
     arm_center_left_x, arm_center_left_y = (arm_left_x1 + arm_left_x2)/2 , arm_left_y1
 
+    arm_inside_left_x1, arm_inside_left_x2 = arm_center_left_x - round(arm_inside_width / 2), arm_center_left_x + round(arm_inside_width / 2)
+
     draw_true_rotated_ellipse(image, arm_left_x1, arm_left_y1, arm_left_x2, arm_left_y2, arm_center_left_x, arm_center_left_y, angle_left_arm, fill=green)
+    #draw_true_rotated_ellipse(image, arm_inside_left_x1, arm_left_y1, arm_inside_left_x2, arm_left_y1 + arm_inside_height, arm_center_left_x, arm_center_left_y, angle_left_arm, white)
 
     # Right arm
     arm_right_x1 = body_x + body_width
