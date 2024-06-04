@@ -31,6 +31,14 @@ def draw_rotated_ellipse(draw, x1, y1, r, cx, cy, angle, fill, outline=None):
     x2, y2 = rotate_point(x1 + r, y1 + r, cx, cy, angle)
     draw.ellipse([x2 - r, y2 - r, x2 + r, y2 + r], fill=fill, outline=outline)
 
+def draw_true_rotated_ellipse(image, x1, y1, x2, y2, angle, fill):
+    size = int(max(abs(x1 - x2), abs(y1 - y2))) * 2
+    ellipse = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(ellipse)
+    box = (size // 2, size // 2, abs(x2 - x1) + size // 2, abs(y2 - y1) + size // 2)
+    draw.ellipse(box, fill)
+    ellipse = ellipse.rotate(angle, expand=False, center=(x2 + size // 2,size // 2))
+    image.paste(ellipse, (int(x1) - size // 2, int(y1) - size // 2), ellipse)
 
 def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foot, angle_right_foot, angle_head):
     draw = ImageDraw.Draw(image)
@@ -105,7 +113,7 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
     arm_left_y2 = arm_y + arm_height
     arm_center_left_x, arm_center_left_y = (arm_left_x1 + arm_left_x2) / 2, arm_left_y1
 
-    draw_rotated_rectangle(draw, arm_left_x1, arm_left_y1, arm_left_x2, arm_left_y2, arm_center_left_x, arm_center_left_y, angle_left_arm, fill=green)
+    draw_true_rotated_ellipse(image, arm_left_x1, arm_left_y1, arm_left_x2, arm_left_y2, angle_left_arm, fill=green)
 
     # Right arm
     arm_right_x1 = body_x + body_width
