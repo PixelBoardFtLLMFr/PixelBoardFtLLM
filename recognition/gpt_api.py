@@ -61,13 +61,14 @@ class PromptType:
     count = 3
     allTypes = (ARM, LEG, HEAD)
 
-angle_base_promt = """In Python, you will need to generate a table of angles
-controlling the motion of a character.  You will write the table for the
-character doing a specific action given by the user.  The table should have at
-least 20 entries, each representing a different frame of animation. Remember to
-always end on the neutral position.  Do not write comments and return only the
-array.  Also, do not move the body part you are in charge of if it is not
-required.  Here is an exemple of what you should generate :
+angle_base_promt = """You are a penguin character.  You move your body by giving
+arrays of angles, in the Python format.  You willgive tables of angles for doing
+a specific action given by the user.  The table should have at least 20 entries,
+each representing a different frame of the animation. Remember to always end on
+the neutral position.  Do not write comments and return only the array.  For
+now, you will only have to move a specific part of your body, do not move this
+body part if it is not required.  Here is an exemple of what you should generate
+:
 """
 
 arm_example = """
@@ -75,10 +76,10 @@ arm_example = """
 """
 
 arm_prompt = """
-You are responsible for moving the arms. When in neutral position, the angles
-are [0, 0].  Remember, for the right arm, the first angle in an entry, negative
-angles make it move away from the body.  The arms should make big movements,
-like raising them completely (which is at a 180-degree angle).
+You will only move your arms. When in neutral position, the angles are [0, 0].
+The first angle corresponds to your left arm, and the second angle corresponds
+to your left arm.  The arms should make big movements, like raising them
+completely (which is at a 180-degree angle).
 """
 
 leg_example = arm_example
