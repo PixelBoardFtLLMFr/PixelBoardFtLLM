@@ -84,20 +84,9 @@ def build_prompt(kind):
     elif kind == PromptType.HEAD:
         return angle_base_promt + head_example + head_prompt
 
-<<<<<<< HEAD
-def ask_gpt(system, user):
-=======
-def get_animation_from_emotion(emotion : str):
-    completion = client.chat.completions.create(
-        model=MODEL,
-        messages= [
-            {"role" : "system", "content" : chose_prompt},
-            {"role" : "user", "content" : f"The detected emotion is : {emotion}"}
-        ]
-    ).choices[0].message.content
 
 async def ask_gpt(system, user):
->>>>>>> 88c5b352848d954f40fcaee07131407a53fb24ac
+
     """
     Get a raw string form ChatGPT using SYSTEM and USER as prompt.
     """
@@ -163,17 +152,8 @@ async def get_angle_from_prompt_async(prompt : str):
     to ChatGPT. The result is a 1x5 array of angles :
     [(right_arm, left_arm, right_leg, left_leg, head)]
     """
-<<<<<<< HEAD
-    angles = {}
-    for kind in (PromptType.ARM, PromptType.LEG, PromptType.HEAD):
-        angles[kind] = []
-        for i in range(3):
-            angles[kind] += [interprete_gpt(ask_gpt(build_prompt(kind), f"The requested motion is : {prompt}"))]
-        angles[kind] = angles[kind][rank_angle(kind, prompt, angles[kind])]
-=======
     prompt_count = 3
     angles_tasks = [None]*(prompt_count*PromptType.count)
->>>>>>> 88c5b352848d954f40fcaee07131407a53fb24ac
 
     for kind in PromptType.allTypes:
         for i in range(prompt_count):
