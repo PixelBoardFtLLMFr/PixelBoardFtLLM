@@ -157,29 +157,29 @@ async def get_angle_from_prompt_async(prompt : str):
     to ChatGPT. The result is a 1x5 array of angles :
     [(right_arm, left_arm, right_leg, left_leg, head)]
     """
-    prompt_count = 3
+    prompt_count = 1
     angles_tasks = [None]*(prompt_count*PromptType.count)
 
     for kind in PromptType.allTypes:
         for i in range(prompt_count):
-            angles_tasks[kind*3 + i] = ask_gpt(build_prompt(kind), f"The requested motion is : {prompt}")
+            angles_tasks[kind + i * 3] = ask_gpt(build_prompt(kind), f"The requested motion is : {prompt}")
 
     angles = await asyncio.gather(*angles_tasks)
 
     for kind in PromptType.allTypes:
         for i in range(prompt_count):
-            angles[kind*3 + i] = interprete_gpt(angles[kind*3 + i])
+            angles[kind + i * 3] = interprete_gpt(angles[i * 3 + kind])
 
     rank_tasks = [None]*PromptType.count
 
     for kind in PromptType.allTypes:
-            rank_tasks[kind] = rank_angle(kind, prompt, angles[kind], 1)
+            rank_tasks[kind] = rank_angle(kind, prompt, angles[kind], prompt_count)
 
     ranks = await asyncio.gather(*rank_tasks)
 
     bests = [None]*PromptType.count
-    for i in PromptType.allTypes:
-        bests[i] = angles[i*3 + ranks[i]]
+    for kind in PromptType.allTypes:
+        bests[kind] = angles[kind + ranks[i] * 3]
 
     return bests
 
