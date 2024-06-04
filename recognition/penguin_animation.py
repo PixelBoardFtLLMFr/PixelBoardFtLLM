@@ -109,7 +109,7 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
 
     arm_inside_left_x1, arm_inside_left_x2 = arm_center_left_x - round(arm_inside_width / 2), arm_center_left_x + round(arm_inside_width / 2)
 
-    draw_true_rotated_ellipse(image, arm_left_x1, arm_left_y1, arm_left_x2, arm_left_y2, arm_center_left_x, arm_center_left_y, angle_left_arm, fill=green)
+    draw_true_rotated_ellipse(image, arm_left_x1, arm_left_y1, arm_left_x2, arm_left_y2, arm_center_left_x, arm_center_left_y, -angle_left_arm, fill=green)
     #draw_true_rotated_ellipse(image, arm_inside_left_x1, arm_left_y1, arm_inside_left_x2, arm_left_y1 + arm_inside_height, arm_center_left_x, arm_center_left_y, angle_left_arm, white)
 
     # Right arm
