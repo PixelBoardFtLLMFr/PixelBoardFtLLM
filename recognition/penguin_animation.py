@@ -46,13 +46,13 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
     green = (169,218,195)
     yellow = (250,222,12)
 
-    body_width, body_height = penguin_width * 0.8 * 0.6, penguin_height * 0.8
-    body_x, body_y = (width - body_width) // 2, (height - body_height) // 2
-
+    body_width, body_height = penguin_width * 0.4, penguin_height * 0.6
     head_size = body_height * 0.4
+
+    body_x, body_y = (penguin_width - body_width) // 2, (penguin_height - body_height) // 2 + head_size // 2
     head_x, head_y = body_x + (body_width - head_size) // 2, body_y - head_size
 
-    eye_size = body_height * 0.04
+    eye_size = body_height * 0.1
     eye_y_offset = body_height * 0.1
     eye_x_offset = body_height * 0.1
 
@@ -99,7 +99,7 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
     foot_right_y2 = foot_right_y1 + foot_height
     foot_center_right_x, foot_center_right_y = (foot_right_x1 + foot_right_x2) / 2, foot_right_y1
 
-    draw_rotated_rectangle(draw, foot_right_x1, foot_right_y1, foot_right_x2, foot_right_y2, foot_center_right_x, foot_center_right_y, angle_right_leg, fill=yellow)
+    # draw_rotated_rectangle(draw, foot_right_x1, foot_right_y1, foot_right_x2, foot_right_y2, foot_center_right_x, foot_center_right_y, angle_right_leg, fill=yellow)
 
     # Left arm
     arm_left_x1 = body_x - arm_width
@@ -137,18 +137,19 @@ def update_image():
 
     angle_left_arm, angle_right_arm, angle_left_foot, angle_right_foot, angle_head = angles[frame_index]
 
-    image = Image.new("RGB", (width, height), "white")
-    image = draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foot, angle_right_foot, angle_head)
+    penguin_image = Image.new("RGB", (penguin_width, penguin_height), "white")
+    penguin_image = draw_penguin_with_arm(penguin_image, angle_left_arm, angle_right_arm, angle_left_foot, angle_right_foot, angle_head)
 
-    tk_image = ImageTk.PhotoImage(image)
-    canvas.itemconfig(image_on_canvas, image=tk_image)
-    canvas.image = tk_image
+    tk_penguin_image = ImageTk.PhotoImage(penguin_image)
+    penguin_canvas.itemconfig(penguin_image_on_canvas, image=tk_penguin_image)
+    penguin_canvas.image = tk_penguin_image
 
     root.after(50, update_image)
 
-width, height = 200, 300
-
-penguin_height, penguin_width = 64, 64
+penguin_size = 64
+penguin_height, penguin_width = penguin_size, penguin_size
+pixel_board_size = 128
+# width, height = penguin_size + pixel_board_size, max(penguin_size, pixel_board_size)
 
 angles = [
     (0, 0, 0, 0, 0)
@@ -158,16 +159,16 @@ frame_index = 0
 
 # Create the tkinter window
 root = tk.Tk()
-canvas = tk.Canvas(root, width=width, height=height)
-canvas.pack()
+penguin_canvas = tk.Canvas(root, width=penguin_width, height=penguin_height)
+penguin_canvas.pack()
 
 # Initialize the image
-image = Image.new("RGB", (width, height), "white")
-image = draw_penguin_with_arm(image, angles[0][0], angles[0][1], angles[0][2], angles[0][3], angles[0][4])
+penguin_image = Image.new("RGB", (penguin_width, penguin_height), "white")
+penguin_image = draw_penguin_with_arm(penguin_image, angles[0][0], angles[0][1], angles[0][2], angles[0][3], angles[0][4])
 
-tk_image = ImageTk.PhotoImage(image)
-image_on_canvas = canvas.create_image(0, 0, anchor=tk.NW, image=tk_image)
-canvas.image = tk_image
+tk_penguin_image = ImageTk.PhotoImage(penguin_image)
+penguin_image_on_canvas = penguin_canvas.create_image(0, 0, anchor=tk.NW, image=tk_penguin_image)
+penguin_canvas.image = tk_penguin_image
 
 # Start the animation
 root.after(50, update_image)
