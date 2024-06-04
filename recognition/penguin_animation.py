@@ -33,14 +33,6 @@ def draw_rotated_ellipse(draw, x1, y1, r, cx, cy, angle, fill, outline = None):
     x2, y2 = rotate_point(x1 + r, y1 + r, cx, cy, angle)
     draw.ellipse([x2 - r, y2 - r, x2 + r, y2 + r], fill=fill, outline=outline)
 
-def draw_rotated_ellipse_arm(draw, x1, y1, x2, y2, angle, cx, cy, fill, outline = None):
-    x2_new, y2_new = rotate_point(x1, y1, cx, cy, angle - 90)
-    x2_final = max(x2_new, x1)
-    y2_final = max(y2_new, y2)
-    draw.ellipse([x1, y1, x2_final , y2_final], fill=fill, outline=outline)
-
-
-
 def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foot, angle_right_foot, angle_head):
     draw = ImageDraw.Draw(image)
 
@@ -48,7 +40,7 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
 
     black = (0, 0, 0)
     white = (255, 255, 255)
-    #orange = (255, 165, 0)
+    orange = (255, 165, 0)
 
     #Oscar colors
     green = (169,218,195)
@@ -98,6 +90,7 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
     draw_rotated_rectangle(draw, foot_left_x, foot_y, foot_left_x + foot_width, foot_y + foot_height, foot_left_x, foot_y, angle_left_foot, fill=yellow)
     draw_rotated_rectangle(draw, foot_right_x, foot_y, foot_right_x + foot_width, foot_y + foot_height, foot_right_x + foot_width, foot_y, angle_right_foot, fill=yellow)
 
+    #draw_rotated_rectangle(draw, foot_left_x1, foot_left_y1, foot_left_x2, foot_left_y2, foot_center_left_x, foot_center_left_y, angle_left_leg, fill=yellow)
 
     # Right foot rotation
     foot_right_x1 = body_x + body_width - foot_width
@@ -106,15 +99,16 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
     foot_right_y2 = foot_right_y1 + foot_height
     foot_center_right_x, foot_center_right_y = (foot_right_x1 + foot_right_x2) / 2, foot_right_y1
 
-    draw_rotated_rectangle(draw, foot_right_x1, foot_right_y1, foot_right_x2, foot_right_y2, foot_center_right_x, foot_center_right_y, angle_right_foot, fill=yellow)
+    draw_rotated_rectangle(draw, foot_right_x1, foot_right_y1, foot_right_x2, foot_right_y2, foot_center_right_x, foot_center_right_y, angle_right_leg, fill=yellow)
 
     # Left arm
     arm_left_x1 = body_x - arm_width
     arm_left_y1 = arm_y
     arm_left_x2 = arm_left_x1 + arm_width
     arm_left_y2 = arm_y + arm_height
-    arm_center_left_x, arm_center_left_y = arm_left_x1 + arm_width/2 , arm_left_y1
+    arm_center_left_x, arm_center_left_y = (arm_left_x1 + arm_left_x2)/2 , arm_left_y1
 
+    draw.ellipse([arm_left_x1, arm_left_y1, arm_left_x2, arm_left_y2], fill=green)
     #draw_rotated_rectangle(draw, arm_left_x1, arm_left_y1, arm_left_x2, arm_left_y2, arm_center_left_x, arm_center_left_y, angle_left_arm, fill=green)
 
     # Right arm
