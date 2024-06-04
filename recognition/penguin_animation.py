@@ -52,7 +52,7 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
     body_x, body_y = (penguin_width - body_width) // 2, (penguin_height - body_height) // 2 + head_size // 2
     head_x, head_y = body_x + (body_width - head_size) // 2, body_y - head_size
 
-    eye_size = body_height * 0.1
+    eye_size = body_height * 0.05
     eye_y_offset = body_height * 0.1
     eye_x_offset = body_height * 0.1
 
@@ -74,8 +74,10 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
     eye_left_y = head_cy - 3 * eye_y_offset
     eye_right_x = round(head_cx + eye_x_offset)
     eye_right_y = eye_left_y
-    draw_rotated_ellipse(draw, eye_left_x, eye_left_y, eye_size//2, head_cx, head_cy, angle_head, fill=black)
-    draw_rotated_ellipse(draw, eye_right_x, eye_right_y, eye_size//2, head_cx, head_cy, angle_head, fill=black)
+    draw.line([rotate_point(eye_left_x, eye_left_y, head_cx, head_cy, angle_head),
+               rotate_point(eye_left_x, eye_left_y + eye_size, head_cx, head_cy, angle_head)], fill=black)
+    draw.line([rotate_point(eye_right_x, eye_right_y, head_cx, head_cy, angle_head),
+               rotate_point(eye_right_x, eye_right_y + eye_size, head_cx, head_cy, angle_head)], fill=black)
 
     beak_width, beak_height = body_height * 0.1, body_height * 0.08
     beak_x, beak_y = round(head_x + (head_size - beak_width) / 2), head_y + head_size // 2
@@ -134,7 +136,6 @@ def update_image():
         angles = gpt_api.get_angle_from_prompt(prompt)
         frame_index = 0
 
-
     angle_left_arm, angle_right_arm, angle_left_foot, angle_right_foot, angle_head = angles[frame_index]
 
     penguin_image = Image.new("RGB", (penguin_width, penguin_height), "white")
@@ -144,12 +145,31 @@ def update_image():
     penguin_canvas.itemconfig(penguin_image_on_canvas, image=tk_penguin_image)
     penguin_canvas.image = tk_penguin_image
 
+    update_pixel_board_canvas(penguin_image)
+
     root.after(50, update_image)
+
+
+def update_pixel_board_canvas(penguin_image):
+    pixel_board_image = Image.new("RGB", (pixel_board_size, pixel_board_size), "white")
+    pixel_board_draw = ImageDraw.Draw(pixel_board_image)
+
+    for i in range(penguin_height):
+        for j in range(penguin_width):
+            pixel = penguin_image.getpixel((i, j))
+            pixel_board_draw.rectangle([(pixel_board_scale*i, pixel_board_scale*j),
+                                        (pixel_board_scale*(i+1/2), pixel_board_scale*(j+1/2))], fill=pixel)
+
+    print("updating")
+
+    tk_pixel_board_image = ImageTk.PhotoImage(pixel_board_image)
+    pixel_board_canvas.itemconfig(pixel_board_image_on_canvas, image=tk_pixel_board_image)
+    pixel_board_canvas.image = tk_pixel_board_image
 
 penguin_size = 64
 penguin_height, penguin_width = penguin_size, penguin_size
-pixel_board_size = 128
-# width, height = penguin_size + pixel_board_size, max(penguin_size, pixel_board_size)
+pixel_board_scale = 8
+pixel_board_size = pixel_board_scale * penguin_size
 
 angles = [
     (0, 0, 0, 0, 0)
@@ -160,15 +180,24 @@ frame_index = 0
 # Create the tkinter window
 root = tk.Tk()
 penguin_canvas = tk.Canvas(root, width=penguin_width, height=penguin_height)
-penguin_canvas.pack()
+penguin_canvas.pack(side='left')
 
-# Initialize the image
+pixel_board_canvas = tk.Canvas(root, width=pixel_board_size, height=pixel_board_size)
+pixel_board_canvas.pack(side='right')
+
+# Initialize the images
 penguin_image = Image.new("RGB", (penguin_width, penguin_height), "white")
 penguin_image = draw_penguin_with_arm(penguin_image, angles[0][0], angles[0][1], angles[0][2], angles[0][3], angles[0][4])
 
 tk_penguin_image = ImageTk.PhotoImage(penguin_image)
 penguin_image_on_canvas = penguin_canvas.create_image(0, 0, anchor=tk.NW, image=tk_penguin_image)
 penguin_canvas.image = tk_penguin_image
+
+pixel_board_image = Image.new("RGB", (pixel_board_size, pixel_board_size), "white")
+tk_pixel_board_image = ImageTk.PhotoImage(pixel_board_image)
+pixel_board_image_on_canvas = pixel_board_canvas.create_image(0, 0, anchor=tk.NW, image=tk_pixel_board_image)
+pixel_board_canvas.image = tk_pixel_board_image
+update_pixel_board_canvas(penguin_image)
 
 # Start the animation
 root.after(50, update_image)
