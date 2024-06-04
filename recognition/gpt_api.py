@@ -28,7 +28,7 @@ Write only a number between 0 and 2 representing the index of the chosen array, 
 rank_prompt_head = """
 In python, a character head are controlled by an array of angle with 0 being its neutral position.
 You will be given 3 arrays and you must choose one that fit the action given by the user the best.
-Write only a number between 0 and 2 representing the index of the chosen array, no punctuation, no comment.
+Write only the number representing the index of the chosen array, no punctuation, no comment.
 """
 
 # Sort of enum
@@ -50,31 +50,33 @@ body part if it is not required.  Here is an exemple of what you should generate
 """
 
 arm_example = """
-[[0, 0], [10, -30], [15, -30], [10, -30], [0, 0], [0, 0], [0, 0], [0, 0]]
+[[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]
 """
 
 arm_prompt = """
-You will only move your arms. When in neutral position, the angles are [0, 0].
-The first angle corresponds to your left arm, and the second angle corresponds
-to your left arm.  The arms should make big movements, like raising them
-completely (which is at a 180-degree angle).
+You are responsible for moving the arms. When in neutral position, the angles
+are [0, 0]. The first value is the right arm and the second is the left one.
+The arms should make big movements, like raising them completely (which is at a 180-degree angle).
 """
 
 leg_example = arm_example
 
 leg_prompt = """
 You are responsible for moving the legs. When in neutral position, the angles
-are [0, 0].  Leg movements are usually small, try not to exceed 90 degrees.
+are [0, 0]. The first value is the right leg and the second is the left one.
+Leg movements are usually small, try not to exceed 90 degrees.
+Do not move if unnecessary for the action.
 """
 
 head_example = """
-[[0], [5], [5], [0], [0], [0], [0], [0], [0], [0], [0], [-5], [0], [0], [0]]
+[[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]]
 """
 
 head_prompt = """
-You are responsible for moving the head .When in neutral position, the angle is
-0.  Make sure to return to that position after every move.  Do not go beyond -90
-and 90 degrees.
+You are responsible for moving the head. When in neutral position, the angle is
+0. Make sure to return to that position after every move. Do not go beyond -90
+and 90 degrees. Head movement are usually very small, often between -10 and 10.
+Do not move if unnecessary for the action.
 """
 
 def build_prompt(kind):
@@ -101,7 +103,9 @@ async def ask_gpt(system, user):
 
     return response.choices[0].message.content
 
-async def rank_angle(prompt_type : PromptType, prompt, angles):
+async def rank_angle(prompt_type : PromptType, prompt, angles, nb_prompt):
+    if nb_prompt == 1:
+        return 0
     system_prompt = None
 
     if prompt_type == PromptType.ARM:
@@ -111,7 +115,10 @@ async def rank_angle(prompt_type : PromptType, prompt, angles):
     elif prompt_type == PromptType.HEAD:
         system_prompt = rank_prompt_head
 
-    response = int(interprete_gpt(await ask_gpt(system_prompt, f"The action is : {prompt}. Choose between :\n 0 : {angles[0]}\n1 : {angles[1]}\n2 : {angles[2]}")))
+    user_prompt = f"The action is : {prompt}. Choose between :\n"
+    for i in range(nb_prompt):
+        user_prompt += f"{i} : {angles[i]}\n"
+    response = int(interprete_gpt(await ask_gpt(system_prompt,  user_prompt)))
 
     if isinstance(response, int) and response >= 0 and response < 3:
         return response
@@ -153,29 +160,29 @@ async def get_angle_from_prompt_async(prompt : str):
     to ChatGPT. The result is a 1x5 array of angles :
     [(right_arm, left_arm, right_leg, left_leg, head)]
     """
-    prompt_count = 3
+    prompt_count = 1
     angles_tasks = [None]*(prompt_count*PromptType.count)
 
     for kind in PromptType.allTypes:
         for i in range(prompt_count):
-            angles_tasks[kind*3 + i] = ask_gpt(build_prompt(kind), f"The requested motion is : {prompt}")
+            angles_tasks[kind + i * 3] = ask_gpt(build_prompt(kind), f"The requested motion is : {prompt}")
 
     angles = await asyncio.gather(*angles_tasks)
 
     for kind in PromptType.allTypes:
         for i in range(prompt_count):
-            angles[kind*3 + i] = interprete_gpt(angles[kind*3 + i])
+            angles[kind + i * 3] = interprete_gpt(angles[i * 3 + kind])
 
     rank_tasks = [None]*PromptType.count
 
     for kind in PromptType.allTypes:
-            rank_tasks[kind] = rank_angle(kind, prompt, angles[kind])
+            rank_tasks[kind] = rank_angle(kind, prompt, angles[kind], prompt_count)
 
     ranks = await asyncio.gather(*rank_tasks)
 
     bests = [None]*PromptType.count
-    for i in PromptType.allTypes:
-        bests[i] = angles[i*3 + ranks[i]]
+    for kind in PromptType.allTypes:
+        bests[kind] = angles[kind + ranks[i] * 3]
 
     return bests
 
