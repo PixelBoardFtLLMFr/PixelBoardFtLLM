@@ -13,28 +13,6 @@ MODEL = "gpt-3.5-turbo"
 #MODEL = "gpt-4-turbo" # more hazardous results
 #MODEL = "gpt-4o"
 
-chose_prompt="""
-We would like to animate a character according to people's emotions. We have
-five different animations:
-- idle,
-- jump,
-- sleepy,
-- sad,
-- wave.
-
-We also have five particles to add to the animation:
-- sweat drop,
-- heart,
-- spark,
-- zzz sleeping,
-- angry veins.
-
-I will give you the detected emotion, what animation and what particle
-do you advise ? Your response should look like this :
-
-ANIMATION;PARTICLE
-"""
-
 rank_prompt_arms = """
 In python, a character arms are controlled by an array of angle with (0, 0) being their neutral position.
 You will be given 3 arrays and you must choose one that fit the action given by the user the best.
@@ -66,32 +44,36 @@ controlling the motion of a character.  You will write the table for the
 character doing a specific action given by the user.  The table should have at
 least 20 entries, each representing a different frame of animation. Remember to
 always end on the neutral position.  Do not write comments and return only the
-array. Here is an exemple of what you should generate :
+array.  Also, do not move the body part you are in charge of if it is not
+required.  Here is an exemple of what you should generate :
 """
 
 arm_example = """
-[[0, 0], [10, -30], [15, -60], [10, -30], [0, 0]]
+[[0, 0], [10, -30], [15, -30], [10, -30], [0, 0], [0, 0], [0, 0], [0, 0]]
 """
 
 arm_prompt = """
-When in neutral position, the angles are [0, 0].  Remember, for the right arm,
-the first angle in an entry, negative angles make it move away from the body.
-The arms should make big movements, like raising them completely (which is at a
-180-degree angle).
+You are responsible for moving the arms. When in neutral position, the angles
+are [0, 0].  Remember, for the right arm, the first angle in an entry, negative
+angles make it move away from the body.  The arms should make big movements,
+like raising them completely (which is at a 180-degree angle).
 """
 
 leg_example = arm_example
 
 leg_prompt = """
-When in neutral position, the angles are [0, 0].
+You are responsible for moving the legs. When in neutral position, the angles
+are [0, 0].  Leg movements are usually small, try not to exceed 90 degrees.
 """
 
 head_example = """
-[[0], [5], [5], [0], [-5], [0]]
+[[0], [5], [5], [0], [0], [0], [0], [0], [0], [0], [0], [-5], [0], [0], [0]]
 """
 
 head_prompt = """
-When in neutral position, the angle is 0.
+You are responsible for moving the head .When in neutral position, the angle is
+0.  Make sure to return to that position after every move.  Do not go beyond -90
+and 90 degrees.
 """
 
 def build_prompt(kind):
@@ -102,16 +84,9 @@ def build_prompt(kind):
     elif kind == PromptType.HEAD:
         return angle_base_promt + head_example + head_prompt
 
-def get_animation_from_emotion(emotion : str):
-    completion = client.chat.completions.create(
-        model=MODEL,
-        messages= [
-            {"role" : "system", "content" : chose_prompt},
-            {"role" : "user", "content" : f"The detected emotion is : {emotion}"}
-        ]
-    ).choices[0].message.content
 
 async def ask_gpt(system, user):
+
     """
     Get a raw string form ChatGPT using SYSTEM and USER as prompt.
     """

@@ -27,7 +27,9 @@ def draw_rotated_rectangle(draw, x1, y1, x2, y2, cx, cy, angle, fill):
     rotated_corners = [rotate_point(x, y, cx, cy, angle) for x, y in corners]
     draw.polygon(rotated_corners, fill=fill)
 
-def draw_rotated_ellipse(draw, x1, y1, r, cx, cy, angle, fill, outline=None):
+
+
+def draw_rotated_ellipse(draw, x1, y1, r, cx, cy, angle, fill, outline = None):
     x2, y2 = rotate_point(x1 + r, y1 + r, cx, cy, angle)
     draw.ellipse([x2 - r, y2 - r, x2 + r, y2 + r], fill=fill, outline=outline)
 
@@ -65,14 +67,16 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
     foot_width, foot_height = body_height * 0.2, body_height * 0.1
     foot_y = body_y + body_height
 
-    arm_width, arm_height = body_height * 0.1, body_height * 0.4
+    arm_width, arm_height = body_height * 0.1, body_height * 0.6
     arm_y = body_y + body_height * 0.2
 
-    draw.rectangle([body_x, body_y, body_x + body_width, body_y + body_height], fill=white, outline=black)
+    draw.rectangle([body_x, body_y, body_x + body_width, body_y + body_height], fill=green)
+    draw.rectangle([body_x + 0.1*body_width, body_y+0.1*body_height, body_x + body_width*0.9, body_y + body_height*0.9], fill=white)
+
 
     head_cx = head_x + head_size // 2
     head_cy = head_y + head_size
-    draw_rotated_ellipse(draw, head_x, head_y, head_size//2, head_cx, head_cy, angle_head, fill=white, outline=black)
+    draw_rotated_ellipse(draw, head_x, head_y, head_size//2, head_cx, head_cy, angle_head, fill=white, outline= green)
 
     eye_left_x = round(head_cx - eye_x_offset)
     eye_left_y = head_cy - 3 * eye_y_offset
@@ -87,14 +91,14 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
     beak_x0, beak_y0 = rotate_point(beak_x, beak_y, head_cx, head_cy, angle_head)
     beak_x1, beak_y1 = rotate_point(beak_x + beak_width, beak_y, head_cx, head_cy, angle_head)
     beak_x2, beak_y2 = rotate_point(beak_x + beak_width // 2, beak_y + beak_height, head_cx, head_cy, angle_head)
-    draw.polygon([(beak_x0, beak_y0), (beak_x1, beak_y1), (beak_x2, beak_y2)], fill=orange)
+    draw.polygon([(beak_x0, beak_y0), (beak_x1, beak_y1), (beak_x2, beak_y2)], fill=yellow)
 
     foot_left_x = body_x
     foot_right_x = body_x + body_width - foot_width
-    draw_rotated_rectangle(draw, foot_left_x, foot_y, foot_left_x + foot_width, foot_y + foot_height, foot_left_x, foot_y, angle_left_foot, fill=orange)
-    draw_rotated_rectangle(draw, foot_right_x, foot_y, foot_right_x + foot_width, foot_y + foot_height, foot_right_x + foot_width, foot_y, angle_right_foot, fill=orange)
+    draw_rotated_rectangle(draw, foot_left_x, foot_y, foot_left_x + foot_width, foot_y + foot_height, foot_left_x, foot_y, angle_left_foot, fill=yellow)
+    draw_rotated_rectangle(draw, foot_right_x, foot_y, foot_right_x + foot_width, foot_y + foot_height, foot_right_x + foot_width, foot_y, angle_right_foot, fill=yellow)
 
-    # draw_rotated_rectangle(draw, foot_left_x1, foot_left_y1, foot_left_x2, foot_left_y2, foot_center_left_x, foot_center_left_y, angle_left_leg, fill=yellow)
+    #draw_rotated_rectangle(draw, foot_left_x1, foot_left_y1, foot_left_x2, foot_left_y2, foot_center_left_x, foot_center_left_y, angle_left_leg, fill=yellow)
 
     # Right foot rotation
     foot_right_x1 = body_x + body_width - foot_width
@@ -103,14 +107,14 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
     foot_right_y2 = foot_right_y1 + foot_height
     foot_center_right_x, foot_center_right_y = (foot_right_x1 + foot_right_x2) / 2, foot_right_y1
 
-    # draw_rotated_rectangle(draw, foot_right_x1, foot_right_y1, foot_right_x2, foot_right_y2, foot_center_right_x, foot_center_right_y, angle_right_leg, fill=yellow)
+    draw_rotated_rectangle(draw, foot_right_x1, foot_right_y1, foot_right_x2, foot_right_y2, foot_center_right_x, foot_center_right_y, angle_right_leg, fill=yellow)
 
     # Left arm
     arm_left_x1 = body_x - arm_width
     arm_left_y1 = arm_y
     arm_left_x2 = arm_left_x1 + arm_width
     arm_left_y2 = arm_y + arm_height
-    arm_center_left_x, arm_center_left_y = (arm_left_x1 + arm_left_x2) / 2, arm_left_y1
+    arm_center_left_x, arm_center_left_y = (arm_left_x1 + arm_left_x2)/2 , arm_left_y1
 
     draw_true_rotated_ellipse(image, arm_left_x1, arm_left_y1, arm_left_x2, arm_left_y2, arm_center_left_x, arm_center_left_y, angle_left_arm, fill=green)
 
