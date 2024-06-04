@@ -161,8 +161,6 @@ def update_pixel_board_canvas(penguin_image):
             pixel_board_draw.rectangle([(pixel_board_scale*i, pixel_board_scale*j),
                                         (pixel_board_scale*(i+1/2), pixel_board_scale*(j+1/2))], fill=pixel)
 
-    print("updating")
-
     tk_pixel_board_image = ImageTk.PhotoImage(pixel_board_image)
     pixel_board_canvas.itemconfig(pixel_board_image_on_canvas, image=tk_pixel_board_image)
     pixel_board_canvas.image = tk_pixel_board_image
