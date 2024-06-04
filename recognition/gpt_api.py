@@ -11,28 +11,6 @@ MODEL = "gpt-3.5-turbo"
 #MODEL = "gpt-4-turbo" # more hazardous results
 #MODEL = "gpt-4o"
 
-chose_prompt="""
-We would like to animate a character according to people's emotions. We have
-five different animations:
-- idle,
-- jump,
-- sleepy,
-- sad,
-- wave.
-
-We also have five particles to add to the animation:
-- sweat drop,
-- heart,
-- spark,
-- zzz sleeping,
-- angry veins.
-
-I will give you the detected emotion, what animation and what particle
-do you advise ? Your response should look like this :
-
-ANIMATION;PARTICLE
-"""
-
 rank_prompt_arms = """
 In python, a character arms are controlled by an array of angle with (0, 0) being their neutral position.
 You will be given 3 arrays and you must choose one that fit the action given by the user the best.
@@ -98,15 +76,6 @@ def build_prompt(kind):
     elif kind == PromptType.HEAD:
         return angle_base_promt + leg_example + leg_prompt
 
-def get_animation_from_emotion(emotion : str):
-    completion = client.chat.completions.create(
-        model=MODEL,
-        messages= [
-            {"role" : "system", "content" : chose_prompt},
-            {"role" : "user", "content" : f"The detected emotion is : {emotion}"}
-        ]
-    ).choices[0].message.content
-
 def ask_gpt(system, user):
     """
     Get a raw string form ChatGPT using SYSTEM and USER as prompt.
@@ -169,7 +138,7 @@ def get_angle_from_prompt(prompt : str):
     for kind in (PromptType.ARM, PromptType.LEG, PromptType.HEAD):
         angles[kind] = []
         for i in range(3):
-            angles[kind] += [interprete_gpt(ask_gpt(build_prompt(kind, f"The requested motion is : {prompt}")))]
+            angles[kind] += [interprete_gpt(ask_gpt(build_prompt(kind), f"The requested motion is : {prompt}"))]
         angles[kind] = angles[kind][rank_angle(kind, prompt, angles[kind])]
 
     return [0,0,0,0,0]*20
