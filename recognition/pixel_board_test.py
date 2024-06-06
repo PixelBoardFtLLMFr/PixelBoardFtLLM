@@ -2,13 +2,14 @@ from time import sleep
 import serial
 import penguin_animation
 from PIL import Image
+import gpt_api
 
 def image_to_serial(image : Image):
     width, height = image.size
     output = ""
     for y in range(height):
         for x in range(width):
-            output += f"{position_to_index(x, y)},{rgb_to_hex(image.getpixel((x, y)))}\n"
+            output += f"{position_to_index(x, y)},{rgb_to_hex(image.getpixel((x, y-1)))}\n"
     return output
 
 def rgb_to_hex(rgb):
@@ -20,7 +21,9 @@ def rgb_to_hex(rgb):
         print(r, g, b)
         raise ValueError("Les valeurs RGB doivent être comprises entre 0 et 255")
 
-def position_to_index(x, y):
+def position_to_index(x, y = None):
+    if y == None:
+        x, y = x
     board_matrix = [[0, 5, 6],
                     [1, 4, 7],
                     [2, 3, 8]]
@@ -61,24 +64,52 @@ def all_colours(ser):
                 print(r, g, b)
                 sleep(0.02)
 
+def get_changed_pixel(old : Image, new : Image):
+    old_data, new_data = list(old.getdata()), list(new.getdata())
+    assert len(old_data) == len(new_data), "Invalid diff"
+    width, _ = old.size
+    res = []
+    for i in range(len(old_data)):
+        if old_data[i] != new_data[i]:
+            res += [{"pos": (i % width, i // width), "color": new_data[i]}]
+    return res
+
+def pixels_to_serial(pixels):
+    output = ""
+    for p in pixels:
+        output += f"{position_to_index(p['pos'])},{rgb_to_hex(p['color'])}\n"
+    return output
+
+def penguin_loop(ser, width, height):
+    angles = [(0, 0, 0, 0, 0)]
+    penguin_size = 12
+    penguin_image = Image.new("RGB", (width, height), "black")
+    penguin_image = penguin_animation.draw_penguin_with_arm(penguin_image, angles[0], penguin_size)
+    send_to_serial(ser, image_to_serial(penguin_image))
+    frame = 0
+    while True:
+        if frame >= len(angles):
+            prompt = input("What should I do next ? ")
+            if prompt == "quit":
+                return
+            angles = gpt_api.get_angle_from_prompt(prompt)
+            frame = 0
+        tmp = penguin_image.copy()
+        penguin_image = Image.new("RGB", (width, height), "black")
+        penguin_image = penguin_animation.draw_penguin_with_arm(penguin_image, angles[frame], penguin_size)
+        diff = get_changed_pixel(tmp, penguin_image)
+        output = pixels_to_serial(diff)
+        send_to_serial(ser, output)
+        sleep(0.1)
+        frame += 1
+
 
 
 ser = serial.Serial("COM3")
 print(ser.name)
 
-angles = [(0, 0, 0, 0, 0)]
-penguin_size = 12
-penguin_height, penguin_width = penguin_size, penguin_size
-
-penguin_image = Image.new("RGB", (12, 15), "white")
-penguin_image = penguin_animation.draw_penguin_with_arm(penguin_image, angles[0][0], angles[0][1], angles[0][2], angles[0][3], angles[0][4])
-
 send_to_serial(ser, clear_serial())
-# send_to_serial(ser, gradiant_serial())
-all_colours(ser)
-#send_to_serial(ser, image_to_serial(penguin_image))
-#print(clear_serial())
-#send_to_serial(ser, f"{position_to_index(8,10)},#ffffff\n")
+penguin_loop(ser, 12, 15)
 
 # def write_color(index, color):
 #     ser.write(f"{index},{color}\n".encode("ascii"))
