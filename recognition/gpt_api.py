@@ -1,3 +1,4 @@
+from time import sleep
 from openai import OpenAI, AsyncOpenAI
 import ast
 import numpy as np
@@ -8,9 +9,9 @@ key = str(key_file.readline().strip())
 
 client = AsyncOpenAI(api_key=key)
 
-MODEL = "gpt-3.5-turbo"
-# MODEL = "gpt-4"
-#MODEL = "gpt-4-turbo" # more hazardous results
+#MODEL = "gpt-3.5-turbo"
+#MODEL = "gpt-4"
+MODEL = "gpt-4-turbo" # more hazardous results
 #MODEL = "gpt-4o"
 
 rank_prompt_arms = """
@@ -79,6 +80,18 @@ and 90 degrees. Head movement are usually very small, often between -10 and 10.
 Do not move if unnecessary for the action.
 """
 
+particle_prompt = """You are a penguin. You will be given by the user an action to do.
+You must choose between a selection of particle the one that fits the best the situation.
+The particle will then appear on you. Return only the particle name, no comment, no punctuation.
+If none of the particle fits with the action, return None.
+The particle you must choose from are : 
+    angry # When angry
+    heart # When happy
+    sleepy # When sleepy
+    spark # When curious, proud, etc
+    sweat # When tired, embarrassed
+"""
+
 def build_prompt(kind):
     if kind == PromptType.ARM:
         return angle_base_promt + arm_example + arm_prompt
@@ -93,6 +106,8 @@ async def ask_gpt(system, user):
     """
     Get a raw string form ChatGPT using SYSTEM and USER as prompt.
     """
+    #print(f"Sending :\n System : {system}\n User : {user}")
+
     response = await client.chat.completions.create(
         model=MODEL,
         messages= [
@@ -162,12 +177,18 @@ async def get_angle_from_prompt_async(prompt : str):
     """
     prompt_count = 1
     angles_tasks = [None]*(prompt_count*PromptType.count)
+    user_prompt = f"The requested motion is : {prompt}"
 
     for kind in PromptType.allTypes:
         for i in range(prompt_count):
-            angles_tasks[kind + i * 3] = ask_gpt(build_prompt(kind), f"The requested motion is : {prompt}")
+            angles_tasks[kind + i * 3] = ask_gpt(build_prompt(kind), user_prompt)
 
-    angles = await asyncio.gather(*angles_tasks)
+    angles_tasks.append(ask_gpt(particle_prompt, user_prompt))
+
+    results = await asyncio.gather(*angles_tasks)
+    angles, particle = results[:-1], results[-1]
+
+    print(particle)
 
     for kind in PromptType.allTypes:
         for i in range(prompt_count):

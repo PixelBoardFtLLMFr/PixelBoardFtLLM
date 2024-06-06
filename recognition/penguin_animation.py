@@ -4,6 +4,18 @@ import math
 import gpt_api
 import ast
 
+particles_images = {}
+
+# def load_particles(particles_folder_path):
+#     image_dict = {}
+#     for filename in os.listdir(folder_path):
+#         if filename.endswith('.png'):
+#             file_path = os.path.join(folder_path, filename)
+#             image_name = os.path.splitext(filename)[0]
+#             image = Image.open(file_path)
+#             image_dict[image_name] = image
+#     return image_dict
+
 def rotate_point(x, y, cx, cy, angle):
     radians = math.radians(angle)
     cos_angle = math.cos(radians)
@@ -125,6 +137,9 @@ def draw_penguin_with_arm(image, angle_left_arm, angle_right_arm, angle_left_foo
 
     return image
 
+def add_particle(image, particle, position):
+    pass
+
 def update_image():
     global frame_index, angles, root
     frame_index += 1
@@ -135,6 +150,7 @@ def update_image():
             root.quit()
             return
         angles = gpt_api.get_angle_from_prompt(prompt)
+        #particle = gpt_api.get_particle_from_prompt(prompt)
         frame_index = 0
 
     angle_left_arm, angle_right_arm, angle_left_foot, angle_right_foot, angle_head = angles[frame_index]
@@ -165,7 +181,7 @@ def update_pixel_board_canvas(penguin_image):
     pixel_board_canvas.itemconfig(pixel_board_image_on_canvas, image=tk_pixel_board_image)
     pixel_board_canvas.image = tk_pixel_board_image
 
-penguin_size = 64
+penguin_size = 29
 penguin_height, penguin_width = penguin_size, penguin_size
 pixel_board_scale = 8
 pixel_board_size = pixel_board_scale * penguin_size
