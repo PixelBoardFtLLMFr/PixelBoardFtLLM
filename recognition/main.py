@@ -17,7 +17,7 @@ arg_parser.add_argument("-v", "--llm-version", action='store', default="gpt-4-tu
                         choices=["3.5-turbo", "4-turbo"], help="ChatGPT version use")
 
 args = arg_parser.parse_args()
-llm.init(args.keyfile, args.llm_version)
+llm = llm.Llm(args.keyfile, args.llm_version)
 
 print("Order 'quit' to exit")
 while True:
