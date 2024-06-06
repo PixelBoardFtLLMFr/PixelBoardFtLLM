@@ -181,41 +181,42 @@ def update_pixel_board_canvas(penguin_image):
     pixel_board_canvas.itemconfig(pixel_board_image_on_canvas, image=tk_pixel_board_image)
     pixel_board_canvas.image = tk_pixel_board_image
 
-penguin_size = 29
+penguin_size = 12
 penguin_height, penguin_width = penguin_size, penguin_size
-pixel_board_scale = 8
-pixel_board_size = pixel_board_scale * penguin_size
+if __name__ == "__main__":
+    pixel_board_scale = 8
+    pixel_board_size = pixel_board_scale * penguin_size
 
-angles = [
-    (0, 0, 0, 0, 0)
-]
+    angles = [
+        (0, 0, 0, 0, 0)
+    ]
 
-frame_index = 0
+    frame_index = 0
 
-# Create the tkinter window
-root = tk.Tk()
-penguin_canvas = tk.Canvas(root, width=penguin_width, height=penguin_height)
-penguin_canvas.pack(side='left')
+    # Create the tkinter window
+    root = tk.Tk()
+    penguin_canvas = tk.Canvas(root, width=penguin_width, height=penguin_height)
+    penguin_canvas.pack(side='left')
 
-pixel_board_canvas = tk.Canvas(root, width=pixel_board_size, height=pixel_board_size)
-pixel_board_canvas.pack(side='right')
+    pixel_board_canvas = tk.Canvas(root, width=pixel_board_size, height=pixel_board_size)
+    pixel_board_canvas.pack(side='right')
 
-# Initialize the images
-penguin_image = Image.new("RGB", (penguin_width, penguin_height), "white")
-penguin_image = draw_penguin_with_arm(penguin_image, angles[0][0], angles[0][1], angles[0][2], angles[0][3], angles[0][4])
+    # Initialize the images
+    penguin_image = Image.new("RGB", (penguin_width, penguin_height), "white")
+    penguin_image = draw_penguin_with_arm(penguin_image, angles[0][0], angles[0][1], angles[0][2], angles[0][3], angles[0][4])
 
-tk_penguin_image = ImageTk.PhotoImage(penguin_image)
-penguin_image_on_canvas = penguin_canvas.create_image(0, 0, anchor=tk.NW, image=tk_penguin_image)
-penguin_canvas.image = tk_penguin_image
+    tk_penguin_image = ImageTk.PhotoImage(penguin_image)
+    penguin_image_on_canvas = penguin_canvas.create_image(0, 0, anchor=tk.NW, image=tk_penguin_image)
+    penguin_canvas.image = tk_penguin_image
 
-pixel_board_image = Image.new("RGB", (pixel_board_size, pixel_board_size), "white")
-tk_pixel_board_image = ImageTk.PhotoImage(pixel_board_image)
-pixel_board_image_on_canvas = pixel_board_canvas.create_image(0, 0, anchor=tk.NW, image=tk_pixel_board_image)
-pixel_board_canvas.image = tk_pixel_board_image
-update_pixel_board_canvas(penguin_image)
+    pixel_board_image = Image.new("RGB", (pixel_board_size, pixel_board_size), "white")
+    tk_pixel_board_image = ImageTk.PhotoImage(pixel_board_image)
+    pixel_board_image_on_canvas = pixel_board_canvas.create_image(0, 0, anchor=tk.NW, image=tk_pixel_board_image)
+    pixel_board_canvas.image = tk_pixel_board_image
+    update_pixel_board_canvas(penguin_image)
 
-# Start the animation
-root.after(50, update_image)
+    # Start the animation
+    root.after(50, update_image)
 
-# Launch the main tkinter loop
-root.mainloop()
+    # Launch the main tkinter loop
+    root.mainloop()
