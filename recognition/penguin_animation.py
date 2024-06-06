@@ -181,7 +181,7 @@ def update_pixel_board_canvas(penguin_image):
     pixel_board_canvas.itemconfig(pixel_board_image_on_canvas, image=tk_pixel_board_image)
     pixel_board_canvas.image = tk_pixel_board_image
 
-penguin_size = 12
+penguin_size = 25
 penguin_height, penguin_width = penguin_size, penguin_size
 if __name__ == "__main__":
     pixel_board_scale = 8
