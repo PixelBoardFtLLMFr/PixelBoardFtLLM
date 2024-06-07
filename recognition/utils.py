@@ -1,9 +1,9 @@
-__debug = False
+_debug = False
 
-def utils_init(debug):
-    global __debug
-    __debug = debug
+def init(debug):
+    global _debug
+    _debug = debug
 
 def debug(*args):
-    if __debug:
+    if _debug:
         print(*args)

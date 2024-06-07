@@ -1,6 +1,7 @@
 import argparse
 import llm
 import numpy as np
+import utils
 
 def array_setlength(array, newlen):
     """
@@ -63,8 +64,7 @@ def llm_get_information(myllm, user_input):
 
 
 
-# Mainloop
-
+# Data
 ppp_desc = "Pixel Penguin Project a.k.a. PPP"
 prompt_str = "What should I do ? "
 
@@ -80,12 +80,16 @@ arg_parser.add_argument("-p", "--port", action='store', default="/dev/ttyACM0",
 arg_parser.add_argument("-v", "--llm-version", action='store', default="4-turbo",
                         choices=["3.5-turbo", "4-turbo"], help="ChatGPT version use")
 
+# Initializations
 args = arg_parser.parse_args()
+utils.init(args.debug)
 myllm = llm.Llm(args.keyfile, args.llm_version)
-information = llm_get_information(myllm, "Say hi")
-print(information["ANGLES"])
-exit(0)
 
+information = llm_get_information(myllm, "Say hi")
+utils.debug(information["ANGLES"])
+exit(0) # Temporary
+
+# Mainloop
 print("Order 'quit' to exit")
 while True:
     order = input()
@@ -93,6 +97,6 @@ while True:
     if order == "quit":
         exit(0)
 
-    # TODO: get angles from LLM using user input as prompt
+    llm_data = llm_get_information(myllm, order)
     # TODO: draw penguin on simulation
     # TODO: draw penguin on pixel board
