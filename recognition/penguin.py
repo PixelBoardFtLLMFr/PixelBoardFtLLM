@@ -52,7 +52,7 @@ def _draw_true_rotated_ellipse(image, x1, y1, x2, y2, cx, cy, angle, fill):
 class Penguin:
     def __init__(self, size):
         self.set_size(size)
-        self.image = PIL.Image.new("RGB", (self.size, self.size), "white")
+        self.image = PIL.Image.new("RGB", (self.size, self.size), "black")
         self.draw = PIL.ImageDraw.Draw(self.image)
 
         self.angle_right_arm  = None
@@ -66,19 +66,19 @@ class Penguin:
 
         self.body_width   = int(self.size * 0.4)
         self.body_height  = int(self.size * 0.6)
-        self.head_size    = int(self.size * 0.4)
+        self.head_size    = int(self.size * 0.3)
         self.eye_size     = int(self.size * 0.05)
         self.eye_x_offset = int(self.size * 0.1)
         self.eye_y_offset = int(self.size * 0.1)
         self.beak_size    = int(self.size * 0.05)
-        self.foot_width   = int(self.size * 0.2)
+        self.foot_width   = int(self.size * 0.15)
         self.foot_height  = int(self.size * 0.1)
         self.arm_width    = int(self.size * 0.1)
         self.arm_height   = int(self.size * 0.06)
 
         self.body_x = (self.size - self.body_width)  // 2
-        self.body_y = (self.size - self.body_height) // 2
-        self.head_x = self.body_x + (self.body_width - self.head_size) // 2
+        self.body_y = (self.size // 2) - (self.body_height // 3)
+        self.head_x = self.body_x + (self.body_width - self.head_size) // 2 + 1
         self.head_y = self.body_y - self.head_size
         self.foot_y = self.body_y + self.body_height
         self.arm_y  = self.body_y
@@ -140,10 +140,10 @@ class Penguin:
 
         self.draw.line([eye_left_x1, eye_left_y1,
                         eye_left_x2, eye_left_y2],
-                       fill=black)
+                       fill=yellow)
         self.draw.line([eye_right_x1, eye_right_y1,
                         eye_right_x2, eye_right_y2],
-                       fill=black)
+                       fill=yellow)
 
         beak_x1, beak_y1 = self._rotate_head_point(self.beak_x1, self.beak_y1)
         beak_x2, beak_y2 = self._rotate_head_point(self.beak_x2, self.beak_y2)
@@ -224,12 +224,12 @@ class Penguin:
 
     def get_pixels(self):
         """
-        Return the pixel matrix of the drawn penguin as a Numpy array. Each
+        Return the pixel matrix of the drawn penguin as an array of arrays. Each
         pixel is a tuple of integers (R, G, B).
         """
-        return np.array([[self.image.getpixel((i, j))
-                          for j in range(self.size)]
-                         for i in range(self.size)])
+        return [[self.image.getpixel((i, j))
+                 for j in range(self.size)]
+                for i in range(self.size)]
 
     def do_draw(self,
                 angle_right_arm, angle_left_arm,

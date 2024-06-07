@@ -7,13 +7,13 @@ def init(debug):
     global _debug
     _debug = debug
 
-def debug(*args):
+def debug(*args, end="\n"):
     """
     Print ARGS, forwarding all of them to the 'print' function, but only if
     debug is enabled.
     """
     if _debug:
-        print(*args)
+        print(*args, end=end)
 
 def tuple_to_hex(pixel):
     """

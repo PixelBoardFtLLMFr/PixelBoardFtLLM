@@ -3,10 +3,12 @@ import argparse
 import numpy as np
 import tkinter as tk
 import time
+import PIL.ImageTk
 # Our Modules
 import llm
 import utils
 import penguin
+import pixelboardsimulator as pbs
 
 def array_setlength(array, newlen):
     """
@@ -67,11 +69,18 @@ def llm_get_information(myllm, user_input):
     # RES is a dictionary containing all the results
     return res
 
+def draw_all(canvas, penguin, simulator, angles):
+    pixels = penguin.do_draw(*angles)
+    simulator_img = simulator.do_draw(pixels)
+    simulator_tk_img = PIL.ImageTk.PhotoImage(simulator_img)
+    canvas.create_image(0, 0, anchor=tk.NW, image=simulator_tk_img)
+    canvas.image = simulator_tk_img
+
 def process_input(*args):
     """
     Process the user input. If an animation is currently running, do nothing.
     """
-    global user_input, animating, myllm, mypenguin, dt
+    global user_input, canvas, animating, myllm, mypenguin, simulator, dt
     text = user_input.get()
     user_input.set("Animating ...")
 
@@ -90,11 +99,11 @@ def process_input(*args):
                 + f"animation will last {frame_count*dt} s")
 
     for i in range(frame_count):
-        mypenguin.do_draw(*angles[i])
-        pixels = mypenguin.get_pixels()
-
+        utils.debug(f"\rFrame {i+1}/{frame_count}", end="")
+        draw_all(canvas, mypenguin, simulator, angles[i])
         time.sleep(dt)
 
+    utils.debug()
     animating = False
     user_input.set(prompt_str)
 
@@ -124,15 +133,9 @@ args = arg_parser.parse_args()
 utils.init(args.debug)
 myllm = llm.Llm(args.keyfile, args.llm_version)
 mypenguin = penguin.Penguin(args.penguin_size)
-pixels = mypenguin.do_draw(0, 0, 0, 0, 0)
 animating = False
 dt = 1/args.framerate # number of seconds to sleep between frames
-# utils.debug(pixels)
-# exit(0) # Temporary
-
-# information = llm_get_information(myllm, "Say hi")
-# utils.debug(information["ANGLES"])
-# exit(0) # Temporary
+simulator = pbs.PixelBoardSimulator(args.scale)
 
 app = tk.Tk(baseName="PPP")
 
@@ -143,7 +146,6 @@ image = tk.PhotoImage(width=canvas_size, height=canvas_size)
 canvas.create_image((canvas_size//2, canvas_size//2), image=image, state="normal")
 
 user_input = tk.StringVar(app, value=prompt_str)
-# user_input.trace('w', process_input)
 user_entry = tk.Entry(app, textvariable=user_input)
 user_entry.grid(column=1, row=0, sticky='S')
 
@@ -152,5 +154,7 @@ submit_button.grid(column=1, row=1, sticky='N')
 
 quit_button = tk.Button(app, text="Quit", command=app.destroy)
 quit_button.grid(column=1, row=2, sticky='SE')
+
+draw_all(canvas, mypenguin, simulator, [0, 0, 0, 0, 0])
 
 app.mainloop()
