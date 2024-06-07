@@ -1,5 +1,7 @@
 import asyncio
 from openai import AsyncOpenAI
+import ast
+import numpy as np
 
 class PromptType:
     """
@@ -111,25 +113,12 @@ def interprete_as_nparray(code_as_str):
 
     try:
         res = np.array(ast.literal_eval(code_as_str))
-    except:
+    except SyntaxError:
         print(f"interprete_as_nparray: invalid syntax '{code_as_str}'")
+    except Error as e:
+        print(f"interprete_as_nparray: error while parsing '{code_as_str}'; {e}")
 
     return res
-
-def array_setlength(array, newlen):
-    """
-    Set Numpy array ARRAY to length NEWLEN, either by truncating it if it is too
-    long, or by repeating the last element if it is too short.
-    """
-    currlen = np.shape(array)[0]
-
-    if currlen >= newlen:
-        return np.resize(array, (newlen, np.shape(array)[1]))
-    else:
-        res = np.copy(array)
-        for i in range(newlen - currlen):
-            res = np.append(res, np.array([array[currlen-1]]), axis=0)
-        return res
 
 class Llm:
     def __init__(self, keyfile, version):
