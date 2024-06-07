@@ -1,6 +1,7 @@
 # External Libraries
 import argparse
 import numpy as np
+import tkinter as tk
 # Our Modules
 import llm
 import utils
@@ -65,7 +66,8 @@ def llm_get_information(myllm, user_input):
     # RES is a dictionary containing all the results
     return res
 
-
+def process_input(user_input):
+    pass
 
 # Data
 ppp_desc = "Pixel Penguin Project a.k.a. PPP"
@@ -82,29 +84,32 @@ arg_parser.add_argument("-p", "--port", action='store', default="/dev/ttyACM0",
                         help="pixel board port, defaults to /dev/ttyACM0")
 arg_parser.add_argument("-v", "--llm-version", action='store', default="4-turbo",
                         choices=["3.5-turbo", "4-turbo"], help="ChatGPT version use")
+arg_parser.add_argument("-x", "--scale", action='store', default=32,
+                        type=int, help="scale of pixel board, "
+                        + "has to be a mutiple of 5, defaults to 30")
 
 # Initializations
 args = arg_parser.parse_args()
 utils.init(args.debug)
 myllm = llm.Llm(args.keyfile, args.llm_version)
 mypenguin = penguin.Penguin(args.penguin_size)
-
 pixels = mypenguin.do_draw(0, 0, 0, 0, 0)
-utils.debug(pixels)
-exit(0) # Temporary
+# utils.debug(pixels)
+# exit(0) # Temporary
 
-information = llm_get_information(myllm, "Say hi")
-utils.debug(information["ANGLES"])
-exit(0) # Temporary
+# information = llm_get_information(myllm, "Say hi")
+# utils.debug(information["ANGLES"])
+# exit(0) # Temporary
 
-# Mainloop
-print("Order 'quit' to exit")
-while True:
-    order = input()
+app = tk.Tk(baseName="PPP")
+tk.Button(app, text="Quit", command=app.destroy).pack(side='bottom')
+canvas_size = args.scale*args.penguin_size
+canvas = tk.Canvas(app,
+                   width=canvas_size,
+                   height=canvas_size,
+                   bg="#000000")
+canvas.pack(side='top')
+image = tk.PhotoImage(width=canvas_size, height=canvas_size)
+canvas.create_image((canvas_size//2, canvas_size//2), image=image, state="normal")
 
-    if order == "quit":
-        exit(0)
-
-    llm_data = llm_get_information(myllm, order)
-    # TODO: draw penguin on simulation
-    # TODO: draw penguin on pixel board
+app.mainloop()
