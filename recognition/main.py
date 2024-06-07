@@ -2,6 +2,7 @@
 import argparse
 import numpy as np
 import tkinter as tk
+import time
 # Our Modules
 import llm
 import utils
@@ -66,10 +67,39 @@ def llm_get_information(myllm, user_input):
     # RES is a dictionary containing all the results
     return res
 
-def process_input(user_input):
-    pass
+def process_input(*args):
+    """
+    Process the user input. If an animation is currently running, do nothing.
+    """
+    global user_input, animating, myllm, mypenguin, dt
+    text = user_input.get()
+    user_input.set("Animating ...")
 
-# Data
+    if animating:
+        return
+
+    animating = True
+    utils.debug(text)
+
+    llm_data = llm_get_information(myllm, text)
+
+    # Angles
+    angles = llm_data["ANGLES"]
+    frame_count = len(angles)
+    utils.debug(f"LLM generated {frame_count} frames, "
+                + f"animation will last {frame_count*dt} s")
+
+    for i in range(frame_count):
+        mypenguin.do_draw(*angles[i])
+        pixels = mypenguin.get_pixels()
+
+        time.sleep(dt)
+
+    animating = False
+    user_input.set(prompt_str)
+
+
+
 ppp_desc = "Pixel Penguin Project a.k.a. PPP"
 prompt_str = "What should I do ? "
 
@@ -87,13 +117,16 @@ arg_parser.add_argument("-v", "--llm-version", action='store', default="4-turbo"
 arg_parser.add_argument("-x", "--scale", action='store', default=32,
                         type=int, help="scale of pixel board, "
                         + "has to be a mutiple of 5, defaults to 30")
+arg_parser.add_argument("-f", "--framerate", action='store', default=1,
+                        type=int, help="frames per second, defaults to 1")
 
-# Initializations
 args = arg_parser.parse_args()
 utils.init(args.debug)
 myllm = llm.Llm(args.keyfile, args.llm_version)
 mypenguin = penguin.Penguin(args.penguin_size)
 pixels = mypenguin.do_draw(0, 0, 0, 0, 0)
+animating = False
+dt = 1/args.framerate # number of seconds to sleep between frames
 # utils.debug(pixels)
 # exit(0) # Temporary
 
@@ -102,14 +135,22 @@ pixels = mypenguin.do_draw(0, 0, 0, 0, 0)
 # exit(0) # Temporary
 
 app = tk.Tk(baseName="PPP")
-tk.Button(app, text="Quit", command=app.destroy).pack(side='bottom')
+
 canvas_size = args.scale*args.penguin_size
-canvas = tk.Canvas(app,
-                   width=canvas_size,
-                   height=canvas_size,
-                   bg="#000000")
-canvas.pack(side='top')
+canvas = tk.Canvas(app, width=canvas_size, height=canvas_size, bg="#000000")
+canvas.grid(column=0, row=0, rowspan=3)
 image = tk.PhotoImage(width=canvas_size, height=canvas_size)
 canvas.create_image((canvas_size//2, canvas_size//2), image=image, state="normal")
+
+user_input = tk.StringVar(app, value=prompt_str)
+# user_input.trace('w', process_input)
+user_entry = tk.Entry(app, textvariable=user_input)
+user_entry.grid(column=1, row=0, sticky='S')
+
+submit_button = tk.Button(app, text="Submit", command=process_input)
+submit_button.grid(column=1, row=1, sticky='N')
+
+quit_button = tk.Button(app, text="Quit", command=app.destroy)
+quit_button.grid(column=1, row=2, sticky='SE')
 
 app.mainloop()
