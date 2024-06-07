@@ -1,7 +1,10 @@
+# External Libraries
 import argparse
-import llm
 import numpy as np
+# Our Modules
+import llm
 import utils
+import penguin
 
 def array_setlength(array, newlen):
     """
@@ -84,6 +87,11 @@ arg_parser.add_argument("-v", "--llm-version", action='store', default="4-turbo"
 args = arg_parser.parse_args()
 utils.init(args.debug)
 myllm = llm.Llm(args.keyfile, args.llm_version)
+mypenguin = penguin.Penguin(args.penguin_size)
+
+pixels = mypenguin.do_draw(0, 0, 0, 0, 0)
+utils.debug(pixels)
+exit(0) # Temporary
 
 information = llm_get_information(myllm, "Say hi")
 utils.debug(information["ANGLES"])
