@@ -131,6 +131,8 @@ class Llm:
         for i in range(len(responses)):
             results[self.prompts[i][2]] = responses[i].choices[0].message.content
 
+        self.prompts = []
+
         return results
 
     def execute_prompts(self):
@@ -141,9 +143,13 @@ class Llm:
         return asyncio.run(self._execute_prompts_async())
 
     def test(self):
-        self.push_prompt("", "This is a test prompt, are you alive ?", 0)
-        self.push_prompt("You are extremeley polite.", "Hi, what's up ?", 1)
+        prompt0 = "This is a test prompt, are you alive ?"
+        self.push_prompt("", prompt0, 0)
+        prompt1 = "Hi, what's up ?"
+        self.push_prompt("You are extremeley polite.", prompt1, 1)
         responses = self.execute_prompts()
-        print(responses[0])
+        print(prompt0)
+        print("> ", responses[0])
         print()
-        print(responses[1])
+        print(prompt1)
+        print("> ", responses[1])
