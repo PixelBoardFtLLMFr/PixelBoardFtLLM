@@ -2,19 +2,19 @@ import tkinter as tk
 from PIL import Image, ImageTk, ImageDraw
 import math
 import gpt_api
-import ast
+import os
 
-particles_images = {}
+particles = None
 
-# def load_particles(particles_folder_path):
-#     image_dict = {}
-#     for filename in os.listdir(folder_path):
-#         if filename.endswith('.png'):
-#             file_path = os.path.join(folder_path, filename)
-#             image_name = os.path.splitext(filename)[0]
-#             image = Image.open(file_path)
-#             image_dict[image_name] = image
-#     return image_dict
+def load_particles(particles_folder_path):
+    image_dict = {}
+    for filename in os.listdir(particles_folder_path):
+        if filename.endswith('.png'):
+            file_path = os.path.join(particles_folder_path, filename)
+            image_name = os.path.splitext(filename)[0]
+            image = Image.open(file_path)
+            image_dict[image_name] = image
+    return image_dict
 
 def rotate_point(x, y, cx, cy, angle):
     radians = math.radians(angle)
@@ -61,12 +61,12 @@ def draw_penguin_with_arm(image, angles, size):
     penguin_height, penguin_width = size, size
 
     black = (0, 0, 0)
-    white = (255, 255, 255)
+    white = (200, 200, 200)
     orange = (255, 165, 0)
     blue = (0,0,255)
 
     #Oscar colors
-    green = (169,218,195)
+    green = (169-100,218,195-100)
     yellow = (250,222,12)
 
     body_width, body_height = penguin_width * 0.4, penguin_height * 0.6
@@ -140,8 +140,16 @@ def draw_penguin_with_arm(image, angles, size):
 
     return image
 
-def add_particle(image, particle, position):
-    pass
+def add_particle(image : Image, particle, position):
+    scale = 1
+    global particles
+    if particles == None:
+        particles = load_particles("particles")
+    if particle not in particles:
+        return image
+    particle_im = particles[particle].copy()
+    image.paste(particle_im, position, particle_im)
+    return image
 
 def update_image():
     global frame_index, angles, root
@@ -184,7 +192,7 @@ def update_pixel_board_canvas(penguin_image):
     pixel_board_canvas.image = tk_pixel_board_image
 
 if __name__ == "__main__":
-    penguin_size = 12
+    penguin_size = 9
     penguin_height, penguin_width = penguin_size, penguin_size
     pixel_board_scale = 8
     pixel_board_size = pixel_board_scale * penguin_size
@@ -205,7 +213,7 @@ if __name__ == "__main__":
 
     # Initialize the images
     penguin_image = Image.new("RGB", (penguin_width, penguin_height), "white")
-    penguin_image = draw_penguin_with_arm(penguin_image, angles[0][0], angles[0][1], angles[0][2], angles[0][3], angles[0][4])
+    penguin_image = draw_penguin_with_arm(penguin_image, angles[0], penguin_size)
 
     tk_penguin_image = ImageTk.PhotoImage(penguin_image)
     penguin_image_on_canvas = penguin_canvas.create_image(0, 0, anchor=tk.NW, image=tk_penguin_image)

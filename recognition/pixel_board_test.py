@@ -87,29 +87,35 @@ def penguin_loop(ser, width, height):
     penguin_image = penguin_animation.draw_penguin_with_arm(penguin_image, angles[0], penguin_size)
     send_to_serial(ser, image_to_serial(penguin_image))
     frame = 0
+    particle = "None"
     while True:
         if frame >= len(angles):
             prompt = input("What should I do next ? ")
             if prompt == "quit":
                 return
-            angles = gpt_api.get_angle_from_prompt(prompt)
+            angles = gpt_api.get_angle_from_prompt(prompt, True)
+            print(angles)
+            print(particle)
             frame = 0
         tmp = penguin_image.copy()
         penguin_image = Image.new("RGB", (width, height), "black")
         penguin_image = penguin_animation.draw_penguin_with_arm(penguin_image, angles[frame], penguin_size)
+        penguin_image = penguin_animation.add_particle(penguin_image, particle, (0,0))
         diff = get_changed_pixel(tmp, penguin_image)
         output = pixels_to_serial(diff)
         send_to_serial(ser, output)
-        sleep(0.1)
+        sleep(0.2)
         frame += 1
 
 
 
 ser = serial.Serial("COM3")
-print(ser.name)
 
-send_to_serial(ser, clear_serial())
-penguin_loop(ser, 12, 15)
+if __name__ == "__main__":
+    send_to_serial(ser, clear_serial())
+    penguin_loop(ser, 12, 15)
+    send_to_serial(ser, clear_serial())
+
 
 # def write_color(index, color):
 #     ser.write(f"{index},{color}\n".encode("ascii"))
