@@ -77,20 +77,21 @@ def draw_all(canvas, penguin, simulator, angles):
     canvas.image = simulator_tk_img
 
 def draw_next_frame(canvas, penguin, simulator, llm_data, index):
+    global animating
     angles = llm_data["ANGLES"]
     frame_count = len(angles)
 
     if index == frame_count:
+        # Animation done
         utils.debug()
         animating = False
         user_input.set(prompt_str)
         return
 
+
     if index == 0:
         # First frame
         ## Angles
-        utils.debug("LLM-generated angles :")
-        utils.debug(angles)
         utils.debug(f"LLM generated {frame_count} frames, "
                     + f"animation will last {frame_count*dt} s")
 

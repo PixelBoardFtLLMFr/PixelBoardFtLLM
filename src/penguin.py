@@ -120,9 +120,6 @@ class Penguin:
         return _rotate_point(x, y, self.head_cx, self.head_cy, self.head_angle)
 
     def _draw_head(self, angle):
-        if self.angle_head == angle:
-            return
-        
         self.head_angle = angle
         _draw_rotated_circle(self.draw,
                              self.head_x, self.head_y,
@@ -155,72 +152,68 @@ class Penguin:
                           fill=yellow)
 
     def _draw_arms(self, angle_right, angle_left):
-        if angle_left != self.angle_left_arm:
-            self.angle_left_arm = angle_left
+        self.angle_left_arm = angle_left
 
-            arm_left_x1 = self.body_x - self.arm_width
-            arm_left_y1 = self.arm_y
-            arm_left_x2 = arm_left_x1 + self.arm_width
-            arm_left_y2 = arm_left_y1 + self.arm_height
+        arm_left_x1 = self.body_x - self.arm_width
+        arm_left_y1 = self.arm_y
+        arm_left_x2 = arm_left_x1 + self.arm_width
+        arm_left_y2 = arm_left_y1 + self.arm_height
 
-            arm_center_left_x = (arm_left_x1 + arm_left_x2) // 2
-            arm_center_left_y = arm_left_y1
+        arm_center_left_x = (arm_left_x1 + arm_left_x2) // 2
+        arm_center_left_y = arm_left_y1
 
-            _draw_true_rotated_ellipse(self.image,
-                                       arm_left_x1, arm_left_y1,
-                                       arm_left_x2, arm_left_y2,
-                                       arm_center_left_x, arm_center_left_y,
-                                       self.angle_left_arm,
-                                       fill=green)
+        _draw_true_rotated_ellipse(self.image,
+                                   arm_left_x1, arm_left_y1,
+                                   arm_left_x2, arm_left_y2,
+                                   arm_center_left_x, arm_center_left_y,
+                                   self.angle_left_arm,
+                                   fill=green)
 
-        if angle_right != self.angle_right_arm:
-            self.angle_right_arm = angle_right
+        self.angle_right_arm = angle_right
 
-            arm_right_x1 = self.body_x + self.body_width
-            arm_right_y1 = self.arm_y
-            arm_right_x2 = arm_right_x1 + self.arm_width
-            arm_right_y2 = arm_right_y1 + self.arm_height
+        arm_right_x1 = self.body_x + self.body_width
+        arm_right_y1 = self.arm_y
+        arm_right_x2 = arm_right_x1 + self.arm_width
+        arm_right_y2 = arm_right_y1 + self.arm_height
 
-            arm_center_right_x = (arm_right_x1 + arm_right_x2) // 2
-            arm_center_right_y = arm_right_y1
+        arm_center_right_x = (arm_right_x1 + arm_right_x2) // 2
+        arm_center_right_y = arm_right_y1
 
-            _draw_true_rotated_ellipse(self.image,
-                                       arm_right_x1, arm_right_y1,
-                                       arm_right_x2, arm_right_y2,
-                                       arm_center_right_x, arm_center_right_y,
-                                       self.angle_right_arm,
-                                       fill=green)
+        _draw_true_rotated_ellipse(self.image,
+                                   arm_right_x1, arm_right_y1,
+                                   arm_right_x2, arm_right_y2,
+                                   arm_center_right_x, arm_center_right_y,
+                                   self.angle_right_arm,
+                                   fill=green)
 
     def _draw_feet(self, angle_right, angle_left):
-        if angle_left != self.angle_left_foot:
-            self.angle_left_foot = angle_left
+        self.angle_left_foot = angle_left
 
-            foot_left_x1 = self.body_x
-            foot_left_y1 = self.foot_y
-            foot_left_x2 = foot_left_x1 + self.foot_width
-            foot_left_y2 = foot_left_y1 + self.foot_height
+        foot_left_x1 = self.body_x
+        foot_left_y1 = self.foot_y
+        foot_left_x2 = foot_left_x1 + self.foot_width
+        foot_left_y2 = foot_left_y1 + self.foot_height
 
-            _draw_rotated_rectangle(self.draw,
-                                    foot_left_x1, foot_left_y1,
-                                    foot_left_x2, foot_left_y2,
-                                    foot_left_x1, foot_left_y1,
-                                    self.angle_left_foot,
-                                    fill=yellow)
+        _draw_rotated_rectangle(self.draw,
+                                foot_left_x1, foot_left_y1,
+                                foot_left_x2, foot_left_y2,
+                                foot_left_x1, foot_left_y1,
+                                self.angle_left_foot,
+                                fill=yellow)
 
-        if angle_right != self.angle_right_foot:
-            self.angle_right_foot = angle_right
+        self.angle_right_foot = angle_right
 
-            foot_right_x1 = self.body_x + self.body_width - self.foot_width
-            foot_right_y1 = self.foot_y
-            foot_right_x2 = foot_right_x1 + self.foot_width
-            foot_right_y2 = foot_right_y1 + self.foot_height
+        foot_right_x1 = self.body_x + self.body_width - self.foot_width
+        foot_right_y1 = self.foot_y
+        foot_right_x2 = foot_right_x1 + self.foot_width
+        foot_right_y2 = foot_right_y1 + self.foot_height
 
-            _draw_rotated_rectangle(self.draw,
-                                    foot_right_x1, foot_right_y1,
-                                    foot_right_x2, foot_right_y2,
-                                    foot_right_x1 + self.foot_width, foot_right_y1,
-                                    self.angle_right_foot,
-                                    fill=yellow)
+        _draw_rotated_rectangle(self.draw,
+                                foot_right_x1, foot_right_y1,
+                                foot_right_x2, foot_right_y2,
+                                foot_right_x1 + self.foot_width, foot_right_y1,
+                                self.angle_right_foot,
+                                fill=yellow)
 
     def get_pixels(self):
         """
