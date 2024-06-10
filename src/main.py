@@ -158,9 +158,6 @@ app = tk.Tk(baseName="PPP")
 canvas_size = args.scale*args.penguin_size
 canvas = tk.Canvas(app, width=canvas_size, height=canvas_size, bg="#000000")
 canvas.grid(column=0, row=0, rowspan=3)
-# image = tk.PhotoImage(width=canvas_size, height=canvas_size)
-# image = canvas.create_image(0, 0, anchor=tk.NW, image=simulator_tk_img)
-# canvas.create_image((canvas_size//2, canvas_size//2), image=image, state="normal")
 
 user_input = tk.StringVar(app, value=prompt_str)
 user_entry = tk.Entry(app, textvariable=user_input)
