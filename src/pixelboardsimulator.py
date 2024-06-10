@@ -17,6 +17,13 @@ class PixelBoardSimulator:
     def get_image(self):
         return self.image
 
+    def _reset_image(self):
+        self.draw.rectangle([0,
+                             0,
+                             self.drawing_size*self.scale - 1,
+                             self.drawing_size*self.scale - 1],
+                            fill=(0, 0, 0))
+
     def do_draw(self, pixels):
         drawing_size = len(pixels)
 
@@ -27,6 +34,8 @@ class PixelBoardSimulator:
                                         self.scale*self.drawing_size),
                                        "black")
             self.draw = PIL.ImageDraw.Draw(self.image)
+
+        self._reset_image()
 
         for i in range(drawing_size):
             for j in range(drawing_size):

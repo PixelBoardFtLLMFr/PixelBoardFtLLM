@@ -76,6 +76,34 @@ def draw_all(canvas, penguin, simulator, angles):
     canvas.create_image(0, 0, anchor=tk.NW, image=simulator_tk_img)
     canvas.image = simulator_tk_img
 
+def draw_next_frame(canvas, penguin, simulator, llm_data, index):
+    angles = llm_data["ANGLES"]
+    frame_count = len(angles)
+
+    if index == frame_count:
+        utils.debug()
+        animating = False
+        user_input.set(prompt_str)
+        return
+
+    if index == 0:
+        # First frame
+        ## Angles
+        utils.debug("LLM-generated angles :")
+        utils.debug(angles)
+        utils.debug(f"LLM generated {frame_count} frames, "
+                    + f"animation will last {frame_count*dt} s")
+
+
+    # Other frames
+    ## Angles
+    utils.debug(f"\rFrame {index+1}/{frame_count}", end="")
+    draw_all(canvas, mypenguin, simulator, angles[index])
+    canvas.after(int(dt*1000),
+                 lambda:
+                 draw_next_frame(canvas, penguin, simulator, llm_data, index+1))
+
+
 def process_input(*args):
     """
     Process the user input. If an animation is currently running, do nothing.
@@ -92,20 +120,7 @@ def process_input(*args):
 
     llm_data = llm_get_information(myllm, text)
 
-    # Angles
-    angles = llm_data["ANGLES"]
-    frame_count = len(angles)
-    utils.debug(f"LLM generated {frame_count} frames, "
-                + f"animation will last {frame_count*dt} s")
-
-    for i in range(frame_count):
-        utils.debug(f"\rFrame {i+1}/{frame_count}", end="")
-        draw_all(canvas, mypenguin, simulator, angles[i])
-        time.sleep(dt)
-
-    utils.debug()
-    animating = False
-    user_input.set(prompt_str)
+    draw_next_frame(canvas, mypenguin, simulator, llm_data, 0)
 
 
 
@@ -122,7 +137,7 @@ arg_parser.add_argument("-s", "--penguin-size", action='store', default=25,
 arg_parser.add_argument("-p", "--port", action='store', default="/dev/ttyACM0",
                         help="pixel board port, defaults to /dev/ttyACM0")
 arg_parser.add_argument("-v", "--llm-version", action='store', default="4-turbo",
-                        choices=["3.5-turbo", "4-turbo"], help="ChatGPT version use")
+                        choices=["3.5-turbo", "4-turbo"], help="ChatGPT version to use")
 arg_parser.add_argument("-x", "--scale", action='store', default=32,
                         type=int, help="scale of pixel board, "
                         + "has to be a mutiple of 5, defaults to 30")
@@ -142,8 +157,9 @@ app = tk.Tk(baseName="PPP")
 canvas_size = args.scale*args.penguin_size
 canvas = tk.Canvas(app, width=canvas_size, height=canvas_size, bg="#000000")
 canvas.grid(column=0, row=0, rowspan=3)
-image = tk.PhotoImage(width=canvas_size, height=canvas_size)
-canvas.create_image((canvas_size//2, canvas_size//2), image=image, state="normal")
+# image = tk.PhotoImage(width=canvas_size, height=canvas_size)
+# image = canvas.create_image(0, 0, anchor=tk.NW, image=simulator_tk_img)
+# canvas.create_image((canvas_size//2, canvas_size//2), image=image, state="normal")
 
 user_input = tk.StringVar(app, value=prompt_str)
 user_entry = tk.Entry(app, textvariable=user_input)

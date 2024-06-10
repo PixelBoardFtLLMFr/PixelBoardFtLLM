@@ -74,7 +74,7 @@ class Penguin:
         self.foot_width   = int(self.size * 0.15)
         self.foot_height  = int(self.size * 0.1)
         self.arm_width    = int(self.size * 0.1)
-        self.arm_height   = int(self.size * 0.06)
+        self.arm_height   = int(self.size * 0.6)
 
         self.body_x = (self.size - self.body_width)  // 2
         self.body_y = (self.size // 2) - (self.body_height // 3)
