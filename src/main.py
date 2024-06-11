@@ -3,12 +3,15 @@ import argparse
 import numpy as np
 import tkinter as tk
 import time
-import PIL.ImageTk
+import PIL.ImageTk, PIL.Image
+import pynput
 # Our Modules
 import llm
 import utils
 import penguin
 import pixelboardsimulator as pbs
+import pixelboard
+import pixelsnake
 
 def array_setlength(array, newlen):
     """
@@ -69,14 +72,18 @@ def llm_get_information(myllm, user_input):
     # RES is a dictionary containing all the results
     return res
 
-def draw_all(canvas, penguin, simulator, angles):
-    pixels = penguin.do_draw(*angles)
-    simulator_img = simulator.do_draw(pixels)
-    simulator_tk_img = PIL.ImageTk.PhotoImage(simulator_img)
-    canvas.create_image(0, 0, anchor=tk.NW, image=simulator_tk_img)
-    canvas.image = simulator_tk_img
+def canvas_send_img(canvas, img):
+    tk_img = PIL.ImageTk.PhotoImage(img)
+    canvas.create_image(0, 0, anchor=tk.NW, image=tk_img)
+    canvas.image = tk_img
 
-def draw_next_frame(canvas, penguin, simulator, llm_data, index):
+def draw_all(canvas, penguin, simulator, board, angles):
+    pixels = penguin.do_draw(*angles)
+    board.draw_pixels(pixels)
+    simulator_img = simulator.do_draw(pixels)
+    canvas_send_img(canvas, simulator_img)
+
+def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
     global animating
     angles = llm_data["ANGLES"]
     frame_count = len(angles)
@@ -99,17 +106,34 @@ def draw_next_frame(canvas, penguin, simulator, llm_data, index):
     # Other frames
     ## Angles
     utils.debug(f"\rFrame {index+1}/{frame_count}", end="")
-    draw_all(canvas, mypenguin, simulator, angles[index])
+    draw_all(canvas, mypenguin, simulator, board, angles[index])
     canvas.after(int(dt*1000),
                  lambda:
                  draw_next_frame(canvas, penguin, simulator, llm_data, index+1))
 
+def snake_loop(canvas, snake, simulator, board, listener):
+    pixels = snake.loop()
+
+    if not pixels:
+        listener.Stop()
+        return
+    
+    canvas.after(int(dt*1000), lambda: snake_loop(canvas, snake, simulator, board, listener))
+
+def launch_snake(size, canvas, simulator, board):
+    snake = pixelsnake.PixelSnake(size)
+    pixels = snake.gen_pixels()
+    board.draw_pixels(pixels)
+    simulator_img = simulator.do_draw(pixels)
+    canvas_send_img(canvas, simulator_img)
+    listener = pynput.Listener(on_press=snake.handle_key)
+    snake_loop(canvas, snake, simulator, board, listener)
 
 def process_input(*args):
     """
     Process the user input. If an animation is currently running, do nothing.
     """
-    global user_input, canvas, animating, myllm, mypenguin, simulator, dt
+    global user_input, canvas, animating, myllm, mypenguin, simulator, board, dt
     text = user_input.get()
     user_input.set("Animating ...")
 
@@ -119,14 +143,18 @@ def process_input(*args):
     animating = True
     utils.debug(text)
 
+    if text == "snake":
+        launch_snake(mypenguin.size, canvas, simulator, board)
+        return
+
     llm_data = llm_get_information(myllm, text)
 
-    draw_next_frame(canvas, mypenguin, simulator, llm_data, 0)
+    draw_next_frame(canvas, mypenguin, simulator, board, llm_data, 0)
 
 
 
 ppp_desc = "Pixel Penguin Project a.k.a. PPP"
-prompt_str = "What should I do ? "
+prompt_str = "Hello, how are you ?"
 
 arg_parser = argparse.ArgumentParser(prog="ppp", description=ppp_desc)
 arg_parser.add_argument("-d", "--debug", action='store_const',
@@ -137,7 +165,7 @@ arg_parser.add_argument("-s", "--penguin-size", action='store', default=25,
                         type=int, help="size of penguin, defaults to 25")
 arg_parser.add_argument("-p", "--port", action='store', default="/dev/ttyACM0",
                         help="pixel board port, defaults to /dev/ttyACM0")
-arg_parser.add_argument("-v", "--llm-version", action='store', default="4-turbo",
+arg_parser.add_argument("-v", "--llm-version", action='store', default="3.5-turbo",
                         choices=["3.5-turbo", "4-turbo"], help="ChatGPT version to use")
 arg_parser.add_argument("-x", "--scale", action='store', default=32,
                         type=int, help="scale of pixel board, "
@@ -152,8 +180,22 @@ mypenguin = penguin.Penguin(args.penguin_size)
 animating = False
 dt = 1/args.framerate # number of seconds to sleep between frames
 simulator = pbs.PixelBoardSimulator(args.scale)
-
-app = tk.Tk(baseName="PPP")
+board = pixelboard.PixelBoard(args.port,
+                              [[0, 9, 10, 19, 20],
+                               [1, 8, 11, 18, 21],
+                               [2, 7, 12, 17, 22],
+                               [3, 6, 13, 16, 23],
+                               [4, 5, 14, 15, 24]],
+                              [[15, 10, 5, 0],
+                               [16, 11, 6, 1],
+                               [17, 12, 7, 2],
+                               [18, 13, 8, 3],
+                               [19, 14, 9, 4]])
+app = tk.Tk()
+app.title("Pixel Penguin Project")
+raw_icon = PIL.Image.open("./assets/oscar_32x32.png")
+icon = PIL.ImageTk.PhotoImage(raw_icon)
+app.wm_iconphoto(False, icon)
 
 canvas_size = args.scale*args.penguin_size
 canvas = tk.Canvas(app, width=canvas_size, height=canvas_size, bg="#000000")
@@ -169,6 +211,6 @@ submit_button.grid(column=1, row=1, sticky='N')
 quit_button = tk.Button(app, text="Quit", command=app.destroy)
 quit_button.grid(column=1, row=2, sticky='SE')
 
-draw_all(canvas, mypenguin, simulator, [0, 0, 0, 0, 0])
+draw_all(canvas, mypenguin, simulator, board, [0, 0, 0, 0, 0])
 
 app.mainloop()
