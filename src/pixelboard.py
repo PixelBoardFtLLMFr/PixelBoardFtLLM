@@ -42,8 +42,8 @@ class PixelBoard:
         self.pixel_matrix = pixel_matrix
 
         self.serial = serial.Serial(self.port)
-        self.height = len(self.board_matrix)*TILE_HEIGHT
-        self.width = len(self.board_matrix[0])*TILE_WIDTH
+        self.height = len(self.tile_matrix)*TILE_HEIGHT
+        self.width = len(self.tile_matrix[0])*TILE_WIDTH
         self.pixels = [[(0, 0, 0)
                         for i in range(self.width)]
                        for j in range(self.height)]

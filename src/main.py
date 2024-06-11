@@ -73,16 +73,27 @@ def llm_get_information(myllm, user_input):
     # RES is a dictionary containing all the results
     return res
 
-def canvas_send_img(canvas, img):
+def draw_pixel_board(board, pixels):
+    pixels_width = len(pixels[0])
+    i_min = (pixels_width - board.width) // 2
+    i_max = (pixels_width + board.width) // 2
+    utils.debug("pixels_width =", pixels_width)
+    utils.debug("board.width =", board.width)
+    utils.debug("i_min =", i_min)
+    utils.debug("i_max =", i_max)
+    pixels_cropped = [row[i_min:i_max] for row in pixels]
+    board.draw_pixels(pixels_cropped)
+
+def draw_canvas(canvas, img):
     tk_img = PIL.ImageTk.PhotoImage(img)
     canvas.create_image(0, 0, anchor=tk.NW, image=tk_img)
     canvas.image = tk_img
 
 def draw_all(canvas, penguin, simulator, board, angles):
     pixels = penguin.do_draw(*angles)
-    board.draw_pixels(pixels)
     simulator_img = simulator.do_draw(pixels)
-    canvas_send_img(canvas, simulator_img)
+    draw_canvas(canvas, simulator_img)
+    draw_pixel_board(board, pixels)
 
 def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
     global animating
@@ -110,7 +121,7 @@ def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
     draw_all(canvas, mypenguin, simulator, board, angles[index])
     canvas.after(int(dt*1000),
                  lambda:
-                 draw_next_frame(canvas, penguin, simulator, llm_data, index+1))
+                 draw_next_frame(canvas, penguin, simulator, board, llm_data, index+1))
 
 def snake_loop(canvas, snake, simulator, board, listener):
     pixels = snake.loop()
@@ -124,9 +135,9 @@ def snake_loop(canvas, snake, simulator, board, listener):
 def launch_snake(size, canvas, simulator, board):
     snake = pixelsnake.PixelSnake(size)
     pixels = snake.gen_pixels()
-    board.draw_pixels(pixels)
+    draw_pixel_board(board, pixels)
     simulator_img = simulator.do_draw(pixels)
-    canvas_send_img(canvas, simulator_img)
+    draw_canvas(canvas, simulator_img)
     listener = pynput.Listener(on_press=snake.handle_key)
     snake_loop(canvas, snake, simulator, board, listener)
 
@@ -238,6 +249,6 @@ submit_button.grid(column=2, row=1, sticky='N')
 quit_button = tk.Button(app, text="Quit", command=app.destroy)
 quit_button.grid(column=1, row=2, sticky='SE')
 
-draw_all(canvas, mypenguin, simulator, [0, 0, 0, 0, 0])
+draw_all(canvas, mypenguin, simulator, board, [0, 0, 0, 0, 0])
 
 app.mainloop()
