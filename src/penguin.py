@@ -4,7 +4,7 @@ import numpy as np
 black  = (0,   0,   0)
 white  = (255, 255, 255)
 orange = (255, 165, 0)
-green  = (169, 218, 195)
+green  = (109, 218, 135)
 yellow = (250, 222, 12)
 
 def _rotate_point(x, y, cx, cy, angle):
@@ -64,12 +64,24 @@ class Penguin:
     def set_size(self, new_size):
         self.size = new_size
 
+        # self.body_width   = int(self.size * 0.4)
+        # self.body_height  = int(self.size * 0.6)
+        # self.head_size    = int(self.size * 0.3)
+        # self.eye_size     = int(self.size * 0.05)
+        # self.eye_x_offset = int(self.size * 0.1)
+        # self.eye_y_offset = int(self.size * 0.1)
+        # self.beak_size    = int(self.size * 0.05)
+        # self.foot_width   = int(self.size * 0.15)
+        # self.foot_height  = int(self.size * 0.1)
+        # self.arm_width    = int(self.size * 0.1)
+        # self.arm_height   = int(self.size * 0.6)
+        
         self.body_width   = int(self.size * 0.4)
         self.body_height  = int(self.size * 0.6)
         self.head_size    = int(self.size * 0.3)
         self.eye_size     = int(self.size * 0.05)
         self.eye_x_offset = int(self.size * 0.1)
-        self.eye_y_offset = int(self.size * 0.1)
+        self.eye_y_offset = int(self.size * 0.075)
         self.beak_size    = int(self.size * 0.05)
         self.foot_width   = int(self.size * 0.15)
         self.foot_height  = int(self.size * 0.1)
