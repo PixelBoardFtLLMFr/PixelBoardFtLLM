@@ -4,7 +4,7 @@ import argparse
 def light_up_tile(ser, index, color):
     out = ""
     for i in range(20):
-        out += f"{index},{color}\n"
+        out += f"{index*20 + i},{color}\n"
     ser.write(out.encode('ascii'))
 
 arg_parser = argparse.ArgumentParser(prog="tester", description="Test the pixel board.")
