@@ -23,6 +23,6 @@ length = len(indices)
 
 if length == 1:
     light_up_tile(ser, indices[0] - 1, args.color)
-elif 
+else:
     for i in range(indices[0] - 1, indices[1]):
         light_up_tile(ser, i, args.color)
