@@ -5,6 +5,7 @@ import tkinter as tk
 import time
 import PIL.ImageTk, PIL.Image
 import pynput
+from speech import SpeechToText
 # Our Modules
 import llm
 import utils
@@ -117,7 +118,7 @@ def snake_loop(canvas, snake, simulator, board, listener):
     if not pixels:
         listener.Stop()
         return
-    
+
     canvas.after(int(dt*1000), lambda: snake_loop(canvas, snake, simulator, board, listener))
 
 def launch_snake(size, canvas, simulator, board):
@@ -129,7 +130,7 @@ def launch_snake(size, canvas, simulator, board):
     listener = pynput.Listener(on_press=snake.handle_key)
     snake_loop(canvas, snake, simulator, board, listener)
 
-def process_input(*args):
+def process_input(*_):
     """
     Process the user input. If an animation is currently running, do nothing.
     """
@@ -150,6 +151,28 @@ def process_input(*args):
     llm_data = llm_get_information(myllm, text)
 
     draw_next_frame(canvas, mypenguin, simulator, board, llm_data, 0)
+
+def process_speech(*_):
+    """
+    Process the user input as a speech
+    """
+    global myllm, canvas, mypenguin, simulator, stt, animating
+    if animating:
+        return
+
+    text = stt.listen()
+
+    if text == None:
+        print("Error during recognition")
+        return
+    print("Input is :", text)
+    animating = True
+    utils.debug(text)
+
+    llm_data = llm_get_information(myllm, text)
+
+    draw_next_frame(canvas, mypenguin, simulator, llm_data, 0)
+
 
 
 
@@ -191,6 +214,8 @@ board = pixelboard.PixelBoard(args.port,
                                [17, 12, 7, 2],
                                [18, 13, 8, 3],
                                [19, 14, 9, 4]])
+stt = SpeechToText()
+
 app = tk.Tk()
 app.title("Pixel Penguin Project")
 raw_icon = PIL.Image.open("./assets/oscar_32x32.png")
@@ -207,10 +232,12 @@ user_entry.grid(column=1, row=0, sticky='S')
 
 submit_button = tk.Button(app, text="Submit", command=process_input)
 submit_button.grid(column=1, row=1, sticky='N')
+submit_button = tk.Button(app, text="Talk", command=process_speech)
+submit_button.grid(column=2, row=1, sticky='N')
 
 quit_button = tk.Button(app, text="Quit", command=app.destroy)
 quit_button.grid(column=1, row=2, sticky='SE')
 
-draw_all(canvas, mypenguin, simulator, board, [0, 0, 0, 0, 0])
+draw_all(canvas, mypenguin, simulator, [0, 0, 0, 0, 0])
 
 app.mainloop()
