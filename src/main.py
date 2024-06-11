@@ -9,6 +9,7 @@ import llm
 import utils
 import penguin
 import pixelboardsimulator as pbs
+from speech import SpeechToText
 
 def array_setlength(array, newlen):
     """
@@ -105,7 +106,7 @@ def draw_next_frame(canvas, penguin, simulator, llm_data, index):
                  draw_next_frame(canvas, penguin, simulator, llm_data, index+1))
 
 
-def process_input(*args):
+def process_input(*_):
     """
     Process the user input. If an animation is currently running, do nothing.
     """
@@ -123,7 +124,29 @@ def process_input(*args):
 
     draw_next_frame(canvas, mypenguin, simulator, llm_data, 0)
 
+def process_speech(*_):
+    """
+    Process the user input as a speech
+    """
+    global myllm, canvas, mypenguin, simulator, stt, animating
+    if animating:
+        return
+    
+    text = stt.listen()
 
+    if text == None:
+        print("Error during recognition")
+        return
+    print("Input is :", text)
+    animating = True
+    utils.debug(text)
+
+    llm_data = llm_get_information(myllm, text)
+
+    draw_next_frame(canvas, mypenguin, simulator, llm_data, 0)
+    
+    
+    
 
 ppp_desc = "Pixel Penguin Project a.k.a. PPP"
 prompt_str = "What should I do ? "
@@ -165,9 +188,13 @@ user_entry.grid(column=1, row=0, sticky='S')
 
 submit_button = tk.Button(app, text="Submit", command=process_input)
 submit_button.grid(column=1, row=1, sticky='N')
+submit_button = tk.Button(app, text="Talk", command=process_speech)
+submit_button.grid(column=2, row=1, sticky='N')
 
 quit_button = tk.Button(app, text="Quit", command=app.destroy)
 quit_button.grid(column=1, row=2, sticky='SE')
+
+stt = SpeechToText()
 
 draw_all(canvas, mypenguin, simulator, [0, 0, 0, 0, 0])
 
