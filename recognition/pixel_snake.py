@@ -82,5 +82,5 @@ def change_direction(event : keyboard.KeyboardEvent):
 
 if __name__ == "__main__":
     send_to_serial(ser, clear_serial())
-    snake_loop(ser, (12, 15))
+    snake_loop(ser, (4, 5))
     send_to_serial(ser, clear_serial())

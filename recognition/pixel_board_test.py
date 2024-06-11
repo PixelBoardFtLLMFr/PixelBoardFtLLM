@@ -24,9 +24,11 @@ def rgb_to_hex(rgb):
 def position_to_index(x, y = None):
     if y == None:
         x, y = x
-    board_matrix = [[0, 5, 6],
-                    [1, 4, 7],
-                    [2, 3, 8]]
+    board_matrix = [[0, 9, 10, 15, 20],
+                    [1, 8, 11, 16, 21],
+                    [2, 7, 12, 17, 22],
+                    [3, 6, 13, 18, 23],
+                    [4, 5, 14, 19, 24]]
     led_matrix = [[15, 10, 5, 0],
                   [16, 11, 6, 1],
                   [17, 12, 7, 2],
@@ -46,7 +48,7 @@ def gradiant_serial():
 
 def clear_serial():
     output = ""
-    for i in range(20 * 9):
+    for i in range(20):
         output += f"{i},#000000\n"
     return output
 
@@ -82,7 +84,7 @@ def pixels_to_serial(pixels):
 
 def penguin_loop(ser, width, height):
     angles = [(0, 0, 0, 0, 0)]
-    penguin_size = 12
+    penguin_size = height
     penguin_image = Image.new("RGB", (width, height), "black")
     penguin_image = penguin_animation.draw_penguin_with_arm(penguin_image, angles[0], penguin_size)
     send_to_serial(ser, image_to_serial(penguin_image))
@@ -113,8 +115,8 @@ ser = serial.Serial("COM3")
 
 if __name__ == "__main__":
     send_to_serial(ser, clear_serial())
-    penguin_loop(ser, 12, 15)
-    send_to_serial(ser, clear_serial())
+    #penguin_loop(ser, 20, 25)
+    #send_to_serial(ser, clear_serial())
 
 
 # def write_color(index, color):

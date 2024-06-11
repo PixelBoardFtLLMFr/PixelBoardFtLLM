@@ -192,7 +192,7 @@ def update_pixel_board_canvas(penguin_image):
     pixel_board_canvas.image = tk_pixel_board_image
 
 if __name__ == "__main__":
-    penguin_size = 9
+    penguin_size = 25
     penguin_height, penguin_width = penguin_size, penguin_size
     pixel_board_scale = 8
     pixel_board_size = pixel_board_scale * penguin_size
