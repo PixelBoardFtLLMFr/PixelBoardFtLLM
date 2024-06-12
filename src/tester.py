@@ -42,11 +42,13 @@ arg_parser.add_argument("-f", "--france", action='store_true', default=False,
                         help="display the French flag")
 arg_parser.add_argument("-o", "--off", action='store_true', default=False,
                         help="turn off the pixel board")
-arg_parser.add_argument("-d", "--delay", action='store', default=0.5,
+arg_parser.add_argument("-d", "--delay", action='store', default=0,
                         type=float, help="delay between tiles")
+
 args = arg_parser.parse_args()
 
 ser = serial.Serial(args.port)
+ser.baudrate = 9600
 
 if args.off:
     light_off(ser, args.delay)
