@@ -40,7 +40,7 @@ class PixelBoardSimulator:
         for x in range(drawing_size):
             for y in range(drawing_size):
                 self.draw.rectangle([x*self.scale,
-                                     yj*self.scale,
+                                     y*self.scale,
                                      x*self.scale + self.pixel_size - 1,
                                      y*self.scale + self.pixel_size - 1],
                                     fill=pixels[y][x])
