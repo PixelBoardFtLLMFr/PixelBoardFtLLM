@@ -82,7 +82,6 @@ def draw_pixel_board(board, pixels):
     utils.debug("i_min =", i_min)
     utils.debug("i_max =", i_max)
     pixels_cropped = [row[i_min:i_max] for row in pixels]
-    utils.debug(pixels_cropped)
     board.draw_pixels(pixels_cropped)
 
 def draw_canvas(canvas, img):
