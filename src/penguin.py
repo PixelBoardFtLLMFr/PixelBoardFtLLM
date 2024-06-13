@@ -2,10 +2,10 @@ import PIL.Image, PIL.ImageDraw
 import numpy as np
 
 black  = (0,   0,   0)
-white  = (255, 255, 255)
-orange = (255, 165, 0)
-green  = (169, 218, 195)
-yellow = (250, 222, 12)
+white  = (180, 255, 255)
+orange = (255, 125, 0)
+green  = (169, 255, 195)
+yellow = (255, 222, 40)
 
 def _rotate_point(x, y, cx, cy, angle):
     """
@@ -65,19 +65,19 @@ class Penguin:
         self.size = new_size
 
         self.body_width   = int(self.size * 0.4)
-        self.body_height  = int(self.size * 0.6)
-        self.head_size    = int(self.size * 0.3)
-        self.eye_size     = int(self.size * 0.05)
-        self.eye_x_offset = int(self.size * 0.1)
-        self.eye_y_offset = int(self.size * 0.1)
-        self.beak_size    = int(self.size * 0.05)
+        self.body_height  = int(self.size * 0.4)
+        self.head_size    = int(self.size * 0.5)
+        self.eye_size     = int(self.size * 0.1)
+        self.eye_x_offset = int(self.head_size * 0.3)
+        self.eye_y_offset = int(self.head_size * 0.7)
+        self.beak_size    = int(self.size * 0.1)
         self.foot_width   = int(self.size * 0.15)
         self.foot_height  = int(self.size * 0.1)
         self.arm_width    = int(self.size * 0.1)
-        self.arm_height   = int(self.size * 0.6)
+        self.arm_height   = int(self.size * 0.4)
 
         self.body_x = (self.size - self.body_width)  // 2
-        self.body_y = (self.size // 2) - (self.body_height // 3)
+        self.body_y = self.size // 2
         self.head_x = self.body_x + (self.body_width - self.head_size) // 2 + 1
         self.head_y = self.body_y - self.head_size
         self.foot_y = self.body_y + self.body_height
@@ -87,13 +87,13 @@ class Penguin:
         self.head_cy = self.head_y + self.head_size
 
         self.eye_left_x = round(self.head_cx - self.eye_x_offset)
-        self.eye_y = self.head_cy - 3*self.eye_y_offset
+        self.eye_y = self.head_cy - self.eye_y_offset
         self.eye_right_x = round(self.head_cx + self.eye_x_offset)
 
         self.beak_x1 = self.head_cx - self.beak_size // 2
         self.beak_x2 = self.head_cx + self.beak_size // 2
         self.beak_x3 = self.head_cx
-        self.beak_y1 = self.head_cy - self.head_size // 2
+        self.beak_y1 = self.head_cy - self.head_size // 3
         self.beak_y2 = self.beak_y1
         self.beak_y3 = self.beak_y1 + self.beak_size
         

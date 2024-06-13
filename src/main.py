@@ -249,6 +249,6 @@ submit_button.grid(column=2, row=1, sticky='N')
 quit_button = tk.Button(app, text="Quit", command=app.destroy)
 quit_button.grid(column=1, row=2, sticky='SE')
 
-draw_all(canvas, mypenguin, simulator, board, [0, 0, 0, 0, 0])
+draw_all(canvas, mypenguin, simulator, board, [20, -20, 0, 0, 0])
 
 app.mainloop()
