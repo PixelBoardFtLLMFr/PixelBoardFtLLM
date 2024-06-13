@@ -45,6 +45,8 @@ class PixelBoard:
             self.serial = serial.Serial(port=self.port, baudrate=9600, xonxoff=True)
         except:
             self.serial = None
+        
+        print(self.serial)
 
         self.height = len(self.tile_matrix)*TILE_HEIGHT
         self.width = len(self.tile_matrix[0])*TILE_WIDTH
@@ -53,12 +55,13 @@ class PixelBoard:
                        for j in range(self.height)]
 
     def _coords_to_idx(self, i, j):
-        tile_index = self.tile_matrix[i//TILE_HEIGHT][j//TILE_WIDTH]
-        pixel_index = self.pixel_matrix[i%TILE_HEIGHT][j%TILE_WIDTH]
+        tile_index = self.tile_matrix[j//TILE_HEIGHT][j//TILE_WIDTH]
+        pixel_index = self.pixel_matrix[j%TILE_HEIGHT][j%TILE_WIDTH]
         return tile_index*TILE_HEIGHT*TILE_WIDTH + pixel_index
 
     def _send_to_serial(self, serial_str):
         if self.serial:
+            serial_str += "499,#000000\n"
             self.serial.write(serial_str.encode("ascii"))
 
     def _write_pixels(self, coords):
