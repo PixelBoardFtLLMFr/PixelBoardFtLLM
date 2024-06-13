@@ -5,7 +5,6 @@ import tkinter as tk
 import time
 import PIL.ImageTk, PIL.Image
 import pynput
-from speech import SpeechToText
 # Our Modules
 import llm
 import utils
@@ -13,6 +12,7 @@ import penguin
 import pixelboardsimulator as pbs
 import pixelboard
 import pixelsnake
+from speech import SpeechToText, Lang
 
 def array_setlength(array, newlen):
     """
@@ -165,18 +165,18 @@ def process_input(*_):
 
 def process_speech(*_):
     """
-    Process the user input as a speech
+    Process the user input as a speech.
     """
-    global myllm, canvas, mypenguin, simulator, stt, animating, board
+    global myllm, canvas, mypenguin, simulator, stt, animating, board, lang_var
     if animating:
         return
 
+    stt.set_lang(lang_var.get())
     text = stt.listen()
 
     if text == None:
         print("Error during recognition")
         return
-    print("Input is :", text)
     animating = True
     utils.debug(text)
 
@@ -232,10 +232,11 @@ app.title("Pixel Penguin Project")
 raw_icon = PIL.Image.open("./assets/oscar_32x32.png")
 icon = PIL.ImageTk.PhotoImage(raw_icon)
 app.wm_iconphoto(False, icon)
+row_count = 9
 
 canvas_size = args.scale*args.penguin_size
 canvas = tk.Canvas(app, width=canvas_size, height=canvas_size, bg="#000000")
-canvas.grid(column=0, row=0, rowspan=3)
+canvas.grid(column=0, row=0, rowspan=row_count)
 
 user_input = tk.StringVar(app, value=prompt_str)
 user_entry = tk.Entry(app, textvariable=user_input)
@@ -244,10 +245,16 @@ user_entry.grid(column=1, row=0, sticky='S')
 submit_button = tk.Button(app, text="Submit", command=process_input)
 submit_button.grid(column=1, row=1, sticky='N')
 submit_button = tk.Button(app, text="Talk", command=process_speech)
-submit_button.grid(column=2, row=1, sticky='N')
+submit_button.grid(column=1, row=2)
 
 quit_button = tk.Button(app, text="Quit", command=app.destroy)
-quit_button.grid(column=1, row=2, sticky='SE')
+quit_button.grid(column=1, row=row_count-1, sticky='SE')
+
+lang_var = tk.StringVar(app, "en-US")
+for i in range(len(Lang.langs)):
+    name, code = Lang.langs[i]
+    rb = tk.Radiobutton(app, text=name, value=code, variable=lang_var)
+    rb.grid(column=1, row=i+3)
 
 draw_all(canvas, mypenguin, simulator, board, [20, -20, 0, 0, 0])
 

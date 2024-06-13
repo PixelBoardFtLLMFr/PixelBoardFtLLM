@@ -44,6 +44,7 @@ class PixelBoard:
 
         try:
             self.serial = serial.Serial(port=self.port, baudrate=9600)
+            self._clear_serial()
         except:
             self.serial = None
 
@@ -52,8 +53,6 @@ class PixelBoard:
         self.pixels = [[(0, 0, 0)
                         for i in range(self.width)]
                        for j in range(self.height)]
-        
-        self._clear_serial()
 
     def _coords_to_idx(self, x, y):
         tile_index = self.tile_matrix[y//TILE_HEIGHT][x//TILE_WIDTH]
