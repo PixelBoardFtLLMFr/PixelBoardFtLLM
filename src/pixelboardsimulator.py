@@ -37,11 +37,11 @@ class PixelBoardSimulator:
 
         self._reset_image()
 
-        for i in range(drawing_size):
-            for j in range(drawing_size):
-                self.draw.rectangle([i*self.scale,
-                                     j*self.scale,
-                                     i*self.scale + self.pixel_size - 1,
-                                     j*self.scale + self.pixel_size - 1],
-                                    fill=pixels[i][j])
+        for x in range(drawing_size):
+            for y in range(drawing_size):
+                self.draw.rectangle([x*self.scale,
+                                     yj*self.scale,
+                                     x*self.scale + self.pixel_size - 1,
+                                     y*self.scale + self.pixel_size - 1],
+                                    fill=pixels[y][x])
         return self.get_image()
