@@ -220,7 +220,8 @@ class Penguin:
         Return the pixel matrix of the drawn penguin as an array of arrays. Each
         pixel is a tuple of integers (R, G, B).
         """
-        return [[self.image.getpixel((i, j))
+        # return self.image.getdata()
+        return [[self.image.getpixel((j, i))
                  for j in range(self.size)]
                 for i in range(self.size)]
 
