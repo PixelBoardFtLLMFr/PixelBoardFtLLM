@@ -167,7 +167,7 @@ def process_speech(*_):
     """
     Process the user input as a speech
     """
-    global myllm, canvas, mypenguin, simulator, stt, animating
+    global myllm, canvas, mypenguin, simulator, stt, animating, board
     if animating:
         return
 
@@ -182,7 +182,7 @@ def process_speech(*_):
 
     llm_data = llm_get_information(myllm, text)
 
-    draw_next_frame(canvas, mypenguin, simulator, llm_data, 0)
+    draw_next_frame(canvas, mypenguin, simulator, board, llm_data, 0)
 
 
 
