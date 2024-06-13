@@ -52,6 +52,8 @@ class PixelBoard:
         self.pixels = [[(0, 0, 0)
                         for i in range(self.width)]
                        for j in range(self.height)]
+        
+        self._clear_serial()
 
     def _coords_to_idx(self, x, y):
         tile_index = self.tile_matrix[y//TILE_HEIGHT][x//TILE_WIDTH]
@@ -71,14 +73,9 @@ class PixelBoard:
         self._send_to_serial(output)
 
     def _clear_serial(self):
-        new_pixels = [[(0, 0, 0)
-                       for _ in range(self.width)]
-                      for _ in range(self.height)]
+        new_pixels = [(x, y) for x in range(self.width) for y in range(self.height)]
 
-        diff_coords = array_diff(self.pixels, new_pixels)
-        self.pixels = new_pixels
-
-        self._write_pixels(diff_coords)
+        self._write_pixels(new_pixels)
 
     def draw_pixels(self, pixels):
         assert len(pixels) == self.height
