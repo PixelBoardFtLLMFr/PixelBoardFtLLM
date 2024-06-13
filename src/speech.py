@@ -13,7 +13,7 @@ class SpeechToText:
     def listen(self):
         try:
             audio_data = self.recognizer.listen(self.microphone_stream)
-            text = self.recognizer.recognize_google(audio_data, language='id-ID')
+            text = self.recognizer.recognize_google(audio_data, language='en-US')
             return text
         except sr.UnknownValueError:
             return None
