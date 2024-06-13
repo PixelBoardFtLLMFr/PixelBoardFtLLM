@@ -11,9 +11,9 @@ option for further information about its parameters.
 
 # Authors
 
-Augustin Roussely
-Benjamin Dayres
-Febri Abdullah
-Ruck Thawonmas
-Rintaro Makino
-Tristan Riehs
+- Augustin Roussely
+- Benjamin Dayres
+- Febri Abdullah
+- Ruck Thawonmas
+- Rintaro Makino
+- Tristan Riehs
