@@ -46,8 +46,6 @@ class PixelBoard:
             self.serial = serial.Serial(port=self.port, baudrate=9600)
         except:
             self.serial = None
-        
-        print(self.serial)
 
         self.height = len(self.tile_matrix)*TILE_HEIGHT
         self.width = len(self.tile_matrix[0])*TILE_WIDTH
@@ -56,7 +54,6 @@ class PixelBoard:
                        for j in range(self.height)]
 
     def _coords_to_idx(self, x, y):
-        utils.debug("Coords :", x, y)
         tile_index = self.tile_matrix[y//TILE_HEIGHT][x//TILE_WIDTH]
         pixel_index = self.pixel_matrix[y%TILE_HEIGHT][x%TILE_WIDTH]
         return tile_index*TILE_HEIGHT*TILE_WIDTH + pixel_index
@@ -75,8 +72,8 @@ class PixelBoard:
 
     def _clear_serial(self):
         new_pixels = [[(0, 0, 0)
-                       for i in range(self.width)]
-                      for j in range(self.height)]
+                       for _ in range(self.width)]
+                      for _ in range(self.height)]
 
         diff_coords = array_diff(self.pixels, new_pixels)
         self.pixels = new_pixels
