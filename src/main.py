@@ -38,26 +38,35 @@ def llm_get_information(myllm, user_input):
     # Preparing Prompts ...
     # put results here, this variable is returned by the function
     res = {}
+    utils.debug("Preparing prompts...")
     ## Angles
+    limb_prompt_types = [llm.PromptType.ARM, llm.PromptType.LEG, llm.PromptType.HEAD]
     user_prompt = f"The requested motion is: {user_input}"
 
-    for kind in llm.PromptType.allTypes:
+    for kind in limb_prompt_types:
         myllm.push_prompt(llm.build_prompt(kind), user_prompt, f"ANGLE{kind}")
 
-    ## Particles
+    ## Facial Expression
+    myllm.push_prompt(llm.build_prompt(llm.PromptType.FACE), user_prompt, "FE")
 
 
     # Executing Prompts ...
+    utils.debug("Executing prompts...")
     responses = myllm.execute_prompts()
 
 
     # Processing Responses ...
+    utils.debug("Processing reponses...")
+    ## Facial Expression
+    fe = responses["FE"]
+    utils.debug(fe)
+    
     ## Angles
     angles = []
-    for kind in llm.PromptType.allTypes:
+    for kind in limb_prompt_types:
         angles.append(llm.interprete_as_nparray(responses[f"ANGLE{kind}"]))
 
-    maxlen = max(*[np.shape(angles[kind])[0] for kind in llm.PromptType.allTypes])
+    maxlen = max(*[np.shape(angles[kind])[0] for kind in limb_prompt_types])
 
     angles[llm.PromptType.ARM] = array_setlength(angles[llm.PromptType.ARM], maxlen)
     angles[llm.PromptType.LEG] = array_setlength(angles[llm.PromptType.LEG], maxlen)

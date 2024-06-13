@@ -50,6 +50,12 @@ def _draw_true_rotated_ellipse(image, x1, y1, x2, y2, cx, cy, angle, fill):
     image.paste(ellipse, (0, 0), ellipse)
 
 class Penguin:
+    facial_expressions = [
+        "neutral",
+        "happy",
+        "sad"
+    ]
+
     def __init__(self, size):
         self.set_size(size)
         self.image = PIL.Image.new("RGB", (self.size, self.size), "black")
