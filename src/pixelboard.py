@@ -42,7 +42,7 @@ class PixelBoard:
         self.pixel_matrix = pixel_matrix
 
         try:
-            self.serial = serial.Serial(port=self.port, baudrate=9600, xonxoff=True)
+            self.serial = serial.Serial(port=self.port, baudrate=9600)
         except:
             self.serial = None
 
