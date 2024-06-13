@@ -5,6 +5,12 @@ class Lang:
     JP = "ja-JP"
     FR = "fr-FR"
     ID = "id-ID"
+    TH = "th-TH"
+    langs = [("English", EN),
+             ("Japanese", JP),
+             ("French", FR),
+             ("Indonesian", ID),
+             ("Thai", TH)]
 
 class SpeechToText:
     def __init__(self, lang=Lang.EN):
