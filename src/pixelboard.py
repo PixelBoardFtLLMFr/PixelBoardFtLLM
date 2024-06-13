@@ -53,8 +53,8 @@ class PixelBoard:
                        for j in range(self.height)]
 
     def _coords_to_idx(self, i, j):
-        tile_index = self.tile_matrix[j//TILE_HEIGHT][i//TILE_WIDTH]
-        pixel_index = self.pixel_matrix[j%TILE_HEIGHT][i%TILE_WIDTH]
+        tile_index = self.tile_matrix[i//TILE_HEIGHT][j//TILE_WIDTH]
+        pixel_index = self.pixel_matrix[i%TILE_HEIGHT][j%TILE_WIDTH]
         return tile_index*TILE_HEIGHT*TILE_WIDTH + pixel_index
 
     def _send_to_serial(self, serial_str):
