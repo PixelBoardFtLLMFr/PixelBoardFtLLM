@@ -2,9 +2,9 @@ import PIL.Image, PIL.ImageDraw
 import numpy as np
 
 black  = (0,   0,   0)
-white  = (180, 255, 255)
+white  = (220, 255, 255)
 orange = (255, 125, 0)
-green  = (169, 255, 195)
+green  = (0, 255, 130)
 yellow = (255, 222, 40)
 
 def _rotate_point(x, y, cx, cy, angle):
@@ -70,7 +70,7 @@ class Penguin:
         self.eye_size     = int(self.size * 0.1)
         self.eye_x_offset = int(self.head_size * 0.3)
         self.eye_y_offset = int(self.head_size * 0.7)
-        self.beak_size    = int(self.size * 0.1)
+        self.beak_size    = int(self.size * 0.05)
         self.foot_width   = int(self.size * 0.15)
         self.foot_height  = int(self.size * 0.1)
         self.arm_width    = int(self.size * 0.1)
