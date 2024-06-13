@@ -78,7 +78,7 @@ class Penguin:
 
         self.body_x = (self.size - self.body_width)  // 2
         self.body_y = self.size // 2
-        self.head_x = self.body_x + (self.body_width - self.head_size) // 2 + 1
+        self.head_x = self.body_x + (self.body_width - self.head_size) // 2
         self.head_y = self.body_y - self.head_size
         self.foot_y = self.body_y + self.body_height
         self.arm_y  = self.body_y
