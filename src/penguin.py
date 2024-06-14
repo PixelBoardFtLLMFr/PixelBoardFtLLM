@@ -3,7 +3,7 @@ import numpy as np
 import utils
 
 black  = (0,   0,   0)
-white  = (220, 255, 255)
+white  = (30, 50, 50)
 orange = (255, 125, 0)
 green  = (0, 255, 130)
 yellow = (255, 222, 40)
@@ -158,17 +158,16 @@ class Penguin:
         elif self.fe == "sad":
             # Horizontal Eyes (- _ -)
             for point in self.eye_points:
-                # Eye
-                x1, y1 = self._rotate_head_point(point[0] - self.eye_size//2, point[1])
-                x2, y2 = self._rotate_head_point(point[0] + self.eye_size//2, point[1])
-
-                self.draw.line([x1, y1, x2, y2], fill=yellow)
-
                 # Tear
                 x1, y1 = self._rotate_head_point(point[0], point[1] + 1)
                 x2, y2 = self._rotate_head_point(point[0] + self.eye_size//2, point[1] + 1)
 
                 self.draw.line([x1, y1, x1, y2], fill=blue)
+                # Eye
+                x1, y1 = self._rotate_head_point(point[0] - self.eye_size//2, point[1])
+                x2, y2 = self._rotate_head_point(point[0] + self.eye_size//2, point[1])
+
+                self.draw.line([x1, y1, x2, y2], fill=yellow)
         elif self.fe == "happy":
             # Half-circle Eyes (^ _ ^)
             #         (x0, y0)
@@ -189,7 +188,7 @@ class Penguin:
         self.draw.polygon([(beak_x1, beak_y1),
                            (beak_x2, beak_y2),
                            (beak_x3, beak_y3)],
-                          fill=yellow)
+                          fill=orange)
 
     def _draw_arms(self, angle_right, angle_left):
         self.angle_left_arm = angle_left
@@ -239,7 +238,7 @@ class Penguin:
                                 foot_left_x2, foot_left_y2,
                                 foot_left_x1, foot_left_y1,
                                 self.angle_left_foot,
-                                fill=yellow)
+                                fill=orange)
 
         self.angle_right_foot = angle_right
 
@@ -253,7 +252,7 @@ class Penguin:
                                 foot_right_x2, foot_right_y2,
                                 foot_right_x1 + self.foot_width, foot_right_y1,
                                 self.angle_right_foot,
-                                fill=yellow)
+                                fill=orange)
 
     def get_pixels(self):
         """
