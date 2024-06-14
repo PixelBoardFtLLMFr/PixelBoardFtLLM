@@ -42,17 +42,20 @@ class PixelBoard:
         self.tile_matrix = tile_matrix
         self.pixel_matrix = pixel_matrix
 
-        try:
-            self.serial = serial.Serial(port=self.port, baudrate=9600)
-            self._clear_serial()
-        except:
-            self.serial = None
-
         self.height = len(self.tile_matrix)*TILE_HEIGHT
         self.width = len(self.tile_matrix[0])*TILE_WIDTH
         self.pixels = [[(0, 0, 0)
                         for i in range(self.width)]
                        for j in range(self.height)]
+
+        try:
+            self.serial = serial.Serial(port=self.port)
+            self._clear_serial()
+            utils.debug("Connected to pixel board")
+        except Exception as e:
+            self.serial = None
+            utils.debug(e)
+            utils.debug("Not connected to pixel board")
 
     def _coords_to_idx(self, x, y):
         tile_index = self.tile_matrix[y//TILE_HEIGHT][x//TILE_WIDTH]
