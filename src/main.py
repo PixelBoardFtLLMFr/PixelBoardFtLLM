@@ -85,10 +85,6 @@ def draw_pixel_board(board, pixels):
     pixels_width = len(pixels[0])
     i_min = (pixels_width - board.width) // 2
     i_max = (pixels_width + board.width) // 2
-    utils.debug("pixels_width =", pixels_width)
-    utils.debug("board.width =", board.width)
-    utils.debug("i_min =", i_min)
-    utils.debug("i_max =", i_max)
     pixels_cropped = [row[i_min:i_max] for row in pixels]
     board.draw_pixels(pixels_cropped)
 
