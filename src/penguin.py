@@ -1,11 +1,13 @@
 import PIL.Image, PIL.ImageDraw
 import numpy as np
+import utils
 
 black  = (0,   0,   0)
 white  = (220, 255, 255)
 orange = (255, 125, 0)
 green  = (0, 255, 130)
 yellow = (255, 222, 40)
+blue   = (50, 50, 255)
 
 def _rotate_point(x, y, cx, cy, angle):
     """
@@ -66,6 +68,7 @@ class Penguin:
         self.angle_right_foot = None
         self.angle_left_foot  = None
         self.angle_head       = None
+        self.fe = "neutral"
 
     def set_size(self, new_size):
         self.size = new_size
@@ -95,6 +98,8 @@ class Penguin:
         self.eye_left_x = round(self.head_cx - self.eye_x_offset)
         self.eye_y = self.head_cy - self.eye_y_offset
         self.eye_right_x = round(self.head_cx + self.eye_x_offset)
+        self.eye_points = [(self.eye_left_x, self.eye_y),
+                           (self.eye_right_x, self.eye_y)]
 
         self.beak_x1 = self.head_cx - self.beak_size // 2
         self.beak_x2 = self.head_cx + self.beak_size // 2
@@ -102,6 +107,14 @@ class Penguin:
         self.beak_y1 = self.head_cy - self.head_size // 3
         self.beak_y2 = self.beak_y1
         self.beak_y3 = self.beak_y1 + self.beak_size
+
+    def set_fe(self, new_fe):
+        if new_fe in self.facial_expressions:
+            self.fe = new_fe
+        else:
+            utils.debug("warning: attempted to give penguin illegal "
+                        + "facial expression:",
+                        new_fe)
         
     def _reset_image(self):
         self.draw.rectangle([0, 0, self.size - 1, self.size - 1], fill=black)
@@ -135,18 +148,39 @@ class Penguin:
                              fill=white,
                              outline=green)
 
-        eye_left_x1, eye_left_y1 = self._rotate_head_point(self.eye_left_x, self.eye_y)
-        eye_left_x2, eye_left_y2 = self._rotate_head_point(self.eye_left_x, self.eye_y + self.eye_size)
+        if self.fe == "neutral":
+            # Vertical Eyes (| _ |)
+            for point in self.eye_points:
+                x1, y1 = self._rotate_head_point(point[0], point[1])
+                x2, y2 = self._rotate_head_point(point[0], point[1] + self.eye_size)
 
-        eye_right_x1, eye_right_y1 = self._rotate_head_point(self.eye_right_x, self.eye_y)
-        eye_right_x2, eye_right_y2 = self._rotate_head_point(self.eye_right_x, self.eye_y + self.eye_size)
+                self.draw.line([x1, y1, x2, y2], fill=yellow)
+        elif self.fe == "sad":
+            # Horizontal Eyes (- _ -)
+            for point in self.eye_points:
+                # Eye
+                x1, y1 = self._rotate_head_point(point[0] - self.eye_size//2, point[1])
+                x2, y2 = self._rotate_head_point(point[0] + self.eye_size//2, point[1])
 
-        self.draw.line([eye_left_x1, eye_left_y1,
-                        eye_left_x2, eye_left_y2],
-                       fill=yellow)
-        self.draw.line([eye_right_x1, eye_right_y1,
-                        eye_right_x2, eye_right_y2],
-                       fill=yellow)
+                self.draw.line([x1, y1, x2, y2], fill=yellow)
+
+                # Tear
+                x1, y1 = self._rotate_head_point(point[0], point[1] + 1)
+                x2, y2 = self._rotate_head_point(point[0] + self.eye_size//2, point[1] + 1)
+
+                self.draw.line([x1, y1, x1, y2], fill=blue)
+        elif self.fe == "happy":
+            # Half-circle Eyes (^ _ ^)
+            #         (x0, y0)
+            #        /        \
+            # (x1, y1)       (x2, y2)
+            for point in self.eye_points:
+                x0, y0 = self._rotate_head_point(point[0], point[1])
+                x1, y1 = self._rotate_head_point(point[0] - self.eye_size//2, point[1] + self.eye_size//2)
+                x2, y2 = self._rotate_head_point(point[0] + self.eye_size//2, point[1] + self.eye_size//2)
+
+                self.draw.line([x1, y1, x0, y0], fill=yellow)
+                self.draw.line([x0, y0, x2, y2], fill=yellow)
 
         beak_x1, beak_y1 = self._rotate_head_point(self.beak_x1, self.beak_y1)
         beak_x2, beak_y2 = self._rotate_head_point(self.beak_x2, self.beak_y2)
