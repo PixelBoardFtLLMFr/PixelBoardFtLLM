@@ -217,6 +217,8 @@ arg_parser.add_argument("-x", "--scale", action='store', default=32,
                         + "has to be a mutiple of 5, defaults to 30")
 arg_parser.add_argument("-f", "--framerate", action='store', default=1,
                         type=int, help="frames per second, defaults to 1")
+arg_parser.add_argument("-q", "--quick", action='store', default=None,
+                        metavar="PROMPT", help="quickly send a prompt")
 
 args = arg_parser.parse_args()
 utils.init(args.debug)
@@ -268,5 +270,9 @@ for i in range(len(Lang.langs)):
     rb.grid(column=1, row=i+3)
 
 draw_all(canvas, mypenguin, simulator, board, [20, -20, 0, 0, 0])
+
+if args.quick:
+    user_input.set(args.quick)
+    process_input()
 
 app.mainloop()
