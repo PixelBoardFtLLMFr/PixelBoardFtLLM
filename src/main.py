@@ -182,7 +182,7 @@ def process_speech(*_):
     user_input.set(text)
 
     if text == None:
-        print("Error during recognition")
+        print("Error during recognition", flush=True)
         return
     animating = True
     utils.debug(text)
