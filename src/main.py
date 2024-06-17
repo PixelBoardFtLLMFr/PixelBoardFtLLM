@@ -11,7 +11,6 @@ import utils
 import penguin
 import pixelboardsimulator as pbs
 import pixelboard
-import pixelsnake
 from speech import SpeechToText, Lang
 
 def array_setlength(array, newlen):
