@@ -4,7 +4,6 @@ import numpy as np
 import tkinter as tk
 import time
 import PIL.ImageTk, PIL.Image
-import pynput
 # Our Modules
 import llm
 import utils
@@ -129,24 +128,6 @@ def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
                  lambda:
                  draw_next_frame(canvas, penguin, simulator, board, llm_data, index+1))
 
-def snake_loop(canvas, snake, simulator, board, listener):
-    pixels = snake.loop()
-
-    if not pixels:
-        listener.Stop()
-        return
-
-    canvas.after(int(dt*1000), lambda: snake_loop(canvas, snake, simulator, board, listener))
-
-def launch_snake(size, canvas, simulator, board):
-    snake = pixelsnake.PixelSnake(size)
-    pixels = snake.gen_pixels()
-    draw_pixel_board(board, pixels)
-    simulator_img = simulator.do_draw(pixels)
-    draw_canvas(canvas, simulator_img)
-    listener = pynput.Listener(on_press=snake.handle_key)
-    snake_loop(canvas, snake, simulator, board, listener)
-
 def process_input(*_):
     """
     Process the user input. If an animation is currently running, do nothing.
@@ -160,10 +141,6 @@ def process_input(*_):
 
     animating = True
     utils.debug(text)
-
-    if text == "snake":
-        launch_snake(mypenguin.size, canvas, simulator, board)
-        return
 
     llm_data = llm_get_information(myllm, text)
 
