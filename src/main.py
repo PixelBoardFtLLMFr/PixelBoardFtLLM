@@ -192,10 +192,17 @@ arg_parser.add_argument("-f", "--framerate", action='store', default=1,
                         type=int, help="frames per second, defaults to 1")
 arg_parser.add_argument("-q", "--quick", action='store', default=None,
                         metavar="PROMPT", help="quickly send a prompt")
+arg_parser.add_argument("-t", "--test", action='store_true', default=False,
+                        help="test LLM connection")
 
 args = arg_parser.parse_args()
 utils.init(args.debug)
 myllm = llm.Llm(args.keyfile, args.llm_version)
+
+if args.test:
+    myllm.test()
+    exit(0)
+
 mypenguin = penguin.Penguin(args.penguin_size)
 animating = False
 dt = 1/args.framerate # number of seconds to sleep between frames
