@@ -59,11 +59,22 @@ def llm_get_information(myllm, user_input):
     res["FE"] = responses["FE"].lower()
     
     ## Angles
-    angles = []
+    angles = {}
     for kind in limb_prompt_types:
-        angles.append(llm.interprete_as_nparray(responses[f"ANGLE{kind}"]))
+        __res_or_die__ = llm.interprete_as_nparray(responses[f"ANGLE{kind}"])
+        if __res_or_die__ is None:
+            # angles = {llm.PromptType.ARM: [[0, 0]],
+            #           llm.PromptType.LEG: [[0, 0]],
+            #           llm.PromptType.HEAD: [[0]]}
+            # break
+            # utils.debug("warning: LLM bullshit detected")
+            angles[kind] = [[0] * (1 if kind == llm.PromptType.HEAD else 2)]
+        else:
+            angles[kind] = __res_or_die__
 
-    maxlen = max(*[np.shape(angles[kind])[0] for kind in limb_prompt_types])
+    myarr = [np.shape(angles[kind])[0] for kind in limb_prompt_types]
+    # utils.debug("myarr =", myarr)
+    maxlen = max(*myarr)
 
     angles[llm.PromptType.ARM] = array_setlength(angles[llm.PromptType.ARM], maxlen)
     angles[llm.PromptType.LEG] = array_setlength(angles[llm.PromptType.LEG], maxlen)

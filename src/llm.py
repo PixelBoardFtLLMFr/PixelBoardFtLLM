@@ -143,9 +143,16 @@ def interprete_as_nparray(code_as_str):
 
     try:
         res = np.array(ast.literal_eval(code_as_str))
+        shape = np.shape(res)
+        if len(shape) != 2:
+            print(f"LLM returned illegal array : {res}")
+            res = None
+        if shape[0] == 0:
+            utils.debug("warning: LLM produced an empty array, returning zeros")
+            res = np.array([[0] * shape[1]])
     except SyntaxError:
         print(f"interprete_as_nparray: invalid syntax '{code_as_str}'")
-    except Error as e:
+    except Exception as e:
         print(f"interprete_as_nparray: error while parsing '{code_as_str}'; {e}")
 
     return res
