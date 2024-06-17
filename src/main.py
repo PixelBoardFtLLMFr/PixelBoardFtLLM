@@ -174,12 +174,13 @@ def process_speech(*_):
     """
     Process the user input as a speech.
     """
-    global myllm, canvas, mypenguin, simulator, stt, animating, board, lang_var
+    global myllm, canvas, mypenguin, simulator, stt, animating, board, lang_var, user_input
     if animating:
         return
 
     stt.set_lang(lang_var.get())
     text = stt.listen()
+    user_input.set(text)
 
     if text == None:
         print("Error during recognition")
