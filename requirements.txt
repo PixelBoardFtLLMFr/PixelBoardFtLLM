@@ -1,5 +1,6 @@
 openai
-keyboard
 tk
 numpy
 pyserial
+SpeechRecognition
+PyAudio

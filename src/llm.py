@@ -2,6 +2,8 @@ import asyncio
 from openai import AsyncOpenAI
 import ast
 import numpy as np
+import penguin
+import utils
 
 class PromptType:
     """
@@ -10,8 +12,9 @@ class PromptType:
     ARM = 0
     LEG = 1
     HEAD = 2
-    count = 3 # number of different prompts
-    allTypes = (ARM, LEG, HEAD) # for looping over prompt types
+    FACE = 3
+    allTypes = (ARM, LEG, HEAD, FACE) # for looping over prompt types
+    count = len(allTypes) # number of different prompts
 
 # Ranking Prompts
 
@@ -38,7 +41,7 @@ number representing the index of the chosen array, no punctuation, no comment.
 # Angle Prompts
 
 angle_base_promt = """You are a penguin character.  You move your body by giving
-arrays of angles, in the Python format.  You willgive tables of angles for doing
+arrays of angles, in the Python format.  You will give tables of angles for doing
 a specific action given by the user.  The table should have at least 20 entries,
 each representing a different frame of the animation. Remember to always end on
 the neutral position.  Do not write comments and return only the array.  For
@@ -78,6 +81,15 @@ and 90 degrees. Head movement are usually very small, often between -10 and 10.
 Do not move if unnecessary for the action.
 """
 
+# Facial Expression Prompt
+fe_prompt_base = """You are a penguin character. You will be given a set of possible
+facial expresion to have. Then, according to the movement you have to do, you
+will have to choose one facial expression. The possible facial expressions are :
+"""
+
+fe_prompt_end = """Please only give the name of the expression you chose.
+"""
+
 # Particle Prompt
 
 particle_prompt = """You are a penguin. You will be given by the user an action
@@ -103,6 +115,14 @@ def build_prompt(kind):
         return angle_base_promt + leg_example + leg_prompt
     elif kind == PromptType.HEAD:
         return angle_base_promt + head_example + head_prompt
+    elif kind == PromptType.FACE:
+        prompt = fe_prompt_base
+        
+        for fe in penguin.Penguin.facial_expressions:
+            prompt += f"- {fe}\n"
+
+        prompt += fe_prompt_end
+        return prompt
 
 def interprete_as_nparray(code_as_str):
     """

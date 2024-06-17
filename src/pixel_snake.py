@@ -3,34 +3,6 @@ from pixel_board_test import send_to_serial, clear_serial, position_to_index, rg
 import keyboard
 from collections import deque
 from random import randint
-direction = (0, 0)
-stop = False
-
-# g = 75
-# d = 77
-# h = 72
-# b = 80
-# esc = 1
-
-class Direction:
-    LEFT = (-1, 0)
-    RIGHT = (1, 0)
-    UP = (0, -1)
-    DOWN = (0, 1)
-
-def is_inside(position, size):
-    return not (position[0] < 0 or position[0] >= size[0] or position[1] < 0 or position[1] >= size[1])
-
-def is_opposite(old_dir, new_dir):
-    return tuple(a + b for a, b in zip(old_dir, new_dir)) == (0,0)
-
-
-def gen_apple(snake, size):
-    apple = snake[0]
-    while apple in snake:
-        apple = (randint(0, size[0] - 1), randint(0, size[1] - 1))
-    return apple
-
 
 def snake_loop(ser, size):
     keyboard.on_press(change_direction)
@@ -67,20 +39,3 @@ def snake_loop(ser, size):
         if old_pos != position:
             send_to_serial(ser, output)
         sleep(0.2)
-        
-
-        
-
-def change_direction(event : keyboard.KeyboardEvent):
-    global direction, stop
-    if event.scan_code == 1:
-        stop = True
-    direction_dict = {75: Direction.LEFT, 77: Direction.RIGHT, 72: Direction.UP, 80: Direction.DOWN}
-    if event.scan_code in direction_dict and not is_opposite(direction, direction_dict[event.scan_code]):
-        direction = direction_dict[event.scan_code]
-
-
-if __name__ == "__main__":
-    send_to_serial(ser, clear_serial())
-    snake_loop(ser, (12, 15))
-    send_to_serial(ser, clear_serial())

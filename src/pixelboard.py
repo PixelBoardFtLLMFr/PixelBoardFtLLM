@@ -1,4 +1,5 @@
 import serial
+import utils
 
 # Pixels on a single tile
 TILE_WIDTH = 4
@@ -28,10 +29,10 @@ def array_diff(arr1, arr2):
     assert len(arr1[0]) == len(arr2[0])
 
     res = []
-    for i in range(len(arr1)):
-        for j in range(len(arr1[0])):
-            if arr1[i][j] != arr2[i][j]:
-                res.append((i, j))
+    for y in range(len(arr1)):
+        for x in range(len(arr1[0])):
+            if arr1[y][x] != arr2[y][x]:
+                res.append((x, y))
 
     return res
 
@@ -41,37 +42,42 @@ class PixelBoard:
         self.tile_matrix = tile_matrix
         self.pixel_matrix = pixel_matrix
 
-        self.serial = serial.Serial(self.port)
-        self.height = len(self.board_matrix)*TILE_HEIGHT
-        self.width = len(self.board_matrix[0])*TILE_WIDTH
+        self.height = len(self.tile_matrix)*TILE_HEIGHT
+        self.width = len(self.tile_matrix[0])*TILE_WIDTH
         self.pixels = [[(0, 0, 0)
                         for i in range(self.width)]
                        for j in range(self.height)]
 
-    def _coords_to_idx(self, i, j):
-        tile_index = self.tile_matrix[j//TILE_HEIGHT][i//TILE_WIDTH]
-        pixel_index = self.pixel_matrix[j%TILE_HEIGHT][i%TILE_WIDTH]
+        try:
+            self.serial = serial.Serial(port=self.port)
+            self._clear_serial()
+            utils.debug("Connected to pixel board")
+        except Exception as e:
+            self.serial = None
+            utils.debug(e)
+            utils.debug("Not connected to pixel board")
+
+    def _coords_to_idx(self, x, y):
+        tile_index = self.tile_matrix[y//TILE_HEIGHT][x//TILE_WIDTH]
+        pixel_index = self.pixel_matrix[y%TILE_HEIGHT][x%TILE_WIDTH]
         return tile_index*TILE_HEIGHT*TILE_WIDTH + pixel_index
 
     def _send_to_serial(self, serial_str):
-        self.serial.write(serial_str.encode("ascii"))
+        if self.serial:
+            serial_str += "499,#000000\n"
+            self.serial.write(serial_str.encode("ascii"))
 
     def _write_pixels(self, coords):
         output = ""
-        for (i, j) in coords:
-            output += f"{self._coords_to_idx(i, j)},{tuple_to_hex(self.pixels[i][j])}\n"
+        for (x, y) in coords:
+            output += f"{self._coords_to_idx(x, y)},{tuple_to_hex(self.pixels[y][x])}\n"
 
         self._send_to_serial(output)
 
     def _clear_serial(self):
-        new_pixels = [[(0, 0, 0)
-                       for i in range(self.width)]
-                      for j in range(self.height)]
+        new_pixels = [(x, y) for x in range(self.width) for y in range(self.height)]
 
-        diff_coords = array_diff(self.pixels, new_pixels)
-        self.pixels = new_pixels
-
-        self.write_pixels(diff_coords)
+        self._write_pixels(new_pixels)
 
     def draw_pixels(self, pixels):
         assert len(pixels) == self.height
