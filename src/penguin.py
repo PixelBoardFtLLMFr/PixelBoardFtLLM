@@ -3,7 +3,7 @@ import numpy as np
 import utils
 
 black  = (0,   0,   0)
-white  = (30, 50, 50)
+white  = (10, 10, 10)
 orange = (255, 125, 0)
 green  = (0, 255, 130)
 yellow = (255, 222, 40)
