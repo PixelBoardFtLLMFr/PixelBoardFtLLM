@@ -56,7 +56,7 @@ def llm_get_information(myllm, user_input):
     # Processing Responses ...
     utils.debug("Processing reponses...")
     ## Facial Expression
-    res["FE"] = responses["FE"]
+    res["FE"] = responses["FE"].lower()
     
     ## Angles
     angles = []
@@ -117,7 +117,7 @@ def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
         penguin.set_fe(fe)
         ## Angles
         utils.debug(f"LLM generated {frame_count} frames, "
-                    + f"animation will last {frame_count*dt} s")
+                    + f"animation will last {frame_count*dt:.2f} s")
 
 
     # Other frames
