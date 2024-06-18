@@ -73,7 +73,7 @@ class Penguin:
     def set_size(self, new_size):
         self.size = new_size
 
-        self.body_width   = int(self.size * 0.4)
+        self.body_width   = int(self.size * 0.45)
         self.body_height  = int(self.size * 0.4)
         self.head_size    = int(self.size * 0.5)
         self.eye_size     = int(self.size * 0.1)
@@ -126,14 +126,14 @@ class Penguin:
         self.draw.rectangle([0, 0, self.size - 1, self.size - 1], fill=black)
 
     def _draw_body(self):
-        self.draw.rectangle([self.body_x,
-                             self.body_y,
+        self.draw.ellipse([self.body_x,
+                             self.body_y - 2,
                              self.body_x + self.body_width,
                              self.body_y + self.body_height],
                             fill=green)
 
-        self.draw.rectangle([self.body_x + self.dx,
-                             self.body_y + self.dy,
+        self.draw.ellipse([self.body_x + self.dx,
+                             self.body_y + self.dy - 2,
                              self.body_x + self.body_width  - self.dx,
                              self.body_y + self.body_height - self.dy],
                             fill=white)
@@ -214,8 +214,8 @@ class Penguin:
     def _draw_arms(self, angle_right, angle_left):
         self.angle_left_arm = angle_left
 
-        arm_left_x1 = self.body_x - self.arm_width
-        arm_left_y1 = self.arm_y
+        arm_left_x1 = self.body_x - self.arm_width + 2
+        arm_left_y1 = self.arm_y + 1
         arm_left_x2 = arm_left_x1 + self.arm_width
         arm_left_y2 = arm_left_y1 + self.arm_height
 
@@ -231,8 +231,8 @@ class Penguin:
 
         self.angle_right_arm = angle_right
 
-        arm_right_x1 = self.body_x + self.body_width
-        arm_right_y1 = self.arm_y
+        arm_right_x1 = self.body_x + self.body_width - 1
+        arm_right_y1 = self.arm_y + 1
         arm_right_x2 = arm_right_x1 + self.arm_width
         arm_right_y2 = arm_right_y1 + self.arm_height
 
