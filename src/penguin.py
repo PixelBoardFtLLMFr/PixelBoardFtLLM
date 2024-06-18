@@ -72,14 +72,14 @@ class Penguin:
 
     def set_size(self, new_size):
         self.size = new_size
-        
+
         self.body_width   = int(self.size * 0.4)
         self.body_height  = int(self.size * 0.4)
         self.head_size    = int(self.size * 0.5)
         self.eye_size     = int(self.size * 0.1)
         self.eye_x_offset = int(self.head_size * 0.3)
         self.eye_y_offset = int(self.head_size * 0.7)
-        self.beak_size    = int(self.size * 0.15)
+        self.beak_size    = int(self.size * 0.2)
         self.foot_width   = int(self.size * 0.15)
         self.foot_height  = int(self.size * 0.1)
         self.arm_width    = int(self.size * 0.1)
@@ -106,7 +106,7 @@ class Penguin:
         self.beak_x3 = self.head_cx
         self.beak_y1 = self.head_cy - self.head_size // 3
         self.beak_y2 = self.beak_y1
-        self.beak_y3 = self.beak_y1 + self.beak_size
+        self.beak_y3 = self.beak_y1 + 2*self.beak_size // 3
 
         self.dx = min(1, self.body_width * 0.1)
         self.dy = min(1, self.body_width * 0.1)
@@ -118,7 +118,7 @@ class Penguin:
             utils.debug("warning: attempted to give penguin illegal "
                         + "facial expression:",
                         new_fe)
-        
+
     def _reset_image(self):
         self.draw.rectangle([0, 0, self.size - 1, self.size - 1], fill=black)
 
@@ -134,7 +134,7 @@ class Penguin:
                              self.body_x + self.body_width  - self.dx,
                              self.body_y + self.body_height - self.dy],
                             fill=white)
-        
+
 
     def _rotate_head_point(self, x, y):
         return _rotate_point(x, y, self.head_cx, self.head_cy, self.head_angle)
@@ -182,6 +182,12 @@ class Penguin:
                 self.draw.line([x1, y1, x0, y0], fill=yellow)
                 self.draw.line([x0, y0, x2, y2], fill=yellow)
 
+        self.draw.rectangle([self.body_x + 2*self.dx + 1,
+                             self.body_y - self.dy,
+                             self.body_x + self.body_width - 2*self.dx - 1,
+                             self.body_y],
+                             fill = black)
+
         beak_x1, beak_y1 = self._rotate_head_point(self.beak_x1, self.beak_y1)
         beak_x2, beak_y2 = self._rotate_head_point(self.beak_x2, self.beak_y2)
         beak_x3, beak_y3 = self._rotate_head_point(self.beak_x3, self.beak_y3)
@@ -190,12 +196,6 @@ class Penguin:
                            (beak_x2, beak_y2),
                            (beak_x3, beak_y3)],
                           fill=orange)
-        
-        self.draw.rectangle([self.body_x + 2*self.dx + 1,
-                             self.body_y - self.dy,
-                             self.body_x + self.body_width - 2*self.dx - 1,
-                             self.body_y],
-                             fill = black)
 
     def _draw_arms(self, angle_right, angle_left):
         self.angle_left_arm = angle_left
