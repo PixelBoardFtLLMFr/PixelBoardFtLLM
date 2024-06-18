@@ -214,7 +214,7 @@ class Penguin:
     def _draw_arms(self, angle_right, angle_left):
         self.angle_left_arm = angle_left
 
-        arm_left_x1 = self.body_x - self.arm_width + 2
+        arm_left_x1 = self.body_x - self.arm_width + 1
         arm_left_y1 = self.arm_y + 1
         arm_left_x2 = arm_left_x1 + self.arm_width
         arm_left_y2 = arm_left_y1 + self.arm_height
