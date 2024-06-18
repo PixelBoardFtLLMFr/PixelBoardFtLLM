@@ -108,6 +108,9 @@ class Penguin:
         self.beak_y2 = self.beak_y1
         self.beak_y3 = self.beak_y1 + self.beak_size
 
+        self.dx = min(1, self.body_width * 0.1)
+        self.dy = min(1, self.body_width * 0.1)
+
     def set_fe(self, new_fe):
         if new_fe in self.facial_expressions:
             self.fe = new_fe
@@ -126,14 +129,12 @@ class Penguin:
                              self.body_y + self.body_height],
                             fill=green)
 
-        dx = min(1, self.body_width * 0.1)
-        dy = min(1, self.body_width * 0.1)
-
-        self.draw.rectangle([self.body_x + dx,
-                             self.body_y + dy,
-                             self.body_x + self.body_width  - dx,
-                             self.body_y + self.body_height - dy],
+        self.draw.rectangle([self.body_x + self.dx,
+                             self.body_y + self.dy,
+                             self.body_x + self.body_width  - self.dx,
+                             self.body_y + self.body_height - self.dy],
                             fill=white)
+        
 
     def _rotate_head_point(self, x, y):
         return _rotate_point(x, y, self.head_cx, self.head_cy, self.head_angle)
@@ -189,6 +190,12 @@ class Penguin:
                            (beak_x2, beak_y2),
                            (beak_x3, beak_y3)],
                           fill=orange)
+        
+        self.draw.rectangle([self.body_x + 2*self.dx + 1,
+                             self.body_y - self.dy,
+                             self.body_x + self.body_width - 2*self.dx - 1,
+                             self.body_y],
+                             fill = black)
 
     def _draw_arms(self, angle_right, angle_left):
         self.angle_left_arm = angle_left

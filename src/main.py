@@ -233,7 +233,7 @@ stt = SpeechToText()
 
 app = tk.Tk()
 app.title("Pixel Penguin Project")
-raw_icon = PIL.Image.open("./assets/oscar_32x32.png")
+raw_icon = PIL.Image.open("./PixelBoardFtLLM/assets/oscar_32x32.png")
 icon = PIL.ImageTk.PhotoImage(raw_icon)
 app.wm_iconphoto(False, icon)
 row_count = 9
