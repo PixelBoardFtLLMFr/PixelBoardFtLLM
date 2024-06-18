@@ -1,0 +1,6 @@
+openai
+tk
+numpy
+pyserial
+SpeechRecognition
+PyAudio
