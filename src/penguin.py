@@ -79,7 +79,7 @@ class Penguin:
         self.eye_size     = int(self.size * 0.1)
         self.eye_x_offset = int(self.head_size * 0.3)
         self.eye_y_offset = int(self.head_size * 0.7)
-        self.beak_size    = int(self.size * 0.1)
+        self.beak_size    = int(self.size * 0.15)
         self.foot_width   = int(self.size * 0.15)
         self.foot_height  = int(self.size * 0.1)
         self.arm_width    = int(self.size * 0.1)
@@ -101,8 +101,8 @@ class Penguin:
         self.eye_points = [(self.eye_left_x, self.eye_y),
                            (self.eye_right_x, self.eye_y)]
 
-        self.beak_x1 = self.head_cx - self.beak_size // 2
-        self.beak_x2 = self.head_cx + self.beak_size // 2
+        self.beak_x1 = self.head_cx - 3*self.beak_size // 4
+        self.beak_x2 = self.head_cx + 3*self.beak_size // 4
         self.beak_x3 = self.head_cx
         self.beak_y1 = self.head_cy - self.head_size // 3
         self.beak_y2 = self.beak_y1
