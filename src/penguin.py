@@ -73,7 +73,7 @@ class Penguin:
     def set_size(self, new_size):
         self.size = new_size
 
-        self.body_width   = int(self.size * 0.45)
+        self.body_width   = int(self.size * 0.4)
         self.body_height  = int(self.size * 0.4)
         self.head_size    = int(self.size * 0.5)
         self.eye_size     = int(self.size * 0.1)
