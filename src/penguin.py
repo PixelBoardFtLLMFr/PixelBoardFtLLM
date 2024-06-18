@@ -95,18 +95,21 @@ class Penguin:
         self.head_cx = self.head_x + self.head_size // 2
         self.head_cy = self.head_y + self.head_size
 
-        self.eye_left_x = round(self.head_cx - self.eye_x_offset)
-        self.eye_y = self.head_cy - self.eye_y_offset
-        self.eye_right_x = round(self.head_cx + self.eye_x_offset)
-        self.eye_points = [(self.eye_left_x, self.eye_y),
-                           (self.eye_right_x, self.eye_y)]
+        self.eye_left_x1 = self.head_cx - self.eye_x_offset - self.eye_size // 2 + 1
+        self.eye_left_x2 = self.eye_left_x1 + self.eye_size // 2
+        self.eye_y1 = self.head_cy - self.eye_y_offset
+        self.eye_y2 = self.head_cy - self.eye_y_offset + self.eye_size
+        self.eye_right_x1 = self.head_cx + self.eye_x_offset - 1
+        self.eye_right_x2 = self.eye_right_x1 + self.eye_size // 2
+        self.eye_points = [[(self.eye_left_x1, self.eye_y1), (self.eye_left_x2, self.eye_y2)],
+                           [(self.eye_right_x1, self.eye_y1), (self.eye_right_x2, self.eye_y2)]]
 
-        self.beak_x1 = self.head_cx - 3*self.beak_size // 4
-        self.beak_x2 = self.head_cx + 3*self.beak_size // 4
+        self.beak_x1 = self.head_cx - self.beak_size // 2
+        self.beak_x2 = self.head_cx + self.beak_size // 2
         self.beak_x3 = self.head_cx
-        self.beak_y1 = self.head_cy - self.head_size // 3
+        self.beak_y1 = self.head_cy - self.beak_size + 1
         self.beak_y2 = self.beak_y1
-        self.beak_y3 = self.beak_y1 + 2*self.beak_size // 3
+        self.beak_y3 = self.beak_y1 + 3*self.beak_size//4
 
         self.dx = min(1, self.body_width * 0.1)
         self.dy = min(1, self.body_width * 0.1)
@@ -152,32 +155,43 @@ class Penguin:
         if self.fe == "neutral":
             # Vertical Eyes (| _ |)
             for point in self.eye_points:
-                x1, y1 = self._rotate_head_point(point[0], point[1])
-                x2, y2 = self._rotate_head_point(point[0], point[1] + self.eye_size)
+                _x1, _y1 = self._rotate_head_point(*point[0])
+                _x2, _y2 = self._rotate_head_point(*point[1])
 
-                self.draw.line([x1, y1, x2, y2], fill=yellow)
+                x1 = min(_x1, _x2)
+                x2 = max(_x1, _x2)
+                y1 = min(_y1, _y2)
+                y2 = max(_y1, _y2)
+
+                self.draw.rectangle([x1, y1, x2, y2], fill=yellow)
         elif self.fe == "sad":
             # Horizontal Eyes (- _ -)
             for point in self.eye_points:
+                utils.debug("Drawing sad eyes")
                 # Tear
-                x1, y1 = self._rotate_head_point(point[0], point[1] + 1)
-                x2, y2 = self._rotate_head_point(point[0] + self.eye_size//2, point[1] + 1)
+                x1, y1 = self._rotate_head_point(*point[0])
+                x2, y2 = self._rotate_head_point(point[0][0] - self.eye_size//2, point[0][1] + self.eye_size*3//2)
 
-                self.draw.line([x1, y1, x1, y2], fill=blue)
+                self.draw.line([x1, y1, x2, y2], fill=blue)
                 # Eye
-                x1, y1 = self._rotate_head_point(point[0] - self.eye_size//2, point[1])
-                x2, y2 = self._rotate_head_point(point[0] + self.eye_size//2, point[1])
+                _x1, _y1 = self._rotate_head_point(*point[0])
+                _x2, _y2 = self._rotate_head_point(point[0][0] + self.eye_size, point[0][1])
 
-                self.draw.line([x1, y1, x2, y2], fill=yellow)
+                x1 = min(_x1, _x2)
+                x2 = max(_x1, _x2)
+                y1 = min(_y1, _y2)
+                y2 = max(_y1, _y2)
+
+                self.draw.rectangle([x1, y1, x2, y2], fill=yellow)
         elif self.fe == "happy":
             # Half-circle Eyes (^ _ ^)
             #         (x0, y0)
             #        /        \
             # (x1, y1)       (x2, y2)
             for point in self.eye_points:
-                x0, y0 = self._rotate_head_point(point[0], point[1])
-                x1, y1 = self._rotate_head_point(point[0] - self.eye_size//2, point[1] + self.eye_size//2)
-                x2, y2 = self._rotate_head_point(point[0] + self.eye_size//2, point[1] + self.eye_size//2)
+                x0, y0 = self._rotate_head_point(*point[0])
+                x1, y1 = self._rotate_head_point(point[0][0] - self.eye_size//2, point[0][1] + self.eye_size//2)
+                x2, y2 = self._rotate_head_point(point[0][0] + self.eye_size//2, point[0][1] + self.eye_size//2)
 
                 self.draw.line([x1, y1, x0, y0], fill=yellow)
                 self.draw.line([x0, y0, x2, y2], fill=yellow)
