@@ -107,9 +107,11 @@ class Penguin:
         self.beak_x1 = self.head_cx - self.beak_size // 2
         self.beak_x2 = self.head_cx + self.beak_size // 2
         self.beak_x3 = self.head_cx
+        self.beak_x4 = self.beak_x3
         self.beak_y1 = self.head_cy - self.beak_size + 1
         self.beak_y2 = self.beak_y1
         self.beak_y3 = self.beak_y1 + 3*self.beak_size//4
+        self.beak_y4 = self.beak_y1 - self.beak_size//4
 
         self.dx = min(1, self.body_width * 0.1)
         self.dy = min(1, self.body_width * 0.1)
@@ -205,10 +207,12 @@ class Penguin:
         beak_x1, beak_y1 = self._rotate_head_point(self.beak_x1, self.beak_y1)
         beak_x2, beak_y2 = self._rotate_head_point(self.beak_x2, self.beak_y2)
         beak_x3, beak_y3 = self._rotate_head_point(self.beak_x3, self.beak_y3)
+        beak_x4, beak_y4 = self._rotate_head_point(self.beak_x4, self.beak_y4)
 
         self.draw.polygon([(beak_x1, beak_y1),
+                           (beak_x3, beak_y3),
                            (beak_x2, beak_y2),
-                           (beak_x3, beak_y3)],
+                           (beak_x4, beak_y4)],
                           fill=orange)
 
     def _draw_arms(self, angle_right, angle_left):
@@ -295,7 +299,7 @@ class Penguin:
         """
         self._reset_image()
         self._draw_body()
-        self._draw_head(angle_head)
         self._draw_arms(angle_right_arm, angle_left_arm)
+        self._draw_head(angle_head)
         self._draw_feet(angle_right_foot, angle_left_foot)
         return self.get_pixels()
