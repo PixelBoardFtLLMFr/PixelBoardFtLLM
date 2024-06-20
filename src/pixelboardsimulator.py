@@ -39,9 +39,14 @@ class PixelBoardSimulator:
 
         for x in range(drawing_size):
             for y in range(drawing_size):
+                pixel = pixels[y][x]
+
+                if pixel == (10, 10, 10):
+                    pixel = (100, 100, 100)
+
                 self.draw.rectangle([x*self.scale,
                                      y*self.scale,
                                      x*self.scale + self.pixel_size - 1,
                                      y*self.scale + self.pixel_size - 1],
-                                    fill=pixels[y][x])
+                                    fill=pixel)
         return self.get_image()
