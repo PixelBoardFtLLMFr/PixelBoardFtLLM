@@ -3,11 +3,13 @@ import numpy as np
 import utils
 
 black  = (0,   0,   0)
-white  = (10, 10, 10)
+white  = (10,  10,  10)
+bright = (200, 200, 200)
 orange = (255, 125, 0)
-green  = (0, 255, 130)
+green  = (0,   255, 130)
 yellow = (255, 222, 40)
-blue   = (50, 50, 255)
+blue   = (50,  50,  255)
+red    = (255, 0,   0)
 
 def _rotate_point(x, y, cx, cy, angle):
     """
@@ -55,7 +57,9 @@ class Penguin:
     facial_expressions = [
         "neutral",
         "happy",
-        "sad"
+        "sad",
+        "angry",
+        "surprised"
     ]
 
     def __init__(self, size):
@@ -119,6 +123,7 @@ class Penguin:
     def set_fe(self, new_fe):
         if new_fe in self.facial_expressions:
             self.fe = new_fe
+            utils.debug("New facial expression:", self.fe)
         else:
             utils.debug("warning: attempted to give penguin illegal "
                         + "facial expression:",
@@ -132,7 +137,7 @@ class Penguin:
                              self.body_y - 2,
                              self.body_x + self.body_width,
                              self.body_y + self.body_height],
-                            fill=green)
+                            fill=blue)
 
         self.draw.ellipse([self.body_x + self.dx,
                              self.body_y + self.dy - 2,
@@ -144,6 +149,98 @@ class Penguin:
     def _rotate_head_point(self, x, y):
         return _rotate_point(x, y, self.head_cx, self.head_cy, self.head_angle)
 
+    def _draw_neutral_eyes(self):
+        # Vertical Eyes (| _ |)
+        for point in self.eye_points:
+            _x1, _y1 = self._rotate_head_point(*point[0])
+            _x2, _y2 = self._rotate_head_point(*point[1])
+
+            x1 = min(_x1, _x2)
+            x2 = max(_x1, _x2)
+            y1 = min(_y1, _y2)
+            y2 = max(_y1, _y2)
+
+            self.draw.rectangle([x1, y1, x2, y2], fill=yellow)
+
+    def _draw_sad_eyes(self):
+        # Horizontal Eyes (- _ -)
+        for point in self.eye_points:
+            utils.debug("Drawing sad eyes")
+            # Tear
+            x1, y1 = self._rotate_head_point(*point[0])
+            x2, y2 = self._rotate_head_point(point[0][0] - self.eye_size//2, point[0][1] + self.eye_size*3//2)
+
+            self.draw.line([x1, y1, x2, y2], fill=blue)
+            # Eye
+            _x1, _y1 = self._rotate_head_point(*point[0])
+            _x2, _y2 = self._rotate_head_point(point[0][0] + self.eye_size, point[0][1])
+
+            x1 = min(_x1, _x2)
+            x2 = max(_x1, _x2)
+            y1 = min(_y1, _y2)
+            y2 = max(_y1, _y2)
+
+            self.draw.rectangle([x1, y1, x2, y2], fill=yellow)
+
+    def _draw_happy_eyes(self):
+        # Half-circle Eyes (^ _ ^)
+        #         (x0, y0)
+        #        /        \
+        # (x1, y1)       (x2, y2)
+        for point in self.eye_points:
+            x0, y0 = self._rotate_head_point(*point[0])
+            x1, y1 = self._rotate_head_point(point[0][0] - self.eye_size//2, point[0][1] + self.eye_size//2)
+            x2, y2 = self._rotate_head_point(point[0][0] + self.eye_size//2, point[0][1] + self.eye_size//2)
+
+            self.draw.line([x1, y1, x0, y0], fill=yellow)
+            self.draw.line([x0, y0, x2, y2], fill=yellow)
+
+    def _draw_angry_eyes(self):
+        eye_fill = bright
+        # Left
+        _x1, _y1 = self._rotate_head_point(self.eye_points[0][0][0],
+                                           self.eye_points[0][0][1] + self.eye_size//2)
+        _x2, _y2 = self._rotate_head_point(*self.eye_points[0][1])
+
+        x1 = min(_x1, _x2)
+        x2 = max(_x1, _x2)
+        y1 = min(_y1, _y2)
+        y2 = max(_y1, _y2)
+
+        self.draw.rectangle([x1, y1, x2, y2], fill=red)
+
+        x1, y1 = self._rotate_head_point(*self.eye_points[0][0])
+        x2, y2 = self._rotate_head_point(*self.eye_points[0][1])
+
+        self.draw.line([x1, y1, x2, y2], fill=eye_fill)
+
+        # Right
+        _x1, _y1 = self._rotate_head_point(self.eye_points[1][1][0],
+                                           self.eye_points[1][1][1] - self.eye_size //2)
+        _x2, _y2 = self._rotate_head_point(*self.eye_points[1][1])
+
+        x1 = min(_x1, _x2)
+        x2 = max(_x1, _x2)
+        y1 = min(_y1, _y2)
+        y2 = max(_y1, _y2)
+
+        self.draw.rectangle([x1, y1, x2, y2], fill=red)
+
+        x1, y1 = self._rotate_head_point(self.eye_points[1][0][0] + self.eye_size//2, self.eye_points[1][0][1])
+        x2, y2 = self._rotate_head_point(self.eye_points[1][1][0] - self.eye_size//2, self.eye_points[1][1][1])
+
+        self.draw.line([x1, y1, x2, y2], fill=eye_fill)
+
+    def _draw_surprised_eyes(self):
+        for point in self.eye_points:
+            _draw_rotated_circle(self.draw,
+                                 point[0][0],
+                                 point[0][1],
+                                 self.eye_size//2,
+                                 self.head_cx, self.head_cy,
+                                 self.head_angle,
+                                 fill=yellow, outline=yellow)
+
     def _draw_head(self, angle):
         self.head_angle = angle
         _draw_rotated_circle(self.draw,
@@ -152,57 +249,24 @@ class Penguin:
                              self.head_cx, self.head_cy,
                              self.head_angle,
                              fill=white,
-                             outline=green)
+                             outline=blue)
 
         if self.fe == "neutral":
-            # Vertical Eyes (| _ |)
-            for point in self.eye_points:
-                _x1, _y1 = self._rotate_head_point(*point[0])
-                _x2, _y2 = self._rotate_head_point(*point[1])
-
-                x1 = min(_x1, _x2)
-                x2 = max(_x1, _x2)
-                y1 = min(_y1, _y2)
-                y2 = max(_y1, _y2)
-
-                self.draw.rectangle([x1, y1, x2, y2], fill=yellow)
+            self._draw_neutral_eyes()
         elif self.fe == "sad":
-            # Horizontal Eyes (- _ -)
-            for point in self.eye_points:
-                utils.debug("Drawing sad eyes")
-                # Tear
-                x1, y1 = self._rotate_head_point(*point[0])
-                x2, y2 = self._rotate_head_point(point[0][0] - self.eye_size//2, point[0][1] + self.eye_size*3//2)
-
-                self.draw.line([x1, y1, x2, y2], fill=blue)
-                # Eye
-                _x1, _y1 = self._rotate_head_point(*point[0])
-                _x2, _y2 = self._rotate_head_point(point[0][0] + self.eye_size, point[0][1])
-
-                x1 = min(_x1, _x2)
-                x2 = max(_x1, _x2)
-                y1 = min(_y1, _y2)
-                y2 = max(_y1, _y2)
-
-                self.draw.rectangle([x1, y1, x2, y2], fill=yellow)
+            self._draw_sad_eyes()
         elif self.fe == "happy":
-            # Half-circle Eyes (^ _ ^)
-            #         (x0, y0)
-            #        /        \
-            # (x1, y1)       (x2, y2)
-            for point in self.eye_points:
-                x0, y0 = self._rotate_head_point(*point[0])
-                x1, y1 = self._rotate_head_point(point[0][0] - self.eye_size//2, point[0][1] + self.eye_size//2)
-                x2, y2 = self._rotate_head_point(point[0][0] + self.eye_size//2, point[0][1] + self.eye_size//2)
-
-                self.draw.line([x1, y1, x0, y0], fill=yellow)
-                self.draw.line([x0, y0, x2, y2], fill=yellow)
+            self._draw_happy_eyes()
+        elif self.fe == "angry":
+            self._draw_angry_eyes()
+        elif self.fe == "surprised":
+            self._draw_surprised_eyes()
 
         self.draw.rectangle([self.body_x + 2*self.dx + 1,
                              self.body_y - self.dy,
                              self.body_x + self.body_width - 2*self.dx - 1,
                              self.body_y],
-                             fill = black)
+                             fill = white)
 
         beak_x1, beak_y1 = self._rotate_head_point(self.beak_x1, self.beak_y1)
         beak_x2, beak_y2 = self._rotate_head_point(self.beak_x2, self.beak_y2)
@@ -231,7 +295,7 @@ class Penguin:
                                    arm_left_x2, arm_left_y2,
                                    arm_center_left_x, arm_center_left_y,
                                    self.angle_left_arm,
-                                   fill=green)
+                                   fill=blue)
 
         self.angle_right_arm = angle_right
 
@@ -248,7 +312,7 @@ class Penguin:
                                    arm_right_x2, arm_right_y2,
                                    arm_center_right_x, arm_center_right_y,
                                    self.angle_right_arm,
-                                   fill=green)
+                                   fill=blue)
 
     def _draw_feet(self, angle_right, angle_left):
         self.angle_left_foot = angle_left
