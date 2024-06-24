@@ -62,6 +62,15 @@ class Penguin:
         "surprised"
     ]
 
+    particles = [
+        "angry",
+        "heart",
+        "sleepy",
+        "spark",
+        "sweat",
+        "none"
+    ]
+
     def __init__(self, size):
         self.set_size(size)
         self.image = PIL.Image.new("RGB", (self.size, self.size), "black")
@@ -73,6 +82,7 @@ class Penguin:
         self.angle_left_foot  = None
         self.angle_head       = None
         self.fe = "neutral"
+        self.particle = None
 
     def set_size(self, new_size):
         self.size = new_size
@@ -120,6 +130,15 @@ class Penguin:
         self.dx = min(1, self.body_width * 0.1)
         self.dy = min(1, self.body_width * 0.1)
 
+        self.particle_dict = {
+            "angry": (self.head_x, self.head_y),
+            "heart": (self.body_x + self.body_width//2,
+                      self.body_y + self.body_height//4),
+            "sleepy": (self.head_x + self.head_size, self.head_y),
+            "spark": (0, self.head_y),
+            "sweat": (self.head_x + self.head_size, self.head_y)
+        }
+
     def set_fe(self, new_fe):
         if new_fe in self.facial_expressions:
             self.fe = new_fe
@@ -128,6 +147,15 @@ class Penguin:
             utils.debug("warning: attempted to give penguin illegal "
                         + "facial expression:",
                         new_fe)
+
+    def set_particle(self, new_particle):
+        if new_particle in self.particles:
+            self.particle = new_particle
+            utils.debug("New particle:", self.particle)
+        else:
+            utils.debug("warning: attempted to give penguin illegal "
+                        + "particle:",
+                        new_particle)
 
     def _reset_image(self):
         self.draw.rectangle([0, 0, self.size - 1, self.size - 1], fill=black)
@@ -343,6 +371,19 @@ class Penguin:
                                 self.angle_right_foot,
                                 fill=orange)
 
+    def _draw_particle(self):
+        if self.particle and self.particle != "none":
+            img = PIL.Image.open("./particles/" + self.particle + ".png")
+            x0, y0 = self.particle_dict[self.particle]
+
+            for x in range(img.width):
+                for y in range(img.height):
+                    pixel = img.getpixel((x, y))
+                    if pixel[3] != 0:
+                        # non-transparent
+                        self.image.putpixel((x0 + x, y0 + y), pixel)
+            
+
     def get_pixels(self):
         """
         Return the pixel matrix of the drawn penguin as an array of arrays. Each
@@ -366,4 +407,5 @@ class Penguin:
         self._draw_arms(angle_right_arm, angle_left_arm)
         self._draw_head(angle_head)
         self._draw_feet(angle_right_foot, angle_left_foot)
+        self._draw_particle()
         return self.get_pixels()

@@ -47,6 +47,8 @@ def llm_get_information(myllm, user_input):
     ## Facial Expression
     myllm.push_prompt(llm.build_prompt(llm.PromptType.FACE), user_prompt, "FE")
 
+    ## Particle
+    myllm.push_prompt(llm.particle_prompt, user_prompt, "PARTICLE")
 
     # Executing Prompts ...
     utils.debug("Executing prompts...")
@@ -87,6 +89,9 @@ def llm_get_information(myllm, user_input):
 
     res["ANGLES"] = angles
 
+    ## Particle
+    res["PARTICLE"] = responses["PARTICLE"].lower()
+
     # RES is a dictionary containing all the results
     return res
 
@@ -126,6 +131,9 @@ def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
         ## Facial Expression
         fe = llm_data["FE"]
         penguin.set_fe(fe)
+        ## Particle
+        particle = llm_data["PARTICLE"]
+        penguin.set_particle(particle)
         ## Angles
         utils.debug(f"LLM generated {frame_count} frames, "
                     + f"animation will last {frame_count*dt:.2f} s")
