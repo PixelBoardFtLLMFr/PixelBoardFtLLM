@@ -113,7 +113,8 @@ The particle you must choose from are :
     sleepy # When sleepy
     spark # When curious, proud, etc
     sweat # When tired, embarrassed
-    Nonce # No particle
+    cloud # When flying
+    none # No particle
 """
 
 def build_prompt(kind):

@@ -68,6 +68,7 @@ class Penguin:
         "sleepy",
         "spark",
         "sweat",
+        "cloud",
         "none"
     ]
 
@@ -83,6 +84,7 @@ class Penguin:
         self.angle_head       = None
         self.fe = "neutral"
         self.particle = None
+        self.particle_pos = 0
 
     def set_size(self, new_size):
         self.size = new_size
@@ -132,11 +134,11 @@ class Penguin:
 
         self.particle_dict = {
             "angry": (self.head_x, self.head_y),
-            "heart": (self.body_x + self.body_width//2,
-                      self.body_y + self.body_height//4),
+            "heart": (self.body_x, self.body_y),
             "sleepy": (self.head_x + self.head_size, self.head_y),
             "spark": (0, self.head_y),
-            "sweat": (self.head_x + self.head_size, self.head_y)
+            "sweat": (self.head_x + self.head_size, self.head_y),
+            "cloud": (0, 0)
         }
 
     def set_fe(self, new_fe):
@@ -376,12 +378,18 @@ class Penguin:
             img = PIL.Image.open("./particles/" + self.particle + ".png")
             x0, y0 = self.particle_dict[self.particle]
 
+            if self.particle == "cloud":
+                self.particle_pos += 2
+            else:
+                self.particle_pos = 0
+
             for x in range(img.width):
                 for y in range(img.height):
                     pixel = img.getpixel((x, y))
                     if pixel[3] != 0:
                         # non-transparent
-                        self.image.putpixel((x0 + x, y0 + y), pixel)
+                        final_y = (y0 + y + self.particle_pos)%self.size
+                        self.image.putpixel((x0 + x, final_y), pixel)
             
 
     def get_pixels(self):
