@@ -4,6 +4,7 @@ import numpy as np
 import tkinter as tk
 import time
 import PIL.ImageTk, PIL.Image
+import threading as th
 # Our Modules
 import llm
 import utils
@@ -108,7 +109,7 @@ def draw_all(canvas, penguin, simulator, board, angles):
     draw_pixel_board(board, pixels)
 
 def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
-    global animating
+    global animating, adjust_th, stt
     angles = llm_data["ANGLES"]
     frame_count = len(angles)
 
@@ -117,6 +118,8 @@ def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
         utils.debug()
         animating = False
         user_input.set(prompt_str)
+        adjust_th.join()
+        process_speech()
         return
 
 
@@ -135,7 +138,9 @@ def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
 
         utils.debug(f"LLM generated {frame_count} frames, "
                     + f"animation will last {frame_count*dt:.2f} s")
-
+        ## Mic Adjustment
+        adjust_th = th.Thread(target=stt.adjust)
+        adjust_th.start()
 
     # Other frames
     ## Angles
@@ -172,12 +177,17 @@ def process_speech(*_):
         return
 
     stt.set_lang(lang_var.get())
-    text = stt.listen()
-    user_input.set(text)
 
-    if text == None:
-        print("Error during recognition", flush=True)
-        return
+    text = None
+
+    while not text:
+        text = stt.listen()
+        user_input.set(text)
+
+        if text == None:
+            print("Error during recognition, retrying", flush=True)
+            stt.adjust()
+    
     animating = True
     utils.debug(text)
 
@@ -236,6 +246,9 @@ board = pixelboard.PixelBoard(args.port,
                                [18, 13, 8, 3],
                                [19, 14, 9, 4]])
 stt = SpeechToText()
+stt.adjust()
+
+adjust_th = None
 
 app = tk.Tk()
 app.title("Pixel Penguin Project")
@@ -271,5 +284,6 @@ draw_all(canvas, mypenguin, simulator, board, [20, -20, 0, 0, 0])
 if args.quick:
     user_input.set(args.quick)
     process_input()
+
 
 app.mainloop()

@@ -1,4 +1,5 @@
 import speech_recognition as sr
+import utils
 
 class Lang:
     EN = "en-US"
@@ -21,7 +22,6 @@ class SpeechToText:
         self.recognizer = sr.Recognizer()
         self.microphone = sr.Microphone()
         self.microphone_stream = self.microphone.__enter__()
-        self.recognizer.adjust_for_ambient_noise(self.microphone_stream)
 
     def __del__(self):
         self.microphone_stream.__exit__(None, None, None)
@@ -31,8 +31,13 @@ class SpeechToText:
 
     def listen(self):
         try:
-            audio_data = self.recognizer.listen(self.microphone_stream)
+            audio_data = self.recognizer.listen(self.microphone_stream, timeout=5)
             text = self.recognizer.recognize_google(audio_data, language=self.lang)
             return text
         except:
             return None
+
+    def adjust(self):
+        utils.debug("Starting microphone adjustment")
+        self.recognizer.adjust_for_ambient_noise(self.microphone_stream)
+        utils.debug("End of microphone adjustment")
