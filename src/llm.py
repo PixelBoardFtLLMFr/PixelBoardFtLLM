@@ -114,6 +114,7 @@ The particle you must choose from are :
     spark # When curious, proud, etc
     sweat # When tired, embarrassed
     cloud # When flying
+    question # When you don't know what to do, or cannot do it
     none # No particle
 """
 

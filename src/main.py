@@ -65,17 +65,11 @@ def llm_get_information(myllm, user_input):
     for kind in limb_prompt_types:
         __res_or_die__ = llm.interprete_as_nparray(responses[f"ANGLE{kind}"])
         if __res_or_die__ is None:
-            # angles = {llm.PromptType.ARM: [[0, 0]],
-            #           llm.PromptType.LEG: [[0, 0]],
-            #           llm.PromptType.HEAD: [[0]]}
-            # break
-            # utils.debug("warning: LLM bullshit detected")
             angles[kind] = [[0] * (1 if kind == llm.PromptType.HEAD else 2)]
         else:
             angles[kind] = __res_or_die__
 
     myarr = [np.shape(angles[kind])[0] for kind in limb_prompt_types]
-    # utils.debug("myarr =", myarr)
     maxlen = max(*myarr)
 
     angles[llm.PromptType.ARM] = array_setlength(angles[llm.PromptType.ARM], maxlen)
@@ -135,6 +129,10 @@ def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
         particle = llm_data["PARTICLE"]
         penguin.set_particle(particle)
         ## Angles
+        if np.sum(angles) == 0:
+            utils.debug("no movement, adding question mark")
+            penguin.set_particle("question")
+
         utils.debug(f"LLM generated {frame_count} frames, "
                     + f"animation will last {frame_count*dt:.2f} s")
 

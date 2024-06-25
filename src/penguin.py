@@ -69,6 +69,7 @@ class Penguin:
         "spark",
         "sweat",
         "cloud",
+        "question",
         "none"
     ]
 
@@ -138,7 +139,8 @@ class Penguin:
             "sleepy": (self.head_x + self.head_size, self.head_y),
             "spark": (0, self.head_y),
             "sweat": (self.head_x + self.head_size, self.head_y),
-            "cloud": (0, 0)
+            "cloud": (0, 0),
+            "question": (self.head_x + self.head_size, self.head_y)
         }
 
     def set_fe(self, new_fe):
@@ -195,7 +197,7 @@ class Penguin:
     def _draw_sad_eyes(self):
         # Horizontal Eyes (- _ -)
         for point in self.eye_points:
-            utils.debug("Drawing sad eyes")
+            # utils.debug("Drawing sad eyes")
             # Tear
             x1, y1 = self._rotate_head_point(*point[0])
             x2, y2 = self._rotate_head_point(point[0][0] - self.eye_size//2, point[0][1] + self.eye_size*3//2)
