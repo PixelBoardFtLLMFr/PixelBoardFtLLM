@@ -391,7 +391,7 @@ class Penguin:
                     if pixel[3] != 0:
                         # non-transparent
                         final_y = (y0 + y + self.particle_pos)%self.size
-                        self.image.putpixel((x0 + x, final_y), pixel)
+                        self.image.putpixel((min(x0 + x, self.size), final_y), pixel)
             
 
     def get_pixels(self):

@@ -119,7 +119,6 @@ def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
         animating = False
         user_input.set(prompt_str)
         adjust_th.join()
-        process_speech()
         return
 
 
@@ -195,7 +194,10 @@ def process_speech(*_):
 
     draw_next_frame(canvas, mypenguin, simulator, board, llm_data, 0)
 
-
+def speech_loop():
+    global running
+    while running:
+        process_speech()
 
 
 ppp_desc = "Pixel Penguin Project a.k.a. PPP"
@@ -267,8 +269,8 @@ user_entry.grid(column=1, row=0, sticky='S')
 
 submit_button = tk.Button(app, text="Submit", command=process_input)
 submit_button.grid(column=1, row=1, sticky='N')
-submit_button = tk.Button(app, text="Talk", command=process_speech)
-submit_button.grid(column=1, row=2)
+# submit_button = tk.Button(app, text="Talk", command=process_speech)
+# submit_button.grid(column=1, row=2)
 
 quit_button = tk.Button(app, text="Quit", command=app.destroy)
 quit_button.grid(column=1, row=row_count-1, sticky='SE')
@@ -285,5 +287,10 @@ if args.quick:
     user_input.set(args.quick)
     process_input()
 
-
+running = True
+    
+speech_thread = th.Thread(target=speech_loop)
+speech_thread.start()
 app.mainloop()
+running = False
+speech_thread.join()

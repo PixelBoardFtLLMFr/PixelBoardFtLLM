@@ -16,6 +16,7 @@ class Lang:
              ("Chinese", CN)]
 
 class SpeechToText:
+    _timeout = 5
     def __init__(self, lang=Lang.EN):
         self.lang = lang
 
@@ -31,7 +32,10 @@ class SpeechToText:
 
     def listen(self):
         try:
-            audio_data = self.recognizer.listen(self.microphone_stream, timeout=5)
+            # audio_data = self.recognizer.listen_in_background(self.microphone_stream,
+            #                                                   timeout=self._timeout,
+            #                                                   phrase_time_limit=self._timeout)
+            audio_data = self.recognizer.listen(self.microphone_stream, timeout=self._timeout, phrase_time_limit=self._timeout)
             text = self.recognizer.recognize_google(audio_data, language=self.lang)
             return text
         except:
