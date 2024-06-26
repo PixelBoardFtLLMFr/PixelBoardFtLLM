@@ -191,7 +191,7 @@ def process_speech(*_):
     """
     Process the user input as a speech.
     """
-    global myllm, canvas, mypenguin, simulator, stt, animating, board, lang_var, user_input
+    global myllm, canvas, mypenguin, simulator, stt, animating, board, lang_var, user_input, input_missed
     if animating:
         return
 
@@ -202,11 +202,13 @@ def process_speech(*_):
     if not text:
         print("Error during recognition, retrying", flush=True)
         stt.adjust()
+        input_missed += 1
         return
     
     user_input.set(text)
     
     animating = True
+    input_missed = 0
     utils.debug(text)
 
     llm_data = llm_get_information(myllm, text)
@@ -214,13 +216,20 @@ def process_speech(*_):
     draw_next_frame(canvas, mypenguin, simulator, board, llm_data, 0)
 
 def speech_loop():
-    global running, submitting
+    global running, submitting, input_missed, mypenguin, canvas, simulator, board
     while running:
         if submitting:
             process_input()
+            input_missed = 0
             submitting = False
         else:
             process_speech()
+
+        if input_missed == max_missed:
+            mypenguin.set_fe("neutral")
+            mypenguin.set_particle("question")
+            draw_all(canvas, mypenguin, simulator, board, [0]*5)
+            input_missed = 0
 
 
 ppp_desc = "Pixel Penguin Project a.k.a. PPP"
@@ -310,6 +319,8 @@ if args.quick:
 
 running = True
 submitting = False
+max_missed = 5
+input_missed = 0
     
 speech_thread = th.Thread(target=speech_loop)
 speech_thread.start()
