@@ -1,15 +1,7 @@
 import PIL.Image, PIL.ImageDraw
 import numpy as np
 import utils
-
-black  = (0,   0,   0)
-white  = (10,  10,  10)
-bright = (200, 200, 200)
-orange = (255, 125, 0)
-green  = (0,   255, 130)
-yellow = (255, 222, 40)
-blue   = (50,  50,  255)
-red    = (255, 0,   0)
+from colors import *
 
 def _rotate_point(x, y, cx, cy, angle):
     """
@@ -86,6 +78,7 @@ class Penguin:
         self.fe = "neutral"
         self.particle = None
         self.particle_pos = 0
+        self.eye = None
 
     def set_size(self, new_size):
         self.size = new_size
@@ -161,6 +154,9 @@ class Penguin:
                         + "particle:",
                         new_particle)
 
+    def set_eye(self, eye):
+        self.eye = eye
+
     def _reset_image(self):
         self.draw.rectangle([0, 0, self.size - 1, self.size - 1], fill=black)
 
@@ -181,19 +177,6 @@ class Penguin:
     def _rotate_head_point(self, x, y):
         return _rotate_point(x, y, self.head_cx, self.head_cy, self.head_angle)
 
-    def _draw_neutral_eyes(self):
-        # Vertical Eyes (| _ |)
-        for point in self.eye_points:
-            _x1, _y1 = self._rotate_head_point(*point[0])
-            _x2, _y2 = self._rotate_head_point(*point[1])
-
-            x1 = min(_x1, _x2)
-            x2 = max(_x1, _x2)
-            y1 = min(_y1, _y2)
-            y2 = max(_y1, _y2)
-
-            self.draw.rectangle([x1, y1, x2, y2], fill=yellow)
-
     def _draw_eye_matrix(self, eye):
         """
         EYE should be a 3x3 matrix of pixels.
@@ -202,11 +185,16 @@ class Penguin:
             for x in range(len(eye[0])):
                 x_left, y_left = self._rotate_head_point(self.eye_left_x1 + x,
                                                          self.eye_y1 + y)
-                self.draw.point([x_left, y_left], fill=eye[y][x])
+                self.draw.point([x_left, y_left], fill=tuple(eye[y][x]))
 
                 x_right, y_right = self._rotate_head_point(self.eye_right_x1 + x,
                                                          self.eye_y1 + y)
-                self.draw.point([x_right, y_right], fill=eye[y][len(eye[0]) - 1 - x])
+                self.draw.point([x_right, y_right], fill=tuple(eye[y][len(eye[0]) - 1 - x]))
+
+    def _draw_neutral_eyes(self):
+        # Vertical Eyes (| _ |)
+        eye = [[yellow, yellow, white]]*3
+        self._draw_eye_matrix(eye)
 
     def _draw_sad_eyes(self):
         # Horizontal Eyes (- _ -)
@@ -237,6 +225,9 @@ class Penguin:
                [white, yellow, white]]
         self._draw_eye_matrix(eye)
 
+    def _draw_self_eye(self):
+        self._draw_eye_matrix(self.eye)
+
     def _draw_head(self, angle):
         self.head_angle = angle
         _draw_rotated_circle(self.draw,
@@ -246,8 +237,9 @@ class Penguin:
                              self.head_angle,
                              fill=white,
                              outline=blue)
-
-        if self.fe == "neutral":
+        if not self.eye is None:
+            self._draw_self_eye()
+        elif self.fe == "neutral":
             self._draw_neutral_eyes()
         elif self.fe == "sad":
             self._draw_sad_eyes()

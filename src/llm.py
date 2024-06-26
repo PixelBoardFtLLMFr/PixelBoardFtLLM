@@ -4,6 +4,7 @@ import ast
 import numpy as np
 import penguin
 import utils
+from colors import *
 
 class PromptType:
     """
@@ -118,6 +119,32 @@ The particle you must choose from are :
     none # No particle
 """
 
+# Eye prompt
+
+eye_prompt = """You are a penguin character. You will be given an action to do.
+Then, you will have to generate an eye design for the character. An eye design
+consist in a two-dimensional Python array of colors. The available colors are
+the following :
+
+bright
+white
+red
+yellow
+blue
+green
+
+Here are a couple examples of input and corresponding output :
+
+be sad
+[[yellow, yellow, yellow],[white, blue, blue],[blue, white, white]]
+
+you are cute
+[[white, yellow, white],[yellow, white, yellow],[white, white, white]]
+
+If you do not know what kind of eye to draw, just output \"None\". If you know
+what to draw, simply output the array of pixels.
+"""
+
 def build_prompt(kind):
     """
     Build the *angle* prompt for the given KIND.
@@ -145,11 +172,12 @@ def interprete_as_nparray(code_as_str):
     res = None
 
     try:
-        res = np.array(ast.literal_eval(code_as_str))
+        # res = np.array(ast.literal_eval(code_as_str))
+        res = np.array(eval(code_as_str))
         shape = np.shape(res)
-        if len(shape) != 2:
-            print(f"LLM returned illegal array : {res}")
-            res = None
+        # if len(shape) != 2:
+        #     print(f"LLM returned illegal array : {res}")
+        #     res = None
         if shape[0] == 0:
             utils.debug("warning: LLM produced an empty array, returning zeros")
             res = np.array([[0] * shape[1]])

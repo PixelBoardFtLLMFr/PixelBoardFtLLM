@@ -51,6 +51,10 @@ def llm_get_information(myllm, user_input):
     ## Particle
     myllm.push_prompt(llm.particle_prompt, user_prompt, "PARTICLE")
 
+    ## Eye
+    myllm.push_prompt(llm.eye_prompt, user_prompt, "EYE")
+
+
     # Executing Prompts ...
     utils.debug("Executing prompts...")
     responses = myllm.execute_prompts()
@@ -86,6 +90,11 @@ def llm_get_information(myllm, user_input):
 
     ## Particle
     res["PARTICLE"] = responses["PARTICLE"].lower()
+
+    ## Eye
+    utils.debug("Interpreting eye")
+    res["EYE"] = llm.interprete_as_nparray(responses["EYE"])
+    utils.debug("Eye interpretation done")
 
     # RES is a dictionary containing all the results
     return res
@@ -137,6 +146,11 @@ def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
 
         utils.debug(f"LLM generated {frame_count} frames, "
                     + f"animation will last {frame_count*dt:.2f} s")
+        # Eye
+        if not llm_data["EYE"] is None:
+            utils.debug("LLM-generated eyes :")
+            utils.debug(llm_data["EYE"])
+            penguin.set_eye(llm_data["EYE"])
         ## Mic Adjustment
         adjust_th = th.Thread(target=stt.adjust)
         adjust_th.start()
