@@ -292,8 +292,6 @@ user_entry.grid(column=1, row=0, sticky='S')
 
 submit_button = tk.Button(app, text="Submit", command=set_submiting)
 submit_button.grid(column=1, row=1, sticky='N')
-# submit_button = tk.Button(app, text="Talk", command=process_speech)
-# submit_button.grid(column=1, row=2)
 
 quit_button = tk.Button(app, text="Quit", command=app.destroy)
 quit_button.grid(column=1, row=row_count-1, sticky='SE')
