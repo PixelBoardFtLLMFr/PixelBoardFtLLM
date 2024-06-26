@@ -20,7 +20,9 @@ def array_setlength(array, newlen):
     """
     currlen = np.shape(array)[0]
 
-    if currlen >= newlen:
+    if currlen == 0:
+        return [0]*newlen
+    elif currlen >= newlen:
         return np.resize(array, (newlen, np.shape(array)[1]))
     else:
         res = np.copy(array)
@@ -93,7 +95,7 @@ def llm_get_information(myllm, user_input):
 
     ## Eye
     utils.debug("Interpreting eye")
-    res["EYE"] = llm.interprete_as_nparray(responses["EYE"])
+    res["EYE"] = llm.interprete_eye(responses["EYE"])
     utils.debug("Eye interpretation done")
 
     # RES is a dictionary containing all the results
@@ -146,7 +148,7 @@ def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
 
         utils.debug(f"LLM generated {frame_count} frames, "
                     + f"animation will last {frame_count*dt:.2f} s")
-        # Eye
+        ## Eye
         if not llm_data["EYE"] is None:
             utils.debug("LLM-generated eyes :")
             utils.debug(llm_data["EYE"])

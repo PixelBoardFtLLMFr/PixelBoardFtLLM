@@ -105,7 +105,7 @@ class Penguin:
         self.head_cx = self.head_x + self.head_size // 2
         self.head_cy = self.head_y + self.head_size
 
-        self.eye_left_x1 = self.head_cx - self.eye_x_offset - self.eye_size // 2 + 1
+        self.eye_left_x1 = self.head_cx - self.eye_x_offset - self.eye_size // 2
         self.eye_left_x2 = self.eye_left_x1 + self.eye_size // 2
         self.eye_y1 = self.head_cy - self.eye_y_offset
         self.eye_y2 = self.head_cy - self.eye_y_offset + self.eye_size
