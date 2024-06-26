@@ -163,6 +163,10 @@ def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
                  lambda:
                  draw_next_frame(canvas, penguin, simulator, board, llm_data, index+1))
 
+def set_submiting():
+    global submitting
+    submitting = True
+
 def process_input(*_):
     """
     Process the user input. If an animation is currently running, do nothing.
@@ -191,15 +195,14 @@ def process_speech(*_):
 
     stt.set_lang(lang_var.get())
 
-    text = None
+    text = stt.listen()
 
-    while not text:
-        text = stt.listen()
-        user_input.set(text)
-
-        if text == None:
-            print("Error during recognition, retrying", flush=True)
-            stt.adjust()
+    if not text:
+        print("Error during recognition, retrying", flush=True)
+        stt.adjust()
+        return
+    
+    user_input.set(text)
     
     animating = True
     utils.debug(text)
@@ -209,9 +212,13 @@ def process_speech(*_):
     draw_next_frame(canvas, mypenguin, simulator, board, llm_data, 0)
 
 def speech_loop():
-    global running
+    global running, submitting
     while running:
-        process_speech()
+        if submitting:
+            process_input()
+            submitting = False
+        else:
+            process_speech()
 
 
 ppp_desc = "Pixel Penguin Project a.k.a. PPP"
@@ -281,7 +288,7 @@ user_input = tk.StringVar(app, value=prompt_str)
 user_entry = tk.Entry(app, textvariable=user_input)
 user_entry.grid(column=1, row=0, sticky='S')
 
-submit_button = tk.Button(app, text="Submit", command=process_input)
+submit_button = tk.Button(app, text="Submit", command=set_submiting)
 submit_button.grid(column=1, row=1, sticky='N')
 # submit_button = tk.Button(app, text="Talk", command=process_speech)
 # submit_button.grid(column=1, row=2)
@@ -302,6 +309,7 @@ if args.quick:
     process_input()
 
 running = True
+submitting = False
     
 speech_thread = th.Thread(target=speech_loop)
 speech_thread.start()
