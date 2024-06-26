@@ -194,84 +194,48 @@ class Penguin:
 
             self.draw.rectangle([x1, y1, x2, y2], fill=yellow)
 
+    def _draw_eye_matrix(self, eye):
+        """
+        EYE should be a 3x3 matrix of pixels.
+        """
+        for y in range(len(eye)):
+            for x in range(len(eye[0])):
+                x_left, y_left = self._rotate_head_point(self.eye_left_x1 + x,
+                                                         self.eye_y1 + y)
+                self.draw.point([x_left, y_left], fill=eye[y][x])
+
+                x_right, y_right = self._rotate_head_point(self.eye_right_x1 + x,
+                                                         self.eye_y1 + y)
+                self.draw.point([x_right, y_right], fill=eye[y][len(eye[0]) - 1 - x])
+
     def _draw_sad_eyes(self):
         # Horizontal Eyes (- _ -)
-        for point in self.eye_points:
-            # utils.debug("Drawing sad eyes")
-            # Tear
-            x1, y1 = self._rotate_head_point(*point[0])
-            x2, y2 = self._rotate_head_point(point[0][0] - self.eye_size//2, point[0][1] + self.eye_size*3//2)
-
-            self.draw.line([x1, y1, x2, y2], fill=blue)
-            # Eye
-            _x1, _y1 = self._rotate_head_point(*point[0])
-            _x2, _y2 = self._rotate_head_point(point[0][0] + self.eye_size, point[0][1])
-
-            x1 = min(_x1, _x2)
-            x2 = max(_x1, _x2)
-            y1 = min(_y1, _y2)
-            y2 = max(_y1, _y2)
-
-            self.draw.rectangle([x1, y1, x2, y2], fill=yellow)
+        eye = [[yellow, yellow, yellow],
+               [white, blue, blue],
+               [blue, white, white]]
+        self._draw_eye_matrix(eye)
 
     def _draw_happy_eyes(self):
         # Half-circle Eyes (^ _ ^)
         #         (x0, y0)
         #        /        \
         # (x1, y1)       (x2, y2)
-        for point in self.eye_points:
-            x0, y0 = self._rotate_head_point(*point[0])
-            x1, y1 = self._rotate_head_point(point[0][0] - self.eye_size//2, point[0][1] + self.eye_size//2)
-            x2, y2 = self._rotate_head_point(point[0][0] + self.eye_size//2, point[0][1] + self.eye_size//2)
-
-            self.draw.line([x1, y1, x0, y0], fill=yellow)
-            self.draw.line([x0, y0, x2, y2], fill=yellow)
+        eye = [[white, yellow, white],
+               [yellow, white, yellow],
+               [white, white, white]]
+        self._draw_eye_matrix(eye)
 
     def _draw_angry_eyes(self):
-        eye_fill = bright
-        # Left
-        _x1, _y1 = self._rotate_head_point(self.eye_points[0][0][0],
-                                           self.eye_points[0][0][1] + self.eye_size//2)
-        _x2, _y2 = self._rotate_head_point(*self.eye_points[0][1])
-
-        x1 = min(_x1, _x2)
-        x2 = max(_x1, _x2)
-        y1 = min(_y1, _y2)
-        y2 = max(_y1, _y2)
-
-        self.draw.rectangle([x1, y1, x2, y2], fill=red)
-
-        x1, y1 = self._rotate_head_point(*self.eye_points[0][0])
-        x2, y2 = self._rotate_head_point(*self.eye_points[0][1])
-
-        self.draw.line([x1, y1, x2, y2], fill=eye_fill)
-
-        # Right
-        _x1, _y1 = self._rotate_head_point(self.eye_points[1][1][0],
-                                           self.eye_points[1][1][1] - self.eye_size //2)
-        _x2, _y2 = self._rotate_head_point(*self.eye_points[1][1])
-
-        x1 = min(_x1, _x2)
-        x2 = max(_x1, _x2)
-        y1 = min(_y1, _y2)
-        y2 = max(_y1, _y2)
-
-        self.draw.rectangle([x1, y1, x2, y2], fill=red)
-
-        x1, y1 = self._rotate_head_point(self.eye_points[1][0][0] + self.eye_size//2, self.eye_points[1][0][1])
-        x2, y2 = self._rotate_head_point(self.eye_points[1][1][0] - self.eye_size//2, self.eye_points[1][1][1])
-
-        self.draw.line([x1, y1, x2, y2], fill=eye_fill)
+        eye = [[bright, white, white],
+               [red, bright, white],
+               [red, bright, white]]
+        self._draw_eye_matrix(eye)
 
     def _draw_surprised_eyes(self):
-        for point in self.eye_points:
-            _draw_rotated_circle(self.draw,
-                                 point[0][0],
-                                 point[0][1],
-                                 self.eye_size//2,
-                                 self.head_cx, self.head_cy,
-                                 self.head_angle,
-                                 fill=yellow, outline=yellow)
+        eye = [[white, yellow, white],
+               [yellow]*3,
+               [white, yellow, white]]
+        self._draw_eye_matrix(eye)
 
     def _draw_head(self, angle):
         self.head_angle = angle
