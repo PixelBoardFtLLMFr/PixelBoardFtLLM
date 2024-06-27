@@ -226,6 +226,7 @@ def speech_loop():
             process_speech()
 
         if input_missed == max_missed:
+            mypenguin.set_eye(None)
             mypenguin.set_fe("neutral")
             mypenguin.set_particle("question")
             draw_all(canvas, mypenguin, simulator, board, [0]*5)
