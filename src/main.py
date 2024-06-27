@@ -191,7 +191,7 @@ def process_speech(*_):
     """
     Process the user input as a speech.
     """
-    global myllm, canvas, mypenguin, simulator, stt, animating, board, lang_var, user_input, input_missed
+    global myllm, canvas, mypenguin, simulator, stt, animating, board, lang_var, user_input, input_missed, speak_label
     if animating:
         return
 
@@ -201,7 +201,9 @@ def process_speech(*_):
 
     if not text:
         print("Error during recognition, retrying", flush=True)
+        speak_label.config(bg='red')
         stt.adjust()
+        speak_label.config(bg='green')
         input_missed += 1
         return
     
@@ -302,6 +304,9 @@ user_entry.grid(column=1, row=0, sticky='S')
 
 submit_button = tk.Button(app, text="Submit", command=set_submiting)
 submit_button.grid(column=1, row=1, sticky='N')
+
+speak_label = tk.Label(app, background='green', width=20)
+speak_label.grid(column=1, row=2)
 
 quit_button = tk.Button(app, text="Quit", command=app.destroy)
 quit_button.grid(column=1, row=row_count-1, sticky='SE')
