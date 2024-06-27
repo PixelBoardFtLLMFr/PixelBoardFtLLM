@@ -155,7 +155,7 @@ class Penguin:
                         new_particle)
 
     def set_eye(self, eye):
-        if not np.shape(eye) == (3, 3, 3):
+        if not eye is None and not np.shape(eye) == (3, 3, 3):
             print("warning: attempted to give penguin illegal eye")
             print(eye)
             return
