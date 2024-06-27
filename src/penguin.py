@@ -282,7 +282,7 @@ class Penguin:
                                    arm_left_x1, arm_left_y1,
                                    arm_left_x2, arm_left_y2,
                                    arm_center_left_x, arm_center_left_y,
-                                   self.angle_left_arm,
+                                   -self.angle_left_arm,
                                    fill=blue)
 
         self.angle_right_arm = angle_right

@@ -335,7 +335,7 @@ def interprete_eye(code_as_str):
         if shape != (3, 3, 3):
             print("interprete_eye: warning: illegal shape of eye", shape)
     except Exception as e:
-        printf("interprete_eye:", e)
+        print("interprete_eye:", e)
 
     return res
 
