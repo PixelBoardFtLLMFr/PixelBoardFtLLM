@@ -169,6 +169,15 @@ def set_submiting():
     global submitting
     submitting = True
 
+def set_mic_status(activated):
+    global recording, speak_label
+    recording = activated
+    speak_label.config(bg=("green" if activated else "red"))
+
+def switch_mic_status():
+    global recording
+    set_mic_status(not recording)
+
 def process_input(*_):
     """
     Process the user input. If an animation is currently running, do nothing.
@@ -191,7 +200,7 @@ def process_speech(*_):
     """
     Process the user input as a speech.
     """
-    global myllm, canvas, mypenguin, simulator, stt, animating, board, lang_var, user_input, input_missed, speak_label
+    global myllm, canvas, mypenguin, simulator, stt, animating, board, lang_var, user_input, input_missed, speak_label, recording
     if animating:
         return
 
@@ -199,11 +208,15 @@ def process_speech(*_):
 
     text = stt.listen()
 
+    if not recording:
+        return
+
     if not text:
         print("Error during recognition, retrying", flush=True)
-        speak_label.config(bg='red')
+        speak_label.config(bg="red")
         stt.adjust()
-        speak_label.config(bg='green')
+        if recording:
+            speak_label.config(bg="green")
         input_missed += 1
         return
     
@@ -218,13 +231,13 @@ def process_speech(*_):
     draw_next_frame(canvas, mypenguin, simulator, board, llm_data, 0)
 
 def speech_loop():
-    global running, submitting, input_missed, mypenguin, canvas, simulator, board
+    global running, submitting, input_missed, mypenguin, canvas, simulator, board, recording
     while running:
         if submitting:
             process_input()
             input_missed = 0
             submitting = False
-        else:
+        elif recording:
             process_speech()
 
         if input_missed == max_missed:
@@ -284,6 +297,7 @@ board = pixelboard.PixelBoard(args.port,
                                [19, 14, 9, 4]])
 stt = SpeechToText()
 stt.adjust()
+recording = True
 
 adjust_th = None
 
@@ -307,6 +321,9 @@ submit_button.grid(column=1, row=1, sticky='N')
 
 speak_label = tk.Label(app, background='green', width=20)
 speak_label.grid(column=1, row=2)
+
+switch_button = tk.Button(app, text="Mic On/Off", command=switch_mic_status)
+switch_button.grid(column=1, row=3, sticky='N')
 
 quit_button = tk.Button(app, text="Quit", command=app.destroy)
 quit_button.grid(column=1, row=row_count-1, sticky='SE')
