@@ -61,7 +61,7 @@ class Penguin:
         "spark",
         "sweat",
         "cloud",
-        "question",
+        # "question",
         "none"
     ]
 
@@ -133,7 +133,7 @@ class Penguin:
             "spark": (0, self.head_y),
             "sweat": (self.head_x + self.head_size, self.head_y),
             "cloud": (0, 0),
-            "question": (self.head_x + self.head_size, self.head_y)
+            # "question": (self.head_x + self.head_size, self.head_y)
         }
 
     def set_fe(self, new_fe):

@@ -69,10 +69,12 @@ def llm_get_information(myllm, user_input):
     
     ## Angles
     angles = {}
+    utils.debug("Processing angles")
     for kind in limb_prompt_types:
         __res_or_die__ = llm.interprete_as_nparray(responses[f"ANGLE{kind}"])
         if __res_or_die__ is None:
             angles[kind] = [[0] * (1 if kind == llm.PromptType.HEAD else 2)]
+            utils.debug("llm_get_information: filling with zeros")
         else:
             angles[kind] = __res_or_die__
 
@@ -94,9 +96,9 @@ def llm_get_information(myllm, user_input):
     res["PARTICLE"] = responses["PARTICLE"].lower()
 
     ## Eye
-    utils.debug("Interpreting eye")
+    utils.debug("Processing eye")
     res["EYE"] = llm.interprete_eye(responses["EYE"])
-    utils.debug("Eye interpretation done")
+    utils.debug("LLM data processing done")
 
     # RES is a dictionary containing all the results
     return res
