@@ -145,8 +145,8 @@ def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
         penguin.set_particle(particle)
         ## Angles
         if np.sum(angles) == 0:
-            utils.debug("no movement, adding question mark")
-            penguin.set_particle("question")
+            utils.debug("no movement, removing particle")
+            penguin.set_particle("none")
 
         utils.debug(f"LLM generated {frame_count} frames, "
                     + f"animation will last {frame_count*dt:.2f} s")
@@ -154,7 +154,7 @@ def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
         if not llm_data["EYE"] is None:
             utils.debug("LLM-generated eyes :")
             utils.debug(llm_data["EYE"])
-            penguin.set_eye(llm_data["EYE"])
+        penguin.set_eye(llm_data["EYE"])
         ## Mic Adjustment
         adjust_th = th.Thread(target=stt.adjust)
         adjust_th.start()
