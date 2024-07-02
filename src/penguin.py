@@ -80,7 +80,7 @@ class Penguin:
         self.particle_pos = 0
         self.eye = None
 
-    def set_size(self, new_size):
+    def set_size(self, new_size, height=0):
         self.size = new_size
 
         self.body_width   = int(self.size * 0.4)
@@ -96,7 +96,7 @@ class Penguin:
         self.arm_height   = int(self.size * 0.4)
 
         self.body_x = (self.size - self.body_width)  // 2
-        self.body_y = self.size // 2
+        self.body_y = self.size // 2 - height
         self.head_x = self.body_x + (self.body_width - self.head_size) // 2
         self.head_y = self.body_y - self.head_size
         self.foot_y = self.body_y + self.body_height
@@ -350,9 +350,8 @@ class Penguin:
                     pixel = img.getpixel((x, y))
                     if pixel[3] != 0:
                         # non-transparent
-                        final_y = (y0 + y + self.particle_pos)%self.size
+                        final_y = (y0 + y + self.particle_pos) % self.size
                         self.image.putpixel((min(x0 + x, self.size - 1), final_y), pixel)
-            
 
     def get_pixels(self):
         """

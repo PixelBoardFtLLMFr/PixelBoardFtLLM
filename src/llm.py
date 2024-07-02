@@ -301,6 +301,17 @@ If you do not know what kind of eye to draw, just output \"None\". If you know
 what to draw, only output the array of pixels, no punctuation, no comment.
 """
 
+# Height Prompt
+
+height_prompt = """You are a cute penguin character called "Ice-kun". You
+react to any command by moving your body.  You move your body by giving arrays
+of height, in the Python format.  You will give tables of height for doing a
+specific action given by the user.  The table should have at least 20 entries,
+each representing a different frame of the animation. Remember to always end on
+the neutral position, (0).  Do not write comments and return only the array. If no movement is needed for the action, then return [[0]]
+Here is an exemple of response : [[0],[0],[0],[0],[0],[0],[0],[0],[0]]
+"""
+
 def build_prompt(kind):
     """
     Build the *angle* prompt for the given KIND.

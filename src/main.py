@@ -56,6 +56,9 @@ def llm_get_information(myllm, user_input):
     ## Eye
     myllm.push_prompt(llm.eye_prompt, user_prompt, "EYE")
 
+    ## Height
+    myllm.push_prompt(llm.height_prompt, user_prompt, "HEIGHT")
+
 
     # Executing Prompts ...
     utils.debug("Executing prompts...")
@@ -94,6 +97,12 @@ def llm_get_information(myllm, user_input):
 
     ## Particle
     res["PARTICLE"] = responses["PARTICLE"].lower()
+
+    utils.debug("Height : ", responses["HEIGHT"])
+
+    height = llm.interprete_as_nparray(responses["HEIGHT"])
+
+    res["HEIGHT"] = height if not height is None else [[0]]
 
     ## Eye
     utils.debug("Processing eye")
@@ -162,6 +171,7 @@ def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
     # Other frames
     ## Angles
     utils.debug(f"\rFrame {index+1}/{frame_count}", end="")
+    mypenguin.set_size(mypenguin.size, llm_data["HEIGHT"][index][0] if index < len(llm_data["HEIGHT"]) else 0)
     draw_all(canvas, mypenguin, simulator, board, angles[index])
     canvas.after(int(dt*1000),
                  lambda:
