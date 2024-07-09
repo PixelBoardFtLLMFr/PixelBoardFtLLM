@@ -24,8 +24,8 @@ struct callback_data {
 	struct json_object *results;
 };
 
-static size_t http_post_callback(char *ptr, size_t size,
-				 size_t nmemb, void *__data)
+static size_t http_post_callback(char *ptr, size_t size, size_t nmemb,
+				 void *__data)
 {
 	struct callback_data *data = __data;
 	size_t realsize = size * nmemb;
@@ -42,7 +42,7 @@ static size_t http_post_callback(char *ptr, size_t size,
 		free(data->buf);
 		free(data);
 	}
-	
+
 	return realsize;
 }
 
@@ -76,7 +76,7 @@ struct llm_ctx *llm_init(const char *keyfile, const char *model)
 			bytes_read);
 		exit(EXIT_FAILURE);
 	}
-		
+
 	fclose(keystream);
 	line[bytes_read - 1] = '\0';
 	char auth_bearer[256] = "Authorization: Bearer ";
@@ -92,10 +92,12 @@ struct llm_ctx *llm_init(const char *keyfile, const char *model)
 	curl_easy_setopt(ctx->curl_handle, CURLOPT_URL, CHATGPT_URL);
 	/* Force the use of SSL.  Fail if not possible. */
 	curl_easy_setopt(ctx->curl_handle, CURLOPT_USE_SSL, CURLUSESSL_ALL);
-	curl_easy_setopt(ctx->curl_handle, CURLOPT_WRITEFUNCTION, http_post_callback);
+	curl_easy_setopt(ctx->curl_handle, CURLOPT_WRITEFUNCTION,
+			 http_post_callback);
 
 	ctx->headers = NULL;
-	ctx->headers = curl_slist_append(ctx->headers, "Content-Type: application/json");
+	ctx->headers = curl_slist_append(ctx->headers,
+					 "Content-Type: application/json");
 	ctx->headers = curl_slist_append(ctx->headers, ctx->auth_bearer_header);
 	curl_easy_setopt(ctx->curl_handle, CURLOPT_HTTPHEADER, ctx->headers);
 
@@ -132,16 +134,14 @@ struct json_object *json_object_prompt_part(const char *role,
 {
 	struct json_object *obj = json_object_new_object();
 
-	json_object_object_add(obj, "role",
-			       json_object_new_string(role));
-	json_object_object_add(obj, "content",
-			       json_object_new_string(content));
+	json_object_object_add(obj, "role", json_object_new_string(role));
+	json_object_object_add(obj, "content", json_object_new_string(content));
 
 	return obj;
 }
 
-void llm_push_prompt(struct llm_ctx *ctx, const char *key,
-		    const char *sys, const char *usr)
+void llm_push_prompt(struct llm_ctx *ctx, const char *key, const char *sys,
+		     const char *usr)
 {
 	/* Build the JSON data */
 	struct json_object *json_prompt = NULL;
@@ -165,19 +165,23 @@ struct json_object *llm_execute_prompts(struct llm_ctx *ctx)
 {
 	/* TODO: execute prompts in parallel */
 	struct json_object *results = json_object_new_object();
-	
-	json_object_object_foreach(ctx->prompts, key, val) {
+
+	json_object_object_foreach(ctx->prompts, key, val)
+	{
 		const char *post_data = json_object_to_json_string(val);
-		struct callback_data *callback_data = calloc(1, sizeof(*callback_data));
+		struct callback_data *callback_data =
+			calloc(1, sizeof(*callback_data));
 
 		callback_data->key = key;
 		callback_data->results = results;
 
-		curl_easy_setopt(ctx->curl_handle, CURLOPT_POSTFIELDS, post_data);
-		curl_easy_setopt(ctx->curl_handle, CURLOPT_WRITEDATA, (void *)callback_data);
+		curl_easy_setopt(ctx->curl_handle, CURLOPT_POSTFIELDS,
+				 post_data);
+		curl_easy_setopt(ctx->curl_handle, CURLOPT_WRITEDATA,
+				 (void *)callback_data);
 
 		curl_easy_perform(ctx->curl_handle);
 	}
-	
+
 	return results;
 }

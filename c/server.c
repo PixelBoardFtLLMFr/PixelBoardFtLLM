@@ -6,17 +6,17 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-enum MHD_Result answer(void *cls, struct MHD_Connection *con,
-		       const char *url, const char *method, const char*version,
+enum MHD_Result answer(void *cls, struct MHD_Connection *con, const char *url,
+		       const char *method, const char *version,
 		       const char *data, size_t *data_size, void **req_cls)
 {
-	(void) cls;
-	(void) url;
-	(void) method;
-	(void) version;
-	(void) data;
-	(void) data_size;
-	(void) req_cls;
+	(void)cls;
+	(void)url;
+	(void)method;
+	(void)version;
+	(void)data;
+	(void)data_size;
+	(void)req_cls;
 
 	const char *page = "<html><body>Hello, browser !</body></html>";
 	struct MHD_Response *response;
@@ -34,8 +34,8 @@ enum MHD_Result answer(void *cls, struct MHD_Connection *con,
 int main(void)
 {
 	struct MHD_Daemon *daemon;
-	daemon = MHD_start_daemon(MHD_USE_INTERNAL_POLLING_THREAD, PORT,
-				  NULL, NULL, &answer, NULL, MHD_OPTION_END);
+	daemon = MHD_start_daemon(MHD_USE_INTERNAL_POLLING_THREAD, PORT, NULL,
+				  NULL, &answer, NULL, MHD_OPTION_END);
 
 	if (!daemon)
 		exit(1);

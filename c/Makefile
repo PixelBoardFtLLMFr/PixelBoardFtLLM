@@ -24,3 +24,8 @@ server: server.o llm.o
 
 llm_tester: llm.o llm_tester.o
 	$(CC) $(__LDFLAGS) $(CURL_LDFLAGS) $(JSON_LDFLAGS) $(LDFLAGS) -o $@ $^
+
+fmt:
+	clang-format -i *.c *.h
+
+.PHONY: fmt

@@ -4,13 +4,13 @@
 
 #include "llm.h"
 
-int main(int argc, char *argv[]) {
-
+int main(int argc, char *argv[])
+{
 	if (argc < 2) {
 		fprintf(stderr, "Usage: %s KEYFILE\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
-	
+
 	struct llm_ctx *ctx = llm_init(argv[1], "gpt-3.5-turbo");
 	char *input = NULL;
 	size_t input_size = 0;
@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
 			perror("getline");
 			exit(EXIT_FAILURE);
 		}
-			
+
 		if (bytes_read < 1)
 			continue;
 
@@ -37,12 +37,14 @@ int main(int argc, char *argv[]) {
 
 		llm_push_prompt(ctx, "KEY", "", input);
 		results = llm_execute_prompts(ctx);
-		struct json_object *answer = json_object_object_get(results, "KEY");
+		struct json_object *answer =
+			json_object_object_get(results, "KEY");
 		answer = json_object_object_get(answer, "choices");
 		answer = json_object_array_get_idx(answer, 0);
 		answer = json_object_object_get(answer, "message");
 		answer = json_object_object_get(answer, "content");
-		printf("%s\n", json_object_to_json_string_ext(answer, JSON_C_TO_STRING_PRETTY));
+		printf("%s\n", json_object_to_json_string_ext(
+				       answer, JSON_C_TO_STRING_PRETTY));
 		json_object_put(results);
 	}
 
