@@ -1,4 +1,6 @@
 #include <microhttpd.h>
+#include <json_object.h>
+#include <json_tokener.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,40 +8,132 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-enum MHD_Result answer(void *cls, struct MHD_Connection *con, const char *url,
-		       const char *method, const char *version,
-		       const char *data, size_t *data_size, void **req_cls)
+struct coninfo {
+	char *buf;
+	size_t buf_size;
+	struct json_tokener *json_tok;
+	char *answer;
+};
+
+static enum MHD_Result handle_chunk(struct coninfo *coninfo, const char *data,
+				    size_t data_size)
 {
-	(void)cls;
-	(void)url;
-	(void)method;
-	(void)version;
-	(void)data;
-	(void)data_size;
-	(void)req_cls;
+	printf("trace: %s\n", __func__);
+	coninfo->answer = "REPLY FROM ITERATOR\n";
+	return MHD_YES;
 
-	const char *page = "<html><body>Hello, browser !</body></html>";
-	struct MHD_Response *response;
-	int ret;
+	/* struct json_tokener *json_tok = json_tokener_new(); */
+	/* struct json_object *json_obj = json_tokener_parse_ex(json_tok, data, size); */
 
-	response = MHD_create_response_from_buffer(strlen(page), (void *)page,
-						   MHD_RESPMEM_PERSISTENT);
+	/* if (!json_obj) { */
+	/* 	fprintf(stderr, "error: %s\n==begin==\n", */
+	/* 		json_tokener_error_desc( */
+	/* 			json_tokener_get_error(json_tok))); */
+	/* 	fwrite(data, 1, size, stderr); */
+	/* 	fprintf(stderr, "===end===\n"); */
+	/* 	return MHD_YES; */
+	/* } */
 
-	ret = MHD_queue_response(con, MHD_HTTP_OK, response);
-	MHD_destroy_response(response);
+	/* return MHD_NO; */
+}
 
-	return ret;
+static void cleanup_request(void *cls, struct MHD_Connection *con,
+			    void **req_cls, enum MHD_RequestTerminationCode toe)
+{
+	printf("trace: %s\n", __func__);
+	
+	struct coninfo *coninfo = *req_cls;
+
+	/* free(coninfo->buf); */
+	/* free(coninfo->answer); */
+	/* json_tokener_free(coninfo->json_tok); */
+	free(coninfo);
+}
+
+static enum MHD_Result handle_request(void *cls, struct MHD_Connection *con,
+				      const char *url, const char *method,
+				      const char *version, const char *data,
+				      size_t *data_size, void **req_cls)
+{
+	if (strcmp(method, "POST") != 0) {
+		fprintf(stderr, "error: bad method (%s)\n", method);
+		/* TODO: send error to client */
+		return MHD_queue_response(con, MHD_HTTP_METHOD_NOT_ALLOWED, NULL);
+	}
+
+	if (strcmp(url, "/") != 0) {
+		fprintf(stderr, "error: bad URL (%s)\n", url);
+		/* TODO: send error to client */
+		return MHD_queue_response(con, MHD_HTTP_FORBIDDEN, NULL);
+	}
+
+	if (*req_cls == NULL) {
+		/* first iteration */
+		printf("info: initializing response\n");
+
+		struct coninfo *coninfo = calloc(1, sizeof(*coninfo));
+
+		if (!coninfo) {
+			perror("malloc");
+			return MHD_NO;
+		}
+
+		*req_cls = (void *)coninfo;
+		return MHD_YES;
+	}
+
+	/* other iterations */
+	printf("info: other iteration\n");
+	struct coninfo *coninfo = *req_cls;
+
+	if (*data_size != 0) {
+		/* process chunk of data */
+		printf("info: processing data chunk :\n");
+		printf("==begin==\n");
+		fwrite(data, 1, *data_size, stdout);
+		printf("\n===end===\n");
+
+		int ret = handle_chunk(coninfo, data, *data_size);
+
+		if (ret == MHD_NO)
+			return MHD_NO;
+		
+		*data_size = 0;
+		return MHD_YES;
+	}
+	else if (coninfo->answer != NULL) {
+		/* reply */
+		printf("info: replying\n");
+
+		int ret;
+		struct MHD_Response *response = MHD_create_response_from_buffer(
+			strlen(coninfo->answer), (void *)coninfo->answer,
+			MHD_RESPMEM_PERSISTENT);
+
+		ret = MHD_queue_response(con, MHD_HTTP_OK, response);
+		MHD_destroy_response(response);
+
+		
+
+		return ret;
+	}
+
+	printf("warning: fell through %s\n", __func__);
+	return MHD_NO;
 }
 
 int main(void)
 {
 	struct MHD_Daemon *daemon;
 	daemon = MHD_start_daemon(MHD_USE_INTERNAL_POLLING_THREAD, PORT, NULL,
-				  NULL, &answer, NULL, MHD_OPTION_END);
+				  NULL, &handle_request, NULL,
+				  MHD_OPTION_NOTIFY_COMPLETED, &cleanup_request,
+				  NULL, MHD_OPTION_END);
 
 	if (!daemon)
 		exit(1);
 
+	printf("Listening on port %d\n", PORT);
 	getchar();
 	MHD_stop_daemon(daemon);
 

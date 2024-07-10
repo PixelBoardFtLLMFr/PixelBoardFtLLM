@@ -13,7 +13,7 @@ JSON_CFLAGS = $(shell pkg-config --cflags json-c)
 JSON_LDFLAGS = $(shell pkg-config --libs json-c)
 LDFLAGS ?= 
 
-__CFLAGS = -Wall -Wextra -DPORT=$(PORT) -DCHATGPT_URL=$(CHATGPT_URL) -D_POSIX_C_SOURCE=200809L
+__CFLAGS = -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -DPORT=$(PORT) -DCHATGPT_URL=$(CHATGPT_URL) -D_POSIX_C_SOURCE=200809L
 __LDFLAGS = 
 
 server: server.o llm.o
