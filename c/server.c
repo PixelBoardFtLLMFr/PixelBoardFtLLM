@@ -8,10 +8,16 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
+/* Information regarding a request being currently processed.  For each
+   request, a pointer to a coninfo structure is used by the handle_request
+   and handle_chunk functions to process the request. */
 struct coninfo {
+	/* currently received data */
 	char *buf;
 	size_t buf_size;
+	/* JSON parser */
 	struct json_tokener *json_tok;
+	/* answer to the request, non-NULL if processing is done */
 	char *answer;
 };
 
@@ -41,7 +47,7 @@ static void cleanup_request(void *cls, struct MHD_Connection *con,
 			    void **req_cls, enum MHD_RequestTerminationCode toe)
 {
 	printf("trace: %s\n", __func__);
-	
+
 	struct coninfo *coninfo = *req_cls;
 
 	/* free(coninfo->buf); */
@@ -50,6 +56,9 @@ static void cleanup_request(void *cls, struct MHD_Connection *con,
 	free(coninfo);
 }
 
+/* Called several times per request. The first time, *REQ_CLS is NULL, the
+   other times, it is set to what we set it to the first time, namely a
+   pointer to a coninfo structure. */
 static enum MHD_Result handle_request(void *cls, struct MHD_Connection *con,
 				      const char *url, const char *method,
 				      const char *version, const char *data,
@@ -97,7 +106,7 @@ static enum MHD_Result handle_request(void *cls, struct MHD_Connection *con,
 
 		if (ret == MHD_NO)
 			return MHD_NO;
-		
+
 		*data_size = 0;
 		return MHD_YES;
 	}
@@ -113,12 +122,11 @@ static enum MHD_Result handle_request(void *cls, struct MHD_Connection *con,
 		ret = MHD_queue_response(con, MHD_HTTP_OK, response);
 		MHD_destroy_response(response);
 
-		
-
 		return ret;
 	}
 
-	printf("warning: fell through %s\n", __func__);
+	/* should never be reached */
+	printf("error: fell through %s\n", __func__);
 	return MHD_NO;
 }
 
