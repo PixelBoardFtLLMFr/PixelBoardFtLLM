@@ -21,3 +21,8 @@ the Makefile content. To build the test program `llm_tester`, run
 # ChatGPT API Reference
 
 See [this page](https://platform.openai.com/docs/api-reference/chat/create).
+
+# Source Formatting
+
+A `.clang-format` file is present. It is the Linux Kernel one. You can format
+all the sources by running `make fmt`.
