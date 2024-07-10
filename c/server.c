@@ -70,34 +70,19 @@ static struct coninfo *coninfo_init(void)
 
 	if (!coninfo) {
 		perror("malloc");
-		goto coninfo_init_err;
+		return NULL;
 	}
-
-	/* coninfo->buf = malloc(BUFSIZE); */
-
-	/* if (!coninfo->buf) { */
-	/* 	perror("malloc"); */
-	/* 	goto coninfo_init_err; */
-	/* } */
 
 	coninfo->tok = json_tokener_new();
 
 	if (!coninfo->tok) {
 		fprintf(stderr, "%s: failed to initialize JSON tokener\n",
 			__func__);
-		goto coninfo_init_err;
+		free(coninfo);
+		return NULL;
 	}
 
 	return coninfo;
-
-coninfo_init_err:
-	/* if (coninfo->buf) */
-	/* 	free(coninfo->buf); */
-
-	if (coninfo)
-		free(coninfo);
-
-	return NULL;
 }
 
 /* Called several times per request. The first time, *REQ_CLS is NULL, the
