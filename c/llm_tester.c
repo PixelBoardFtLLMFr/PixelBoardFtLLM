@@ -7,7 +7,7 @@
 int main(int argc, char *argv[])
 {
 	if (argc < 2) {
-		fprintf(stderr, "Usage: %s KEYFILE\n", argv[0]);
+		fprintf(stderr, "Usage: %s KEY\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
 
@@ -15,6 +15,8 @@ int main(int argc, char *argv[])
 	char *input = NULL;
 	size_t input_size = 0;
 	struct json_object *results = NULL;
+
+	printf("Type 'quit' to exit.\n");
 
 	while (1) {
 		printf("(llm) ");

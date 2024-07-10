@@ -46,48 +46,24 @@ static size_t http_post_callback(char *ptr, size_t size, size_t nmemb,
 	return realsize;
 }
 
-struct llm_ctx *llm_init(const char *keyfile, const char *model)
+struct llm_ctx *llm_init(const char *key, const char *model)
 {
-	char *line = NULL;
-	size_t line_size = 0;
 	struct llm_ctx *ctx = malloc(sizeof(*ctx));
-	FILE *keystream = fopen(keyfile, "r");
 
 	if (!ctx) {
 		perror("malloc");
 		exit(EXIT_FAILURE);
 	}
 
-	if (!keystream) {
-		perror("fopen");
-		exit(EXIT_FAILURE);
-	}
-
 	/* Auth Bearer */
-	ssize_t bytes_read = getline(&line, &line_size, keystream);
-
-	if (bytes_read == -1) {
-		perror("getline");
-		exit(EXIT_FAILURE);
-	}
-
-	if (bytes_read < 2) {
-		fprintf(stderr, "getline: suspicious length of key (%zu)\n",
-			bytes_read);
-		exit(EXIT_FAILURE);
-	}
-
-	fclose(keystream);
-	line[bytes_read - 1] = '\0';
 	char auth_bearer[256] = "Authorization: Bearer ";
-	strcat(auth_bearer, line);
+	strcat(auth_bearer, key);
 	ctx->auth_bearer_header = strdup(auth_bearer);
-	free(line);
 
 	/* CURL Handle */
 	ctx->curl_handle = curl_easy_init();
 #ifndef NDEBUG
-	curl_easy_setopt(ctx->curl_handle, CURLOPT_VERBOSE, 1L);
+	/* curl_easy_setopt(ctx->curl_handle, CURLOPT_VERBOSE, 1L); */
 #endif
 	curl_easy_setopt(ctx->curl_handle, CURLOPT_URL, CHATGPT_URL);
 	/* Force the use of SSL.  Fail if not possible. */
