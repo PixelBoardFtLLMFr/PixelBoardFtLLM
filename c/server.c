@@ -59,8 +59,7 @@ static void cleanup_request(void *cls, struct MHD_Connection *con,
 
 	struct coninfo *coninfo = *req_cls;
 
-	/* free(coninfo->buf); */
-	/* free(coninfo->answer); */
+	free(coninfo->answer);
 	json_tokener_free(coninfo->tok);
 	free(coninfo);
 }
@@ -164,7 +163,7 @@ static enum MHD_Result handle_request(void *cls, struct MHD_Connection *con,
 		int ret;
 		struct MHD_Response *response = MHD_create_response_from_buffer(
 			strlen(coninfo->answer), (void *)coninfo->answer,
-			MHD_RESPMEM_MUST_FREE);
+			MHD_RESPMEM_PERSISTENT);
 
 		ret = MHD_queue_response(con, MHD_HTTP_OK, response);
 		MHD_destroy_response(response);
