@@ -17,6 +17,7 @@ void llm_destroy(struct llm_ctx *ctx);
    later, all in parallel, by calling llm_execute_prompts. */
 void llm_push_prompt(struct llm_ctx *ctx, const char *key, const char *sys,
 		     const char *usr);
+
 /* Execute the prompts previously pushed. Return a JSON object whose keys are
    the ones given to the llm_push_prompt calls, and whose values are the
    corresponding LLM responses. */

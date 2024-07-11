@@ -35,6 +35,41 @@ static struct json_object *json_error(const char *msg)
 	return obj;
 }
 
+
+/* Verify the content of the json object OBJ. */
+static enum MHD_Result process_request(struct coninfo *coninfo,
+				       struct json_object *obj)
+{
+	/* TODO: send to LLM */
+	printf("%s: processing valid JSON\n", __func__);
+
+	struct json_object *input;
+	json_bool ret;
+
+	ret = json_object_object_get_ex(obj, "input", &input);
+
+	if (!ret) {
+		struct json_object *json_err = json_error("the given JSON object does not have an 'input' value");
+		coninfo->http_status = MHD_HTTP_BAD_REQUEST;
+		coninfo->answer = strdup(json_object_to_json_string(json_err));
+		json_object_put(json_err);
+		json_object_put(obj);
+		return MHD_NO;
+	}
+
+	/* char reply[128] = { 0 }; */
+	/* int length = json_object_object_length(obj); */
+	/* json_object_put(obj); */
+	/* sprintf(reply, "Length of JSON object: %d\n", length); */
+	/* coninfo->answer = strdup(reply); */
+	/* coninfo->http_status = MHD_HTTP_OK; */
+	exit(2);
+
+	return MHD_YES;
+}
+
+/* Handle the chunks of data. Only take care of the JSON
+   parsing, not of the JSON content. */
 static enum MHD_Result handle_chunk(struct coninfo *coninfo, const char *data,
 				    size_t data_size)
 {
@@ -43,18 +78,8 @@ static enum MHD_Result handle_chunk(struct coninfo *coninfo, const char *data,
 	struct json_object *obj =
 		json_tokener_parse_ex(coninfo->tok, data, data_size);
 
-	if (obj) {
-		printf("%s: parsing valid JSON\n", __func__);
-		/* TODO: sanitize JSON input */
-		/* TODO: send to LLM */
-		char reply[128] = { 0 };
-		int length = json_object_object_length(obj);
-		json_object_put(obj);
-		sprintf(reply, "Length of JSON object: %d\n", length);
-		coninfo->answer = strdup(reply);
-		coninfo->http_status = MHD_HTTP_OK;
-		return MHD_YES;
-	}
+	if (obj)
+		return process_request(coninfo, obj);
 
 	if (json_tokener_get_error(coninfo->tok) != json_tokener_continue) {
 		printf("%s: invalid JSON detected\n", __func__);
