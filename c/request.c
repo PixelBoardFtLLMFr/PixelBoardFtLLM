@@ -8,6 +8,8 @@
 #include <sys/types.h>
 
 #include "request.h"
+#include "prompt.h"
+#include "llm.h"
 
 /* 1KB */
 #define BUFSIZE (1 << 10)
@@ -20,6 +22,7 @@ struct coninfo {
 	struct json_tokener *tok;
 	/* answer to the request, non-NULL if processing is done */
 	char *answer;
+	int http_status;
 };
 
 static enum MHD_Result handle_chunk(struct coninfo *coninfo, const char *data,
@@ -31,6 +34,7 @@ static enum MHD_Result handle_chunk(struct coninfo *coninfo, const char *data,
 		json_tokener_parse_ex(coninfo->tok, data, data_size);
 
 	if (obj) {
+		printf("%s: parsing valid JSON\n", __func__);
 		/* TODO: sanitize JSON input */
 		/* TODO: send to LLM */
 		char reply[128] = { 0 };
@@ -38,17 +42,18 @@ static enum MHD_Result handle_chunk(struct coninfo *coninfo, const char *data,
 		json_object_put(obj);
 		sprintf(reply, "Length of JSON object: %d\n", length);
 		coninfo->answer = strdup(reply);
-
-		if (!coninfo->answer)
-			return MHD_NO;
-
+		coninfo->http_status = MHD_HTTP_OK;
 		return MHD_YES;
 	}
 
 	if (json_tokener_get_error(coninfo->tok) != json_tokener_continue) {
-		fprintf(stderr, "json_tokener_parse_ex: %s\n",
-			json_tokener_error_desc(
-				json_tokener_get_error(coninfo->tok)));
+		printf("%s: invalid JSON detected\n", __func__);
+		const char *msg = json_tokener_error_desc(json_tokener_get_error(coninfo->tok));
+		struct json_object *json_err = json_object_new_object();
+		json_object_object_add(json_err, "error", json_object_new_string(msg));
+		coninfo->answer = strdup(json_object_to_json_string(json_err));
+		coninfo->http_status = MHD_HTTP_BAD_REQUEST;
+		json_object_put(json_err);
 		return MHD_NO;
 	}
 
@@ -59,6 +64,10 @@ void cleanup_request(void *cls, struct MHD_Connection *con,
 			    void **req_cls, enum MHD_RequestTerminationCode toe)
 {
 	printf("trace: %s\n", __func__);
+
+	if (toe != MHD_REQUEST_TERMINATED_COMPLETED_OK) {
+		printf("warning: connection error %d\n", toe);
+	}
 
 	struct coninfo *coninfo = *req_cls;
 
@@ -86,6 +95,25 @@ static struct coninfo *coninfo_init(void)
 	}
 
 	return coninfo;
+}
+
+static enum  MHD_Result reply_request(struct MHD_Connection *con,
+				      struct coninfo *coninfo)
+{
+	printf("trace: %s\n", __func__);
+	printf("%s: reply text '%s'\n", __func__, coninfo->answer);
+	printf("%s: reply HTTP code '%d'\n", __func__, coninfo->http_status);
+
+	int ret;
+	struct MHD_Response *response = MHD_create_response_from_buffer(
+		strlen(coninfo->answer), (void *)coninfo->answer,
+		MHD_RESPMEM_PERSISTENT);
+
+	ret = MHD_queue_response(con, coninfo->http_status, response);
+	MHD_destroy_response(response);
+
+	printf("trace: %s done\n", __func__);
+	return ret;
 }
 
 /* Called several times per request. The first time, *REQ_CLS is NULL, the
@@ -137,26 +165,15 @@ enum MHD_Result handle_request(void *cls, struct MHD_Connection *con,
 		fwrite(data, 1, *data_size, stdout);
 		printf("\n===end===\n");
 
-		int ret = handle_chunk(coninfo, data, *data_size);
-
-		if (ret == MHD_NO)
-			return MHD_NO;
+		handle_chunk(coninfo, data, *data_size);
 
 		*data_size = 0;
 		return MHD_YES;
-	} else if (coninfo->answer != NULL) {
-		/* reply */
-		printf("info: replying\n");
+	}
 
-		int ret;
-		struct MHD_Response *response = MHD_create_response_from_buffer(
-			strlen(coninfo->answer), (void *)coninfo->answer,
-			MHD_RESPMEM_PERSISTENT);
-
-		ret = MHD_queue_response(con, MHD_HTTP_OK, response);
-		MHD_destroy_response(response);
-
-		return ret;
+	if (coninfo->answer != NULL) {
+		/* reply success */
+		return reply_request(con, coninfo);
 	}
 
 	/* should never be reached */
