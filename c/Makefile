@@ -16,7 +16,7 @@ LDFLAGS ?=
 __CFLAGS = -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -DDEFAULT_PORT=$(DEFAULT_PORT) -DCHATGPT_URL=$(CHATGPT_URL) -D_POSIX_C_SOURCE=200809L -D_GNU_SOURCE
 __LDFLAGS = 
 
-server: server.o llm.o
+server: server.o llm.o request.o
 	$(CC) $(__LDFLAGS) $(CURL_LDFLAGS) $(MHD_LDFLAGS) $(JSON_LDFLAGS) $(LDFLAGS) -o $@ $^
 
 %.o: %.c
