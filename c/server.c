@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 #include "request.h"
+#include "prompt.h"
 
 static void print_usage(FILE *stream)
 {
@@ -41,6 +42,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	prompt_init();
 	daemon = MHD_start_daemon(MHD_USE_INTERNAL_POLLING_THREAD, port, NULL,
 				  NULL, &handle_request, NULL,
 				  MHD_OPTION_NOTIFY_COMPLETED, &cleanup_request,
@@ -51,6 +53,7 @@ int main(int argc, char *argv[])
 
 	printf("Listening on port %d\n", port);
 	getchar();
+	prompt_destroy();
 	MHD_stop_daemon(daemon);
 
 	return EXIT_SUCCESS;

@@ -56,6 +56,8 @@ struct llm_ctx *llm_init(const char *key, const char *model)
 	}
 
 	/* Auth Bearer */
+	/* TODO: if KEY is NULL, use default key */
+	/* TODO: enable prompt limiting for default key */
 	char auth_bearer[256] = "Authorization: Bearer ";
 	strcat(auth_bearer, key);
 	ctx->auth_bearer_header = strdup(auth_bearer);

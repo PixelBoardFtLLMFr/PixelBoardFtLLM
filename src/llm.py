@@ -81,7 +81,8 @@ Output:[[10, -50], [20, -30], [30, -20], [40, -10], [50, 0], [40, -10], [30, -20
 """
 
 head_example = """Input:hello
-Output:[[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]]"""
+Output:[[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]]
+"""
 
 head_prompt = """
 You are responsible for moving the head. When in neutral position, the angle is
