@@ -4,8 +4,8 @@
 
 #include "prompt.h"
 
-/* 16KB */
-#define MAX_FILE_SIZE (1 << 14)
+/* 4KB */
+#define MAX_FILE_SIZE (1 << 12)
 
 static char *angle_base;
 
@@ -104,13 +104,44 @@ void prompt_destroy(void)
 	free(height);
 }
 
+static char *concat(const char *s0, const char *s1, const char*s2)
+{
+	char buf[3*MAX_FILE_SIZE];
+	strcpy(buf, s0);
+	strcat(buf, s1);
+	strcat(buf, s2);
+	return strdup(buf);
+}
+
 char *prompt_sys(enum prompt_type type)
 {
+	switch (type) {
+	case PT_ARM:
+		return concat(angle_base, arm_example, arm_spec);
+	case PT_LEG:
+		return concat(angle_base, leg_example, leg_spec);
+	case PT_HEAD:
+		return concat(angle_base, head_example, head_spec);
+	case PT_FACE:
+		return strdup(face);
+	case PT_PARTICLE:
+		return strdup(particle);
+	case PT_EYE:
+		return strdup(eye);
+	case PT_HEIGHT:
+		return strdup(height);
+	default:
+		fprintf(stderr, "%s: invalid prompt type %d\n", __func__, type);
+		break;
+	}
+
 	return NULL;
 }
 
 char *prompt_user(enum prompt_type type, const char *input)
 {
-	return NULL;
+	char buf[MAX_FILE_SIZE];
+	strcpy(buf, "The user input is : ");
+	strncat(buf, input, MAX_FILE_SIZE-strlen(input)-1);
+	return strdup(buf);
 }
-

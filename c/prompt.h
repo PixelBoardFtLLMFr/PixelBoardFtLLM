@@ -17,11 +17,12 @@ void prompt_init(void);
 
 void prompt_destroy(void);
 
-/* Get the "system" part of the prompt for the given TYPE. */
+/* Get the "system" part of the prompt for the given TYPE. The returned
+ string is heap-allocated. */
 char *prompt_sys(enum prompt_type type);
 
 /* Get the "user" part of the prompt for the given TYPE and the
-   INPUT given by the end-user. */
+   INPUT given by the end-user. The returned string is heap-allocated. */
 char *prompt_user(enum prompt_type type, const char *input);
 
 #endif
