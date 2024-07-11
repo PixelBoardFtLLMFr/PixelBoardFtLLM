@@ -30,7 +30,7 @@ static char *height;
    has not to exceed MAX_FILE_SIZE. */
 static char *read_whole_file(const char *path)
 {
-	char buf[MAX_FILE_SIZE] = {0};
+	char buf[MAX_FILE_SIZE] = { 0 };
 	size_t buf_len = 0;
 	FILE *stream = fopen(path, "r");
 
@@ -40,15 +40,14 @@ static char *read_whole_file(const char *path)
 	}
 
 	while (!ferror(stream) && !feof(stream) && (buf_len < MAX_FILE_SIZE)) {
-		buf_len += fread(buf+buf_len, 1,
-				   MAX_FILE_SIZE-buf_len-1, stream);
+		buf_len += fread(buf + buf_len, 1, MAX_FILE_SIZE - buf_len - 1,
+				 stream);
 
-		if (buf_len == MAX_FILE_SIZE-1) {
+		if (buf_len == MAX_FILE_SIZE - 1) {
 			fprintf(stderr, "erorr: file %s too big\n", path);
 			exit(EXIT_FAILURE);
 		}
 	}
-
 
 	if (ferror(stream)) {
 		perror("fread");
@@ -104,9 +103,9 @@ void prompt_destroy(void)
 	free(height);
 }
 
-static char *concat(const char *s0, const char *s1, const char*s2)
+static char *concat(const char *s0, const char *s1, const char *s2)
 {
-	char buf[3*MAX_FILE_SIZE];
+	char buf[3 * MAX_FILE_SIZE];
 	strcpy(buf, s0);
 	strcat(buf, s1);
 	strcat(buf, s2);
@@ -142,6 +141,6 @@ char *prompt_user(enum prompt_type type, const char *input)
 {
 	char buf[MAX_FILE_SIZE];
 	strcpy(buf, "The user input is : ");
-	strncat(buf, input, MAX_FILE_SIZE-strlen(input)-1);
+	strncat(buf, input, MAX_FILE_SIZE - strlen(input) - 1);
 	return strdup(buf);
 }

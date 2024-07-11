@@ -14,16 +14,16 @@ JSON_LDFLAGS = $(shell pkg-config --libs json-c)
 LDFLAGS ?= 
 
 __CFLAGS = -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -DDEFAULT_PORT=$(DEFAULT_PORT) -DCHATGPT_URL=$(CHATGPT_URL) -D_POSIX_C_SOURCE=200809L -D_GNU_SOURCE
-__LDFLAGS = 
+__LDFLAGS =
 
 server: server.o llm.o request.o prompt.o
-	$(CC) $(__LDFLAGS) $(CURL_LDFLAGS) $(MHD_LDFLAGS) $(JSON_LDFLAGS) $(LDFLAGS) -o $@ $^
+	@echo -e "  LD\t$@"; $(CC) $(__LDFLAGS) $(CURL_LDFLAGS) $(MHD_LDFLAGS) $(JSON_LDFLAGS) $(LDFLAGS) -o $@ $^
 
 %.o: %.c
-	$(CC) -c $(__CFLAGS) $(CURL_CFLAGS) $(MHD_CFLAGS) $(JSON_CFLAGS) $(CFLAGS) -o $@ $<
+	@echo -e "  CC\t$@"; $(CC) -c $(__CFLAGS) $(CURL_CFLAGS) $(MHD_CFLAGS) $(JSON_CFLAGS) $(CFLAGS) -o $@ $<
 
 llm_tester: llm.o llm_tester.o
-	$(CC) $(__LDFLAGS) $(CURL_LDFLAGS) $(JSON_LDFLAGS) $(LDFLAGS) -o $@ $^
+	@echo -e "  LD\t$@"; $(CC) $(__LDFLAGS) $(CURL_LDFLAGS) $(JSON_LDFLAGS) $(LDFLAGS) -o $@ $^
 
 fmt:
 	clang-format -i *.c *.h

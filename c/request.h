@@ -10,7 +10,7 @@ enum MHD_Result handle_request(void *cls, struct MHD_Connection *con,
 			       size_t *data_size, void **req_cls);
 
 /* Callback for cleaning up resources used for replying to request. */
-void cleanup_request(void *cls, struct MHD_Connection *con,
-		     void **req_cls, enum MHD_RequestTerminationCode toe);
+void cleanup_request(void *cls, struct MHD_Connection *con, void **req_cls,
+		     enum MHD_RequestTerminationCode toe);
 
 #endif

@@ -6,6 +6,7 @@
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <stdarg.h>
 
 #include "request.h"
 #include "prompt.h"
@@ -24,6 +25,15 @@ struct coninfo {
 	char *answer;
 	int http_status;
 };
+
+/* Create a JSON object of the form {"error": MSG}. */
+static struct json_object *json_error(const char *msg)
+{
+	struct json_object *obj = json_object_new_object();
+	struct json_object *txt = json_object_new_string(msg);
+	json_object_object_add(obj, "error", txt);
+	return obj;
+}
 
 static enum MHD_Result handle_chunk(struct coninfo *coninfo, const char *data,
 				    size_t data_size)
@@ -48,9 +58,9 @@ static enum MHD_Result handle_chunk(struct coninfo *coninfo, const char *data,
 
 	if (json_tokener_get_error(coninfo->tok) != json_tokener_continue) {
 		printf("%s: invalid JSON detected\n", __func__);
-		const char *msg = json_tokener_error_desc(json_tokener_get_error(coninfo->tok));
-		struct json_object *json_err = json_object_new_object();
-		json_object_object_add(json_err, "error", json_object_new_string(msg));
+		struct json_object *json_err =
+			json_error(json_tokener_error_desc(
+				json_tokener_get_error(coninfo->tok)));
 		coninfo->answer = strdup(json_object_to_json_string(json_err));
 		coninfo->http_status = MHD_HTTP_BAD_REQUEST;
 		json_object_put(json_err);
@@ -60,8 +70,8 @@ static enum MHD_Result handle_chunk(struct coninfo *coninfo, const char *data,
 	return MHD_NO;
 }
 
-void cleanup_request(void *cls, struct MHD_Connection *con,
-			    void **req_cls, enum MHD_RequestTerminationCode toe)
+void cleanup_request(void *cls, struct MHD_Connection *con, void **req_cls,
+		     enum MHD_RequestTerminationCode toe)
 {
 	printf("trace: %s\n", __func__);
 
@@ -70,6 +80,11 @@ void cleanup_request(void *cls, struct MHD_Connection *con,
 	}
 
 	struct coninfo *coninfo = *req_cls;
+
+	if (!coninfo) {
+		printf("warning: cleaning up a connection that has no coninfo\n");
+		return;
+	}
 
 	free(coninfo->answer);
 	json_tokener_free(coninfo->tok);
@@ -97,8 +112,10 @@ static struct coninfo *coninfo_init(void)
 	return coninfo;
 }
 
-static enum  MHD_Result reply_request(struct MHD_Connection *con,
-				      struct coninfo *coninfo)
+/* Reply to the pending request of CON, using the answer and the
+   HTTP status of CONINFO. */
+static enum MHD_Result reply_request(struct MHD_Connection *con,
+				     struct coninfo *coninfo)
 {
 	printf("trace: %s\n", __func__);
 	printf("%s: reply text '%s'\n", __func__, coninfo->answer);
@@ -116,6 +133,36 @@ static enum  MHD_Result reply_request(struct MHD_Connection *con,
 	return ret;
 }
 
+/* Reply to the pending request of CON. No coninfo
+   has to be associated with it yet. */
+static enum MHD_Result reply_request_error(struct MHD_Connection *con,
+					   const char *fmt, ...)
+{
+	va_list ap;
+	int ret;
+	struct json_object *json_err;
+	char msg[512], *json_msg;
+
+	printf("trace: %s\n", __func__);
+
+	va_start(ap, fmt);
+	vsprintf(msg, fmt, ap);
+
+	json_err = json_error(msg);
+	json_msg = strdup(json_object_to_json_string_ext(
+		json_err, JSON_C_TO_STRING_NOSLASHESCAPE));
+	json_object_put(json_err);
+
+	struct MHD_Response *response = MHD_create_response_from_buffer(
+		strlen(json_msg), (void *)json_msg, MHD_RESPMEM_MUST_FREE);
+
+	ret = MHD_queue_response(con, MHD_HTTP_BAD_REQUEST, response);
+	MHD_destroy_response(response);
+
+	printf("trace: %s done\n", __func__);
+	return ret;
+}
+
 /* Called several times per request. The first time, *REQ_CLS is NULL, the
    other times, it is set to what we set it to the first time, namely a
    pointer to a coninfo structure. */
@@ -125,16 +172,11 @@ enum MHD_Result handle_request(void *cls, struct MHD_Connection *con,
 			       size_t *data_size, void **req_cls)
 {
 	if (strcmp(method, "POST") != 0) {
-		fprintf(stderr, "error: bad method (%s)\n", method);
-		/* TODO: send error to client */
-		return MHD_queue_response(con, MHD_HTTP_METHOD_NOT_ALLOWED,
-					  NULL);
+		return reply_request_error(con, "bad method (%s)", method);
 	}
 
 	if (strcmp(url, "/") != 0) {
-		fprintf(stderr, "error: bad URL (%s)\n", url);
-		/* TODO: send error to client */
-		return MHD_queue_response(con, MHD_HTTP_FORBIDDEN, NULL);
+		return reply_request_error(con, "bad URL (%s)", url);
 	}
 
 	if (*req_cls == NULL) {
