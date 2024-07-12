@@ -1,5 +1,6 @@
 #include <json_object.h>
 #include <json_tokener.h>
+#include <linkhash.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -60,7 +61,8 @@ static char *get_default_key(void)
 	}
 
 	if (bytes_read < 2) {
-		fprintf(stderr, "getline: suspicious key length (%zu)\n", bytes_read);
+		fprintf(stderr, "getline: suspicious key length (%zu)\n",
+			bytes_read);
 		fclose(stream);
 		exit(EXIT_FAILURE);
 	}
@@ -69,6 +71,114 @@ static char *get_default_key(void)
 	fclose(stream);
 
 	return key;
+}
+
+static size_t get_frame_count(const struct json_object *isl)
+{
+	size_t res = 0;
+	return res;
+}
+
+static void forward_llm_error(struct coninfo *coninfo,
+			      struct json_object *json_err)
+{
+	json_bool ret;
+	struct json_object *json_buf;
+	struct json_object *json_reply;
+
+	coninfo->http_status = MHD_HTTP_INTERNAL_SERVER_ERROR;
+	ret = json_object_object_get_ex(json_err, "message", &json_buf);
+
+	if (!ret) {
+		coninfo->answer = strdup(
+			"{\"error\":\"failed to forward ChatGPT error\"}");
+		return;
+	}
+
+	json_reply = json_object_new_object();
+	json_object_object_add(json_reply, "error", json_buf);
+	coninfo->answer = strdup(json_object_to_json_string(json_reply));
+	json_object_put(json_reply);
+}
+
+static void reply_parsing_failed(struct coninfo *coninfo)
+{
+	coninfo->http_status = MHD_HTTP_INTERNAL_SERVER_ERROR;
+	coninfo->answer =
+		strdup("{\"error\":\"failed to parse ChatGPT response\"}");
+}
+
+/* The ChatGPT API returns complex JSON objects, this function isolate the
+   actual text generated for each key. Return NULL if any error was thrown
+   by ChatGPT. */
+static struct json_object *isolate_llm_responses(struct coninfo *coninfo,
+						 const struct json_object *raw)
+{
+	struct json_object *res = json_object_new_object();
+	struct json_object *json_err, *json_buf;
+
+	json_object_object_foreach(raw, key, val)
+	{
+		/* check for error */
+		json_bool found =
+			json_object_object_get_ex(val, "error", &json_err);
+		/* TODO: verify memory integrity */
+
+		if (found) {
+			forward_llm_error(coninfo, json_err);
+			json_object_put(res);
+			return NULL;
+		}
+
+		/* no error, retrieve information */
+		found = json_object_object_get_ex(val, "choices", &json_buf);
+
+		if (!found)
+			goto isolate_parse_err;
+
+		json_buf = json_object_array_get_idx(json_buf, 0);
+
+		if (!json_buf)
+			goto isolate_parse_err;
+
+		found = json_object_object_get_ex(json_buf, "message",
+						  &json_buf);
+
+		if (!found)
+			goto isolate_parse_err;
+
+		found = json_object_object_get_ex(json_buf, "content",
+						  &json_buf);
+
+		if (!found)
+			goto isolate_parse_err;
+
+		json_object_object_add(res, key, json_buf);
+	}
+
+	printf("==LLM isolated reply==\n");
+	printf("%s\n",
+	       json_object_to_json_string_ext(res, JSON_C_TO_STRING_PRETTY));
+	printf("==END==\n");
+
+	return res;
+
+isolate_parse_err:
+	reply_parsing_failed(coninfo);
+	json_object_put(res);
+	return NULL;
+}
+
+/* Convert the ChatGPT raw response RAW to the format the front-end expects. */
+static struct json_object *
+translate_llm_responses(struct coninfo *coninfo, const struct json_object *raw)
+{
+	struct json_object *isl = isolate_llm_responses(coninfo, raw);
+
+	if (!isl)
+		return NULL;
+
+	return NULL;
 }
 
 /* Verify the content of the json object OBJ. */
@@ -85,7 +195,8 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 	ret = json_object_object_get_ex(obj, "input", &json_buf);
 
 	if (!ret) {
-		struct json_object *json_err = json_error("the given JSON object does not have an 'input' value");
+		struct json_object *json_err = json_error(
+			"the given JSON object does not have an 'input' value");
 		coninfo->http_status = MHD_HTTP_BAD_REQUEST;
 		coninfo->answer = strdup(json_object_to_json_string(json_err));
 		json_object_put(json_err);
@@ -102,27 +213,35 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 		key = get_default_key();
 		printf("info: using the default key\n");
 		/* TODO: limit usage */
-	}
-	else {
+	} else {
 		key = strdup(json_object_to_json_string(json_buf));
 	}
 
 	json_object_put(obj);
 
-	/* TODO: send to LLM */
 	printf("debug: input=%s\n", input);
 	printf("debug: key=%s\n", key);
 
-	struct json_object *raw_responses = prompt_execute_all(key ,input);
+	struct json_object *raw_responses = prompt_execute_all(key, input);
 
 	printf("==LLM raw reply==\n");
-	printf("%s\n", json_object_to_json_string_ext(raw_responses, JSON_C_TO_STRING_PRETTY));
-	printf("===    END    ===\n");
-	json_object_put(raw_responses);
+	printf("%s\n", json_object_to_json_string_ext(raw_responses,
+						      JSON_C_TO_STRING_PRETTY));
+	printf("==END==\n");
+
+	struct json_object *translated_responses =
+		translate_llm_responses(coninfo, raw_responses);
+
+	if (!translated_responses) {
+		/* TODO: free resources */
+		return MHD_NO;
+	}
 
 	coninfo->http_status = MHD_HTTP_OK;
 	coninfo->answer = strdup("Reply.\n");
 
+	json_object_put(raw_responses);
+	json_object_put(translated_responses);
 	free(input);
 	free(key);
 

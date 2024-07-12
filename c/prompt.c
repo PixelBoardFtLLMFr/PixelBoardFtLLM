@@ -21,12 +21,8 @@ enum prompt_type {
 };
 
 static char *keys[] = {
-	[PT_ARM] = "ARM",
-	[PT_LEG] = "LEG",
-	[PT_HEAD] = "HEAD",
-	[PT_FACE] = "FACE",
-	[PT_PARTICLE] = "PARTICLE",
-	[PT_EYE] = "EYE",
+	[PT_ARM] = "ARM",	[PT_LEG] = "LEG",	    [PT_HEAD] = "HEAD",
+	[PT_FACE] = "FACE",	[PT_PARTICLE] = "PARTICLE", [PT_EYE] = "EYE",
 	[PT_HEIGHT] = "HEIGHT",
 };
 
@@ -177,7 +173,7 @@ struct json_object *prompt_execute_all(const char *key, const char *input)
 	struct llm_ctx *ctx = llm_init(key, "gpt-3.5-turbo");
 	struct json_object *raw_responses;
 
-	for (int i=0; i < PT_COUNT; i++) {
+	for (int i = 0; i < PT_COUNT; i++) {
 		char *sys = prompt_sys(i);
 		char *usr = prompt_usr(i, input);
 		llm_push_prompt(ctx, keys[i], sys, usr);
