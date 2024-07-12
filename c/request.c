@@ -27,6 +27,11 @@ struct coninfo {
 	int http_status;
 };
 
+struct array_dim {
+	int width;
+	int height;
+};
+
 /* Create a JSON object of the form {"error": MSG}. */
 static struct json_object *json_error(const char *msg)
 {
@@ -71,12 +76,6 @@ static char *get_default_key(void)
 	fclose(stream);
 
 	return key;
-}
-
-static size_t get_frame_count(const struct json_object *isl)
-{
-	size_t res = 0;
-	return res;
 }
 
 static void forward_llm_error(struct coninfo *coninfo,
@@ -169,6 +168,25 @@ isolate_parse_err:
 	return NULL;
 }
 
+static struct array_dim *json_array_get_dim(const struct json_object *obj)
+{
+	struct json_tokener *tok = json_tokener_new();
+	struct json_object *arr = json_tokener_parse(json_object_to_json_string(obj));
+	struct array_dim *dim;
+
+	if (!arr || (json_object_get_type(arr) != json_type_array)) {
+		json_tokener_free(tok);
+		return NULL;
+	}
+
+	/* TODO: RESUME */
+
+	dim = malloc(sizeof(*dim));
+
+	
+	return NULL;
+}
+
 /* Convert the ChatGPT raw response RAW to the format the front-end expects. */
 static struct json_object *
 translate_llm_responses(struct coninfo *coninfo, const struct json_object *raw)
@@ -177,6 +195,8 @@ translate_llm_responses(struct coninfo *coninfo, const struct json_object *raw)
 
 	if (!isl)
 		return NULL;
+
+	/* TODO: RESUME */
 
 	return NULL;
 }
