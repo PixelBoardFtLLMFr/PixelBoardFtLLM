@@ -175,12 +175,17 @@ static char *prompt_usr(enum prompt_type type, const char *input)
 struct json_object *prompt_execute_all(const char *key, const char *input)
 {
 	struct llm_ctx *ctx = llm_init(key, "gpt-3.5-turbo");
+	struct json_object *raw_responses;
 
 	for (int i=0; i < PT_COUNT; i++) {
 		char *sys = prompt_sys(i);
 		char *usr = prompt_usr(i, input);
 		llm_push_prompt(ctx, keys[i], sys, usr);
+		free(sys);
+		free(usr);
 	}
 
-	return llm_execute_prompts(ctx);
+	raw_responses = llm_execute_prompts(ctx);
+	llm_destroy(ctx);
+	return raw_responses;
 }

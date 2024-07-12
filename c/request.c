@@ -35,18 +35,54 @@ static struct json_object *json_error(const char *msg)
 	return obj;
 }
 
+/* Read the file containing the default key and return it. The returned
+   string is heap-allocated. */
+static char *get_default_key(void)
+{
+	char *key = NULL;
+	size_t key_size = 0;
+	ssize_t bytes_read;
+	FILE *stream;
+
+	stream = fopen(DEFAULT_KEY_FILE, "r");
+
+	if (!stream) {
+		perror(DEFAULT_KEY_FILE);
+		exit(EXIT_FAILURE);
+	}
+
+	bytes_read = getline(&key, &key_size, stream);
+
+	if (bytes_read == -1) {
+		perror(DEFAULT_KEY_FILE);
+		fclose(stream);
+		exit(EXIT_FAILURE);
+	}
+
+	if (bytes_read < 2) {
+		fprintf(stderr, "getline: suspicious key length (%zu)\n", bytes_read);
+		fclose(stream);
+		exit(EXIT_FAILURE);
+	}
+
+	key[bytes_read - 1] = '\0';
+	fclose(stream);
+
+	return key;
+}
 
 /* Verify the content of the json object OBJ. */
 static enum MHD_Result process_request(struct coninfo *coninfo,
 				       struct json_object *obj)
 {
-	/* TODO: send to LLM */
 	printf("%s: processing valid JSON\n", __func__);
 
-	struct json_object *input;
+	struct json_object *json_buf;
 	json_bool ret;
+	char *key, *input;
 
-	ret = json_object_object_get_ex(obj, "input", &input);
+	/* verify "input" */
+	ret = json_object_object_get_ex(obj, "input", &json_buf);
 
 	if (!ret) {
 		struct json_object *json_err = json_error("the given JSON object does not have an 'input' value");
@@ -57,13 +93,38 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 		return MHD_NO;
 	}
 
-	/* char reply[128] = { 0 }; */
-	/* int length = json_object_object_length(obj); */
-	/* json_object_put(obj); */
-	/* sprintf(reply, "Length of JSON object: %d\n", length); */
-	/* coninfo->answer = strdup(reply); */
-	/* coninfo->http_status = MHD_HTTP_OK; */
-	exit(2);
+	input = strdup(json_object_to_json_string(json_buf));
+
+	/* verify "key" */
+	ret = json_object_object_get_ex(obj, "key", &json_buf);
+
+	if (!ret) {
+		key = get_default_key();
+		printf("info: using the default key\n");
+		/* TODO: limit usage */
+	}
+	else {
+		key = strdup(json_object_to_json_string(json_buf));
+	}
+
+	json_object_put(obj);
+
+	/* TODO: send to LLM */
+	printf("debug: input=%s\n", input);
+	printf("debug: key=%s\n", key);
+
+	struct json_object *raw_responses = prompt_execute_all(key ,input);
+
+	printf("==LLM raw reply==\n");
+	printf("%s\n", json_object_to_json_string_ext(raw_responses, JSON_C_TO_STRING_PRETTY));
+	printf("===    END    ===\n");
+	json_object_put(raw_responses);
+
+	coninfo->http_status = MHD_HTTP_OK;
+	coninfo->answer = strdup("Reply.\n");
+
+	free(input);
+	free(key);
 
 	return MHD_YES;
 }
@@ -145,6 +206,8 @@ static enum MHD_Result reply_request(struct MHD_Connection *con,
 	printf("trace: %s\n", __func__);
 	printf("%s: reply text '%s'\n", __func__, coninfo->answer);
 	printf("%s: reply HTTP code '%d'\n", __func__, coninfo->http_status);
+
+	/* TODO: handle NULL answer */
 
 	int ret;
 	struct MHD_Response *response = MHD_create_response_from_buffer(
