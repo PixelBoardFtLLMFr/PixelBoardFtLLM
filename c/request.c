@@ -30,6 +30,7 @@ struct coninfo {
 struct array_dim {
 	int width;
 	int height;
+	enum json_type type;
 };
 
 /* Create a JSON object of the form {"error": MSG}. */
@@ -233,7 +234,7 @@ static json_object *json_string_to_json_array(struct json_object *obj)
    usually because OBJ does not have a valid shape or is not an array at all. */
 static struct array_dim *json_array_get_dim(struct json_object *obj)
 {
-	struct json_object *first;
+	struct json_object *elem;
 	struct json_object *arr = json_string_to_json_array(obj);
 	struct array_dim *dim = NULL;
 
@@ -246,15 +247,15 @@ static struct array_dim *json_array_get_dim(struct json_object *obj)
 	if (dim->height == 0)
 		goto array_get_dim_err;
 
-	first = json_object_array_get_idx(arr, 0);
+	elem = json_object_array_get_idx(arr, 0);
 
-	if (json_object_get_type(first) != json_type_array)
+	if (json_object_get_type(elem) != json_type_array)
 		goto array_get_dim_err;
 
-	dim->width = json_object_array_length(first);
+	dim->width = json_object_array_length(elem);
 
-	if ((dim->width != 1) && (dim->width != 2))
-		goto array_get_dim_err;
+	/* TODO: verify that every row has same width */
+	/* TODO: verify that every element has same type */
 
 	json_object_put(arr);
 	return dim;
@@ -317,9 +318,9 @@ static void json_array_add_padding(struct json_object **obj, int final_len)
 	*obj = arr;
 }
 
-/* Write an array containing one line of zeros of width WANTED_WIDTH to DEST,
-   and write its dimension to DIM_DEST. */
-static void fill_zeros(struct json_object **dest, struct array_dim **dim_dest,
+/* Write an array containing one line of zeros of width WANTED_WIDTH to
+   ARR_DEST, and write its dimension to DIM_DEST. */
+static void fill_zeros(struct json_object **arr_dest, struct array_dim **dim_dest,
 		       int wanted_width)
 {
 		print_big_json("LLM bullshit", *arr_dest);
