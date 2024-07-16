@@ -208,7 +208,8 @@ isolate_parse_err:
 	return NULL;
 }
 
-/* Convert the JSON string OBJ representing an array to a JSON array. */
+/* Convert the JSON string OBJ representing an array to a JSON array.
+ Return NULL is the given JSON string does not represent an array. */
 static json_object *json_string_to_json_array(struct json_object *obj)
 {
 	struct json_tokener *tok = json_tokener_new();
@@ -228,8 +229,8 @@ static json_object *json_string_to_json_array(struct json_object *obj)
 }
 
 /* Get the dimension of the JSON array OBJ, which is actually a JSON string
-   we have to parse like "[1, 2]". Return NULL if an error occured,
-   usually because OBJ does not have a valid shape. */
+   we have to parse like "[[1], [2]]". Return NULL if an error occured,
+   usually because OBJ does not have a valid shape or is not an array at all. */
 static struct array_dim *json_array_get_dim(struct json_object *obj)
 {
 	struct json_object *first;
@@ -316,6 +317,22 @@ static void json_array_add_padding(struct json_object **obj, int final_len)
 	*obj = arr;
 }
 
+/* Write an array containing one line of zeros of width WANTED_WIDTH to DEST,
+   and write its dimension to DIM_DEST. */
+static void fill_zeros(struct json_object **dest, struct array_dim **dim_dest,
+		       int wanted_width)
+{
+		print_big_json("LLM bullshit", *arr_dest);
+		struct json_object *line = json_object_new_array_ext(wanted_width);
+
+		for (int i = 0; i < wanted_width; i++)
+			json_object_array_put_idx(line, i, json_object_new_int(0));
+
+		*arr_dest = json_object_new_array_ext(1);
+		json_object_array_put_idx(*arr_dest, 0, line);
+		*dim_dest = json_array_get_dim(*arr_dest);
+}
+
 /* Retrieve the value of KEY in OBJ. If it is an array of width WANTED_WIDTH,
    it is returned. Else, if it is either not a array or an array of bad width,
    an array containing a single line of zeros of width WANTED_WIDTH is
@@ -329,29 +346,16 @@ static void sanitize_array(struct json_object *obj,
 	json_object_object_get_ex(obj, "ARM", arr_dest);
 	*dim_dest = json_array_get_dim(*arr_dest);
 
-	if (!dim_dest || ((*dim_dest)->width != wanted_width)) {
-		printf("warning: LLM returned wrong width for key %s, filling \
-with a line of zeros\n", key);
-		print_big_json("LLM bullshit", *arr_dest);
-		struct json_object *line = json_object_new_array_ext(wanted_width);
-
-		for (int i = 0; i < wanted_width; i++)
-			json_object_array_put_idx(line, i, json_object_new_int(0));
-
-		*arr_dest = json_object_new_array_ext(1);
-		json_object_array_put_idx(*arr_dest, 0, line);
-
-		free(*dim_dest);
-		*dim_dest = json_array_get_dim(*arr_dest);
-
+	if (!dim_dest) {
+		/* OBJ["ARM"] is not a valid array or not an array at all */
+		fill_zeros(arr_dest, dim_dest, wanted_width);
 		return;
 	}
 
-	/* verify that either each member of the array is an array of numbers  */
-
-	struct json_tokener *tok = json_tokener_new();
-	struct json_object *arr = json_tokener_parse(json_object_to_json_string(obj));
-	/* TODO: RESUME */
+	if ((*dim_dest)->width != wanted_width) {
+		free(*dim_dest);
+		fill_zeros(arr_dest, dim_dest, wanted_width);
+	}
 }
 
 /* Convert the ChatGPT raw response RAW to the format the front-end expects. */
