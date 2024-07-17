@@ -111,7 +111,8 @@ static void reply_parsing_failed(struct coninfo *coninfo)
 static void print_big_json(const char *start, struct json_object *obj)
 {
 	printf("==%s==\n", start);
-	printf("%s\n", json_object_to_json_string_ext(obj, JSON_C_TO_STRING_PRETTY));
+	printf("%s\n",
+	       json_object_to_json_string_ext(obj, JSON_C_TO_STRING_PRETTY));
 	printf("==end==\n");
 }
 
@@ -214,7 +215,8 @@ isolate_parse_err:
 static json_object *json_string_to_json_array(struct json_object *obj)
 {
 	struct json_tokener *tok = json_tokener_new();
-	struct json_object *arr = json_tokener_parse(json_object_to_json_string(obj));
+	struct json_object *arr =
+		json_tokener_parse(json_object_to_json_string(obj));
 
 	json_tokener_free(tok);
 
@@ -227,6 +229,37 @@ static json_object *json_string_to_json_array(struct json_object *obj)
 	}
 
 	return arr;
+}
+
+/* Returns non-zero if every row of ARR has the width specified in DIM and
+   every element of ARR has the type specified in DIM. */
+static int rows_valid(const struct array_dim *dim,
+		      const struct json_object *arr)
+{
+	for (size_t i = 0; i < json_object_array_length(arr); i++) {
+		struct json_object *row;
+		int row_len;
+
+		row = json_object_array_get_idx(arr, i);
+
+		if (json_object_get_type(row) != json_type_array)
+			return 0;
+
+		row_len = json_object_array_length(row);
+
+		if (row_len != dim->width)
+			return 0;
+
+		for (int j = 0; j < row_len; j++) {
+			struct json_object *elem =
+				json_object_array_get_idx(row, j);
+
+			if (json_object_get_type(elem) != dim->type)
+				return 0;
+		}
+	}
+
+	return 1;
 }
 
 /* Get the dimension of the JSON array OBJ, which is actually a JSON string
@@ -254,8 +287,13 @@ static struct array_dim *json_array_get_dim(struct json_object *obj)
 
 	dim->width = json_object_array_length(elem);
 
-	/* TODO: verify that every row has same width */
-	/* TODO: verify that every element has same type */
+	if (dim->width == 0)
+		goto array_get_dim_err;
+
+	dim->type = json_object_get_type(json_object_array_get_idx(elem, 0));
+
+	if (!rows_valid(dim, arr))
+		goto array_get_dim_err;
 
 	json_object_put(arr);
 	return dim;
@@ -307,7 +345,7 @@ static void json_array_add_padding(struct json_object **obj, int final_len)
 	arr = json_tokener_parse(json_object_to_json_string(*obj));
 	json_tokener_free(tok);
 	current_len = json_object_array_length(arr);
-	last = json_object_array_get_idx(arr, current_len-1);
+	last = json_object_array_get_idx(arr, current_len - 1);
 
 	while (current_len < final_len) {
 		json_object_array_add(arr, last);
@@ -320,29 +358,27 @@ static void json_array_add_padding(struct json_object **obj, int final_len)
 
 /* Write an array containing one line of zeros of width WANTED_WIDTH to
    ARR_DEST, and write its dimension to DIM_DEST. */
-static void fill_zeros(struct json_object **arr_dest, struct array_dim **dim_dest,
-		       int wanted_width)
+static void fill_zeros(struct json_object **arr_dest,
+		       struct array_dim **dim_dest, int wanted_width)
 {
-		print_big_json("LLM bullshit", *arr_dest);
-		struct json_object *line = json_object_new_array_ext(wanted_width);
+	print_big_json("LLM bullshit", *arr_dest);
+	struct json_object *line = json_object_new_array_ext(wanted_width);
 
-		for (int i = 0; i < wanted_width; i++)
-			json_object_array_put_idx(line, i, json_object_new_int(0));
+	for (int i = 0; i < wanted_width; i++)
+		json_object_array_put_idx(line, i, json_object_new_int(0));
 
-		*arr_dest = json_object_new_array_ext(1);
-		json_object_array_put_idx(*arr_dest, 0, line);
-		*dim_dest = json_array_get_dim(*arr_dest);
+	*arr_dest = json_object_new_array_ext(1);
+	json_object_array_put_idx(*arr_dest, 0, line);
+	*dim_dest = json_array_get_dim(*arr_dest);
 }
 
 /* Retrieve the value of KEY in OBJ. If it is an array of width WANTED_WIDTH,
    it is returned. Else, if it is either not a array or an array of bad width,
    an array containing a single line of zeros of width WANTED_WIDTH is
    returned. */
-static void sanitize_array(struct json_object *obj,
-			   const char *key,
+static void sanitize_array(struct json_object *obj, const char *key,
 			   struct json_object **arr_dest,
-			   struct array_dim **dim_dest,
-			   int wanted_width)
+			   struct array_dim **dim_dest, int wanted_width)
 {
 	json_object_object_get_ex(obj, "ARM", arr_dest);
 	*dim_dest = json_array_get_dim(*arr_dest);
@@ -364,9 +400,9 @@ static struct json_object *
 translate_llm_responses(struct coninfo *coninfo, const struct json_object *raw)
 {
 	struct array_dim *arm_dim, *leg_dim, *head_dim, *height_dim;
-	int frame_count;
 	struct json_object *arm, *leg, *head, *height;
 	struct json_object *isl = isolate_llm_responses(coninfo, raw);
+	int frame_count;
 
 	if (!isl)
 		return NULL;
@@ -446,7 +482,8 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 	}
 
 	coninfo->http_status = MHD_HTTP_OK;
-	coninfo->answer = strdup(json_object_to_json_string(translated_responses));
+	coninfo->answer =
+		strdup(json_object_to_json_string(translated_responses));
 
 	json_object_put(raw_responses);
 	json_object_put(translated_responses);
