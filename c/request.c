@@ -16,6 +16,8 @@
 /* 1KB */
 #define BUFSIZE (1 << 10)
 
+#define EYE_SIZE 3
+
 /* Information regarding a request being currently processed.  For each
    request, a pointer to a coninfo structure is used by the handle_request
    and handle_chunk functions to process the request. */
@@ -376,7 +378,7 @@ static void fill_zeros(struct json_object **arr_dest,
    it is returned. Else, if it is either not a array or an array of bad width,
    an array containing a single line of zeros of width WANTED_WIDTH is
    returned. */
-static void sanitize_array(struct json_object *obj, const char *key,
+static void sanitize_array(const struct json_object *obj, const char *key,
 			   struct json_object **arr_dest,
 			   struct array_dim **dim_dest, int wanted_width)
 {
@@ -393,6 +395,180 @@ static void sanitize_array(struct json_object *obj, const char *key,
 		free(*dim_dest);
 		fill_zeros(arr_dest, dim_dest, wanted_width);
 	}
+}
+
+/* Split the JSON array at *DEST, and write the result to *DEST as well.
+   Before split :
+   [[0, 2],
+    [1, 3]]
+   After split :
+   {
+     "left":  [0, 1],
+     "right": [2, 3]
+   }
+
+   LENGTH is used for optmizing memory allocation.
+*/
+static void json_array_split(struct json_object **dest, int length)
+{
+	struct json_object *res = json_object_object_new();
+	/* TODO: RESUME */
+}
+
+/* Return non-zeros if the NULL-terminated array ARR contains STR. */
+static int string_array_contains(const char *const *arr, const char *str)
+{
+	for (int i = 0; arr[i] != NULL; i++) {
+		if (strcmp(str, arr[i]) == 0)
+			return 1;
+	}
+	
+	return 0;
+}
+
+/* Verify that OBJ[KEY] is in ARR. If it is, it is written to *DEST, else
+   DEF is written. */
+static void sanitize_string(const struct json_object *obj,
+			    struct json_object **dest,
+			    const char *key,
+			    const char *const *arr,
+			    const char *def)
+{
+	
+	json_object_object_get_ex(obj, key, dest);
+
+	if (json_object_get_type(*dest) != json_type_string)
+		goto sanitize_string_default;
+
+	if (!string_array_contains(arr, json_object_to_json_string(*dest)))
+		goto sanitize_string_default;
+
+	return;
+
+sanitize_string_default:
+	*dest = json_object_new_string(def);
+}
+
+/* Verify that OBJ["FACE"] is a valid facial expression. If it is, it is
+   written to *DEST, else "neutral" is written. */
+static void sanitize_face(const struct json_object *obj,
+			  struct json_object **dest)
+{
+	const char *const faces[] = {
+		"neutral",
+		"happy",
+		"sad",
+		"angry",
+		"surprised",
+		NULL
+	};
+
+	sanitize_string(obj, dest, "FACE", faces, faces[0]);
+}
+
+/* Verify that OBJ["PARTICLE"] is a valid particle. If it is, it is
+   written to *DEST, else "none" is written. */
+static void sanitize_particle(const struct json_object *obj,
+			      struct json_object **dest)
+{
+	const char *const particles[] = {
+		"none",
+		"angry",
+		"heart",
+		"sleepy",
+		"spark",
+		"sweat",
+		"cloud",
+		NULL
+	};
+
+	sanitize_string(obj, dest, "PARTICLE", particles, particles[0]);
+}
+
+/* Convert a C triplet (usually for an RGB pixel) into a
+   JSON array of three integers. */
+static struct json_object *triplet_to_json(const int *triplet)
+{
+	struct json_object *arr = json_object_new_array_ext(3);
+
+	for (int i = 0; i < 3; i++) {
+		struct json_object *json_int = json_object_new_int(triplet[i]);
+		json_object_array_put_idx(arr, i, json_int);
+	}
+
+	return arr;
+}
+
+/* Return the JSON array of integers of length 3 corresponding to the
+   color OBJ as a JSON string. */
+static struct json_object *convert_eye_element(struct json_object *obj)
+{
+	const char *json_str = json_object_to_json_string(obj);
+	const char *const colors_str[] = {
+		"blue",
+		"bright",
+		"green",
+		"red",
+		"white",
+		"yellow",
+		NULL
+	};
+	const int colors_int[][3] = {
+		{50, 50, 255},
+		{200, 200, 200},
+		{0,   255, 130},
+		{255, 0,   0},
+		{10,  10,  10},
+		{255, 222, 40}
+	};
+
+	for (int i = 0; colors_str[i] != NULL; i++) {
+		if (strcmp(json_str, colors_str[i]) == 0)
+			return triplet_to_json(colors_int[i]);
+	}
+
+	return NULL;
+}
+
+static void convert_eye_colors(struct json_object **dest)
+{
+	struct json_object *arr = json_string_to_json_array(*dest);
+
+	for (int i = 0; i < EYE_SIZE; i++) {
+		struct json_object *row = json_object_array_get_idx(arr, i);
+
+		for (int j = 0; j < EYE_SIZE; j++) {
+			struct json_object *old_elem = json_object_array_get_idx(row, j);
+			struct json_object *new_elem = convert_eye_element(old_elem);
+			json_object_array_put_idx(row, j, new_elem);
+		}
+	}
+}
+
+/* Verify that the eye OBJ["EYE"] has the right 3x3 shape, and that
+   colors are valid. A null JSON object is written to *DEST if eye is
+   not valid. */
+static void sanitize_eye(const struct json_object *obj,
+			 struct json_object **dest)
+{
+	struct array_dim *dim;
+
+	json_object_object_get_ex(obj, "EYE", dest);
+	dim = json_array_get_dim(*dest);
+
+	if (!dim) {
+		*dest = json_object_new_null();
+		return;
+	}
+
+	if ((dim->width != EYE_SIZE) || (dim->height != EYE_SIZE)
+	    || (dim->type != json_type_string)) {
+		free(dim);
+		*dest = json_object_new_null();
+		return;
+	}
+
+	convert_eye_colors(dest);
 }
 
 /* Convert the ChatGPT raw response RAW to the format the front-end expects. */
@@ -415,11 +591,31 @@ translate_llm_responses(struct coninfo *coninfo, const struct json_object *raw)
 	frame_count = vmax(4, arm_dim->height, leg_dim->height,
 			   head_dim->height, height_dim->height);
 
+	free(arm_dim);
+	free(leg_dim);
+	free(head_dim);
+	free(height_dim);
+
 	json_array_add_padding(&arm, frame_count);
 	json_array_add_padding(&leg, frame_count);
 	json_array_add_padding(&head, frame_count);
 	json_array_add_padding(&height, frame_count);
 
+	json_array_split(&arm);
+	json_array_split(&leg);
+
+
+	struct json_object *face;
+	sanitize_face(isl, &face);
+
+	struct json_object *particle;
+	sanitize_particle(isl, &particle);
+
+	struct json_object *eye;
+	sanitize_eye(isl, &eye);
+	
+	/* TODO: translate all the sanitized data */
+	
 	return NULL;
 }
 
