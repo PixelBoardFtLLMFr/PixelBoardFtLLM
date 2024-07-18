@@ -48,8 +48,10 @@ int main(int argc, char *argv[])
 				  MHD_OPTION_NOTIFY_COMPLETED, &cleanup_request,
 				  NULL, MHD_OPTION_END);
 
-	if (!daemon)
+	if (!daemon) {
+		fprintf(stderr, "%s: failed to initialize HTTP daemon\n", argv[0]);
 		exit(1);
+	}
 
 	printf("Listening on port %d\n", port);
 	getchar();
