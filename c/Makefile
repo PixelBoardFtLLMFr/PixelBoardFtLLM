@@ -21,10 +21,10 @@ server: server.o llm.o request.o prompt.o
 	@echo -e "  LD\t$@"; $(CC) $(__LDFLAGS) $(CURL_LDFLAGS) $(MHD_LDFLAGS) $(JSON_LDFLAGS) $(LDFLAGS) -o $@ $^
 
 %.o: %.c
-	@echo -e "  CC\t$@"; $(CC) -c $(__CFLAGS) $(CURL_CFLAGS) $(MHD_CFLAGS) $(JSON_CFLAGS) $(CFLAGS) -o $@ $<
+	@echo -e "  CC\t$@"; $(CC) -c $(CFLAGS) $(__CFLAGS) $(CURL_CFLAGS) $(MHD_CFLAGS) $(JSON_CFLAGS) -o $@ $<
 
 llm_tester: llm.o llm_tester.o
-	@echo -e "  LD\t$@"; $(CC) $(__LDFLAGS) $(CURL_LDFLAGS) $(JSON_LDFLAGS) $(LDFLAGS) -o $@ $^
+	@echo -e "  LD\t$@"; $(CC) $(LDFLAGS) $(__LDFLAGS) $(CURL_LDFLAGS) $(JSON_LDFLAGS) -o $@ $^
 
 fmt:
 	clang-format -i *.c *.h
