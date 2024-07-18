@@ -213,14 +213,17 @@ isolate_parse_err:
 }
 
 /* Convert the JSON string OBJ representing an array to a JSON array.
- Return NULL is the given JSON string does not represent an array. */
+   Return NULL is the given JSON string does not represent an array. */
 static json_object *json_string_to_json_array(struct json_object *obj)
 {
 	struct json_tokener *tok = json_tokener_new();
-	struct json_object *arr =
-		json_tokener_parse(json_object_to_json_string(obj));
+	char *str = strdup(json_object_to_json_string(obj));
+	struct json_object *arr;
 
+	str[strlen(str) - 1] = '\0';
+	arr = json_tokener_parse(str+1);
 	json_tokener_free(tok);
+	free(str);
 
 	if (!arr)
 		return NULL;
@@ -264,14 +267,23 @@ static int rows_valid(const struct array_dim *dim,
 	return 1;
 }
 
-/* Get the dimension of the JSON array OBJ, which is actually a JSON string
-   we have to parse like "[[1], [2]]". Return NULL if an error occured,
-   usually because OBJ does not have a valid shape or is not an array at all. */
+/* Get the dimension of the JSON array OBJ, which is either a JSON string we
+   have to parse like "[[1], [2]]", or directly a JSON array. Return NULL if an
+   error occured, usually because OBJ does not have a valid shape or is not an
+   array at all. */
 static struct array_dim *json_array_get_dim(struct json_object *obj)
 {
 	struct json_object *elem;
-	struct json_object *arr = json_string_to_json_array(obj);
+	struct json_object *arr;
 	struct array_dim *dim = NULL;
+	enum json_type type = json_object_get_type(obj);
+
+	if (type == json_type_string)
+		 arr = json_string_to_json_array(obj);
+	else if (type == json_type_array)
+		arr = obj;
+	else
+		return NULL;
 
 	if (!arr)
 		goto array_get_dim_err;
@@ -297,12 +309,14 @@ static struct array_dim *json_array_get_dim(struct json_object *obj)
 	if (!rows_valid(dim, arr))
 		goto array_get_dim_err;
 
-	json_object_put(arr);
+	if (type == json_type_string)
+		json_object_put(arr);
+
 	return dim;
 
 array_get_dim_err:
 	/* LLM returned bullshit */
-	if (arr)
+	if (arr && (type == json_type_string))
 		json_object_put(arr);
 
 	if (dim)
@@ -382,10 +396,10 @@ static void sanitize_array(const struct json_object *obj, const char *key,
 			   struct json_object **arr_dest,
 			   struct array_dim **dim_dest, int wanted_width)
 {
-	json_object_object_get_ex(obj, "ARM", arr_dest);
+	json_object_object_get_ex(obj, key, arr_dest);
 	*dim_dest = json_array_get_dim(*arr_dest);
 
-	if (!dim_dest) {
+	if (!(*dim_dest)) {
 		/* OBJ["ARM"] is not a valid array or not an array at all */
 		fill_zeros(arr_dest, dim_dest, wanted_width);
 		return;
@@ -394,7 +408,12 @@ static void sanitize_array(const struct json_object *obj, const char *key,
 	if ((*dim_dest)->width != wanted_width) {
 		free(*dim_dest);
 		fill_zeros(arr_dest, dim_dest, wanted_width);
+		return;
 	}
+
+	struct json_object *old_arr = *arr_dest;
+	*arr_dest = json_string_to_json_array(old_arr);
+	json_object_put(old_arr);
 }
 
 /* Split the JSON array at *DEST, and write the result to *DEST as well.
@@ -406,13 +425,24 @@ static void sanitize_array(const struct json_object *obj, const char *key,
      "left":  [0, 1],
      "right": [2, 3]
    }
-
-   LENGTH is used for optmizing memory allocation.
 */
-static void json_array_split(struct json_object **dest, int length)
+static void json_array_split(struct json_object **dest)
 {
-	struct json_object *res = json_object_object_new();
-	/* TODO: RESUME */
+	int length = json_object_array_length(*dest);
+	struct json_object *right = json_object_new_array_ext(length);
+	struct json_object *left = json_object_new_array_ext(length);
+
+	for (int i = 0; i < length; i++) {
+		struct json_object *row = json_object_array_get_idx(*dest, i);
+
+		json_object_array_put_idx(left, i, json_object_array_get_idx(row, 0));
+		json_object_array_put_idx(right, i, json_object_array_get_idx(row, 1));
+	}
+
+	/* json_object_put(*dest); */
+	*dest = json_object_new_object();
+	json_object_object_add(*dest, "left", left);
+	json_object_object_add(*dest, "right", right);
 }
 
 /* Return non-zeros if the NULL-terminated array ARR contains STR. */
@@ -575,9 +605,10 @@ static void sanitize_eye(const struct json_object *obj,
 static struct json_object *
 translate_llm_responses(struct coninfo *coninfo, const struct json_object *raw)
 {
+	struct json_object *isl = isolate_llm_responses(coninfo, raw);
+
 	struct array_dim *arm_dim, *leg_dim, *head_dim, *height_dim;
 	struct json_object *arm, *leg, *head, *height;
-	struct json_object *isl = isolate_llm_responses(coninfo, raw);
 	int frame_count;
 
 	if (!isl)
@@ -613,10 +644,20 @@ translate_llm_responses(struct coninfo *coninfo, const struct json_object *raw)
 
 	struct json_object *eye;
 	sanitize_eye(isl, &eye);
-	
-	/* TODO: translate all the sanitized data */
-	
-	return NULL;
+
+
+	struct json_object *res = json_object_new_object();
+	json_object_object_add(res, "ARM", arm);
+	json_object_object_add(res, "LEG", leg);
+	json_object_object_add(res, "HEAD", head);
+	json_object_object_add(res, "HEIGHT", height);
+	json_object_object_add(res, "FACE", face);
+	json_object_object_add(res, "PARTICLE", particle);
+	json_object_object_add(res, "EYE", eye);
+
+	/* json_object_put(isl); */
+
+	return res;
 }
 
 /* Verify the content of the json object OBJ. */
@@ -681,8 +722,8 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 	coninfo->answer =
 		strdup(json_object_to_json_string(translated_responses));
 
-	json_object_put(raw_responses);
-	json_object_put(translated_responses);
+	/* json_object_put(raw_responses); */
+	/* json_object_put(translated_responses); */
 	free(input);
 	free(key);
 
