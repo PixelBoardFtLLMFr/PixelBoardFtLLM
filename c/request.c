@@ -361,26 +361,19 @@ static int vmax(int count, ...)
 }
 
 /* Lengthen the JSON array OBJ to FINAL_LEN by repeating its last element. */
-static void json_array_add_padding(struct json_object **obj, int final_len)
+static void json_array_add_padding(struct json_object **arr, int final_len)
 {
-	struct json_tokener *tok;
-	struct json_object *arr;
 	int current_len;
 	struct json_object *last;
 
-	tok = json_tokener_new();
-	arr = json_tokener_parse(json_object_to_json_string(*obj));
-	json_tokener_free(tok);
-	current_len = json_object_array_length(arr);
-	last = json_object_array_get_idx(arr, current_len - 1);
+	current_len = json_object_array_length(*arr);
+	last = json_object_array_get_idx(*arr, current_len - 1);
 
 	while (current_len < final_len) {
-		json_object_array_add(arr, last);
+		json_object_array_add(*arr, last);
+		/* json_object_get(last); */
 		current_len++;
 	}
-
-	json_object_put(*obj);
-	*obj = arr;
 }
 
 /* Write an array containing one line of zeros of width WANTED_WIDTH to
@@ -411,7 +404,7 @@ static void sanitize_array(const struct json_object *obj, const char *key,
 	*dim_dest = json_array_get_dim(*arr_dest);
 
 	if (!(*dim_dest)) {
-		/* OBJ["ARM"] is not a valid array or not an array at all */
+		/* OBJ[KEY] is not a valid array or not an array at all */
 		fill_zeros(arr_dest, dim_dest, wanted_width);
 		return;
 	}
@@ -422,9 +415,10 @@ static void sanitize_array(const struct json_object *obj, const char *key,
 		return;
 	}
 
-	struct json_object *old_arr = *arr_dest;
-	*arr_dest = json_string_to_json_array(old_arr);
-	json_object_put(old_arr);
+	/* struct json_object *old_arr = *arr_dest; */
+	/* *arr_dest = json_string_to_json_array(old_arr); */
+	/* json_object_put(old_arr); */
+	*arr_dest = json_string_to_json_array(*arr_dest);
 }
 
 /* Split the JSON array at *DEST, and write the result to *DEST as well.
@@ -484,6 +478,7 @@ static void sanitize_string(const struct json_object *obj,
 	if (!string_array_contains(arr, json_object_to_json_string(*dest)))
 		goto sanitize_string_default;
 
+	json_object_get(*dest);
 	return;
 
 sanitize_string_default:
@@ -609,6 +604,7 @@ static void sanitize_eye(const struct json_object *obj,
 		return;
 	}
 
+	/* free(dim); */
 	convert_eye_colors(dest);
 }
 
@@ -666,7 +662,7 @@ translate_llm_responses(struct coninfo *coninfo, const struct json_object *raw)
 	json_object_object_add(res, "PARTICLE", particle);
 	json_object_object_add(res, "EYE", eye);
 
-	/* json_object_put(isl); */
+	json_object_put(isl);
 
 	return res;
 }
@@ -732,7 +728,7 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 	coninfo->answer =
 		strdup(json_object_to_json_string(translated_responses));
 
-	/* json_object_put(translated_responses); */
+	json_object_put(translated_responses);
 	free(input);
 	free(key);
 
