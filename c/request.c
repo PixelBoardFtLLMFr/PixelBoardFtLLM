@@ -81,9 +81,11 @@ static char *get_default_key(void)
 	return key;
 }
 
+/* Send an error thrown by the LLM API to the client. */
 static void forward_llm_error(struct coninfo *coninfo,
 			      struct json_object *json_err)
 {
+	printf("trace: %s\n", __func__);
 	json_bool ret;
 	struct json_object *json_buf;
 	struct json_object *json_reply;
@@ -100,6 +102,7 @@ static void forward_llm_error(struct coninfo *coninfo,
 	json_reply = json_object_new_object();
 	json_object_object_add(json_reply, "error", json_buf);
 	coninfo->answer = strdup(json_object_to_json_string(json_reply));
+	json_object_get(json_buf);
 	json_object_put(json_reply);
 }
 
@@ -161,23 +164,27 @@ static void print_big_json(const char *start, struct json_object *obj)
 static struct json_object *isolate_llm_responses(struct coninfo *coninfo,
 						 const struct json_object *raw)
 {
-	struct json_object *res = json_object_new_object();
-	struct json_object *json_err, *json_buf;
+	/* check for error */
+	/* I use weird braces because the json_object_object_foreach macro
+	   declares KEY in the current scope */
+	/* clang-format off */
+	{json_object_object_foreach(raw, key, val) {
+		(void) key;
+		struct json_object *json_err;
 
-	json_object_object_foreach(raw, key, val)
-	{
-		/* check for error */
-		json_bool found =
-			json_object_object_get_ex(val, "error", &json_err);
-		/* TODO: verify memory integrity */
-
-		if (found) {
+		if (json_object_object_get_ex(val, "error", &json_err)) {
 			forward_llm_error(coninfo, json_err);
-			json_object_put(res);
 			return NULL;
 		}
+	}}
 
-		/* no error, retrieve information */
+	/* no error, retrieve information */
+	struct json_object *res = json_object_new_object();
+
+	{json_object_object_foreach(raw, key, val) {
+		struct json_object *json_buf;
+		json_bool found;
+		
 		found = json_object_object_get_ex(val, "choices", &json_buf);
 
 		if (!found)
@@ -201,7 +208,11 @@ static struct json_object *isolate_llm_responses(struct coninfo *coninfo,
 			goto isolate_parse_err;
 
 		json_object_object_add(res, key, json_buf);
-	}
+		/* We must take ownership in order to
+		   keep data after RAW is freed */
+		json_object_get(json_buf);
+	}}
+	/* clang-format on */
 
 	print_big_json("LLM isolated reply", res);
 	return res;
@@ -703,13 +714,12 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 
 	struct json_object *raw_responses = prompt_execute_all(key, input);
 
-	printf("==LLM raw reply==\n");
-	printf("%s\n", json_object_to_json_string_ext(raw_responses,
-						      JSON_C_TO_STRING_PRETTY));
-	printf("==END==\n");
+	print_big_json("LLM raw reply", raw_responses);
 
 	struct json_object *translated_responses =
 		translate_llm_responses(coninfo, raw_responses);
+	json_object_put(raw_responses);
+	raw_responses = NULL;
 
 	if (!translated_responses) {
 		json_object_put(raw_responses);
@@ -722,7 +732,6 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 	coninfo->answer =
 		strdup(json_object_to_json_string(translated_responses));
 
-	/* json_object_put(raw_responses); */
 	/* json_object_put(translated_responses); */
 	free(input);
 	free(key);
