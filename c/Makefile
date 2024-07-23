@@ -1,5 +1,3 @@
-CC ?= gcc
-CFLAGS ?= -O2 -DNDEBUG
 DEFAULT_PORT ?= 4444
 CHATGPT_URL ?= \"https://api.openai.com/v1/chat/completions\"
 DEFAULT_KEY_FILE ?= \"$(shell realpath ./default_key.txt)\"
@@ -12,12 +10,21 @@ MHD_LDFLAGS = $(shell pkg-config --libs libmicrohttpd)
 
 JSON_CFLAGS = $(shell pkg-config --cflags json-c)
 JSON_LDFLAGS = $(shell pkg-config --libs json-c)
-LDFLAGS ?= 
+
+CC ?= gcc
+CFLAGS ?= -O2 -DNDEBUG
+LDFLAGS ?=
+PREFIX ?= $(HOME)/.local
+SERVICEDIR ?= /etc/systemd/user
+SHAREDIR ?= $(PREFIX)/share/ppp_server
 
 SRC = server.c llm.c request.c prompt.c
 OBJ = $(subst .c,.o,$(SRC))
-__CFLAGS = -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -DDEFAULT_PORT=$(DEFAULT_PORT) -DCHATGPT_URL=$(CHATGPT_URL) -DDEFAULT_KEY_FILE=$(DEFAULT_KEY_FILE) -D_POSIX_C_SOURCE=200809L -D_GNU_SOURCE
+TXT = angle_base.txt arm_example.txt arm_spec.txt eye.txt face.txt head_example.txt head_spec.txt height.txt leg_example.txt leg_spec.txt particle.txt 
+__CFLAGS = -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -DDEFAULT_PORT=$(DEFAULT_PORT) -DCHATGPT_URL=$(CHATGPT_URL) -DDEFAULT_KEY_FILE=$(DEFAULT_KEY_FILE) -DSHAREDIR=$(SHAREDIR) -D_POSIX_C_SOURCE=200809L -D_GNU_SOURCE
 __LDFLAGS =
+
+compile: ppp_server ppp_start.sh ppp.service
 
 ppp_server: $(OBJ)
 	@echo -e "  LD\t$@"; $(CC) $(__LDFLAGS) $(CURL_LDFLAGS) $(MHD_LDFLAGS) $(JSON_LDFLAGS) $(LDFLAGS) -o $@ $^
@@ -31,9 +38,33 @@ llm_tester: llm.o llm_tester.o
 fmt:
 	clang-format -i *.c *.h
 
-ppp_code.tar.gz: $(SRC) Makefile
+ppp_code.tar.gz: $(SRC) Makefile $(TXT)
 	tar czf $@ $^
 
 dist: ppp_code.tar.gz
 
-.PHONY: fmt dist
+ppp_start.sh: ppp_start.sh.in
+	@echo -e "  SED\t$@"; sed 's:@PREFIX@:$(PREFIX):g' <$< | sed 's:@HOME@:$(HOME):g' >$@
+
+ppp.service: ppp.service.in
+	@echo -e "  SED\t$@"; sed 's:@PREFIX@:$(PREFIX):g' <$< >$@
+
+install: ppp_server ppp_start.sh $(TXT)
+	mkdir -p $(PREFIX)/bin
+	cp ppp_server $(PREFIX)/bin/
+	mkdir -p $(PREFIX)/libexec
+	cp ppp_start.sh $(PREFIX)/libexec/
+	chmod +x $(PREFIX)/libexec/ppp_start.sh
+	mkdir -p $(SHAREDIR)
+	cp $(TXT) $(SHAREDIR)/
+
+service_install: ppp.service
+	cp ppp.service $(SERVICEDIR)/
+
+uninstall:
+	rm -f $(PREFIX)/bin/ppp_server $(PREFIX)/libexec/ppp_start.sh $(SERVICEDIR)/ppp.service
+
+clean:
+	rm -f ppp_server $(OBJ) ppp_start.sh ppp.service
+
+.PHONY: fmt dist install compile clean install service_install uninstall

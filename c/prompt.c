@@ -80,24 +80,24 @@ static char *read_whole_file(const char *path)
 
 void prompt_init(void)
 {
-	angle_base = read_whole_file("angle_base.txt");
+	angle_base = read_whole_file(SHAREDIR "/angle_base.txt");
 
-	arm_spec = read_whole_file("arm_spec.txt");
-	arm_example = read_whole_file("arm_example.txt");
+	arm_spec = read_whole_file(SHAREDIR "/arm_spec.txt");
+	arm_example = read_whole_file(SHAREDIR "/arm_example.txt");
 
-	leg_spec = read_whole_file("leg_spec.txt");
-	leg_example = read_whole_file("leg_example.txt");
+	leg_spec = read_whole_file(SHAREDIR "/leg_spec.txt");
+	leg_example = read_whole_file(SHAREDIR "/leg_example.txt");
 
-	head_spec = read_whole_file("head_spec.txt");
-	head_example = read_whole_file("head_example.txt");
+	head_spec = read_whole_file(SHAREDIR "/head_spec.txt");
+	head_example = read_whole_file(SHAREDIR "/head_example.txt");
 
-	face = read_whole_file("face.txt");
+	face = read_whole_file(SHAREDIR "/face.txt");
 
-	particle = read_whole_file("particle.txt");
+	particle = read_whole_file(SHAREDIR "/particle.txt");
 
-	eye = read_whole_file("eye.txt");
+	eye = read_whole_file(SHAREDIR "/eye.txt");
 
-	height = read_whole_file("height.txt");
+	height = read_whole_file(SHAREDIR "/height.txt");
 }
 
 void prompt_destroy(void)

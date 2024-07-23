@@ -18,6 +18,16 @@ static void print_usage(FILE *stream)
 		"  -m, --max-requests MAX\tallow only MAXrequests per hour\n");
 }
 
+static void print_help(void) {
+	printf("Pixel Penguin Project a.k.a. PPP\n\n");
+	print_usage(stdout);
+	printf("\nCompiled with :\n");
+	printf("  ChatGPT URL\t\t%s\n", CHATGPT_URL);
+	printf("  Share Directory\t%s\n", SHAREDIR);
+	printf("  Default Port\t\t%d\n", DEFAULT_PORT);
+	printf("  Default Key File\t%s\n", DEFAULT_KEY_FILE);
+}
+
 int main(int argc, char *argv[])
 {
 	struct MHD_Daemon *daemon;
@@ -31,7 +41,7 @@ int main(int argc, char *argv[])
 	while ((opt = getopt_long(argc, argv, ":hp:m:", opts, &ind)) != -1) {
 		switch (opt) {
 		case 'h':
-			print_usage(stdout);
+			print_help();
 			exit(EXIT_SUCCESS);
 		case 'p':
 			port = atoi(optarg);
