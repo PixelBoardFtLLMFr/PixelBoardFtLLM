@@ -718,7 +718,6 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 	raw_responses = NULL;
 
 	if (!translated_responses) {
-		json_object_put(raw_responses);
 		free(input);
 		free(key);
 		return MHD_NO;
@@ -728,7 +727,7 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 	coninfo->answer =
 		strdup(json_object_to_json_string(translated_responses));
 
-	json_object_put(translated_responses);
+	/* json_object_put(translated_responses); */
 	free(input);
 	free(key);
 
