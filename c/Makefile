@@ -33,7 +33,7 @@ ppp_server: $(OBJ)
 	@echo -e "  CC\t$@"; $(CC) -c $(CFLAGS) $(__CFLAGS) $(CURL_CFLAGS) $(MHD_CFLAGS) $(JSON_CFLAGS) -o $@ $<
 
 llm_tester: llm.o llm_tester.o
-	@echo -e "  LD\t$@"; $(CC) $(LDFLAGS) $(__LDFLAGS) $(CURL_LDFLAGS) $(JSON_LDFLAGS) -o $@ $^
+	@echo -e "  LD\t$@"; $(CC) -o $@ $^ $(LDFLAGS) $(__LDFLAGS) $(CURL_LDFLAGS) $(JSON_LDFLAGS)
 
 fmt:
 	clang-format -i *.c *.h
