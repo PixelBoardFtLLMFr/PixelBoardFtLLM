@@ -27,7 +27,7 @@ __LDFLAGS =
 compile: ppp_server ppp_start.sh ppp.service
 
 ppp_server: $(OBJ)
-	@echo -e "  LD\t$@"; $(CC) $(__LDFLAGS) $(CURL_LDFLAGS) $(MHD_LDFLAGS) $(JSON_LDFLAGS) $(LDFLAGS) -o $@ $^
+	@echo -e "  LD\t$@"; $(CC) -o $@ $^ $(__LDFLAGS) $(CURL_LDFLAGS) $(MHD_LDFLAGS) $(JSON_LDFLAGS) $(LDFLAGS)
 
 %.o: %.c
 	@echo -e "  CC\t$@"; $(CC) -c $(CFLAGS) $(__CFLAGS) $(CURL_CFLAGS) $(MHD_CFLAGS) $(JSON_CFLAGS) -o $@ $<
@@ -38,7 +38,7 @@ llm_tester: llm.o llm_tester.o
 fmt:
 	clang-format -i *.c *.h
 
-ppp_code.tar.gz: $(SRC) Makefile $(TXT) ppp.service.in ppp_start.sh.in llm.h prompt.h request.h
+ppp_code.tar.gz: $(SRC) Makefile $(TXT) ppp.service.in ppp_start.sh.in llm.h prompt.h request.h apt_deps.txt
 	tar czf $@ $^
 
 dist: ppp_code.tar.gz

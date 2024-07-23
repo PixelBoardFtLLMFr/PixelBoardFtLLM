@@ -81,6 +81,14 @@ static char *get_default_key(void)
 	return key;
 }
 
+/* Set the headers that are mandatory for network traffic to properly go. */
+static void set_mandatory_headers(struct MHD_Response *response)
+{
+	MHD_add_response_header(response, "Access-Control-Allow-Headers", "*");
+	MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
+	MHD_add_response_header(response, "Access-Control-Allow-Methods", "POST, OPTIONS");
+}
+
 /* Send an error thrown by the LLM API to the client. */
 static void forward_llm_error(struct coninfo *coninfo,
 			      struct json_object *json_err)
@@ -157,7 +165,7 @@ static void print_big_json(const char *start, struct json_object *obj)
      },
      ...
    }
-   
+
    In this case, the "LLM error message" is forwarded as-is to
    the client, see the forward_llm_error function.
 */
@@ -184,7 +192,7 @@ static struct json_object *isolate_llm_responses(struct coninfo *coninfo,
 	{json_object_object_foreach(raw, key, val) {
 		struct json_object *json_buf;
 		json_bool found;
-		
+
 		found = json_object_object_get_ex(val, "choices", &json_buf);
 
 		if (!found)
@@ -457,7 +465,7 @@ static int string_array_contains(const char *const *arr, const char *str)
 		if (strcmp(str, arr[i]) == 0)
 			return 1;
 	}
-	
+
 	return 0;
 }
 
@@ -469,7 +477,6 @@ static void sanitize_string(const struct json_object *obj,
 			    const char *const *arr,
 			    const char *def)
 {
-	
 	json_object_object_get_ex(obj, key, dest);
 
 	if (json_object_get_type(*dest) != json_type_string)
@@ -818,7 +825,7 @@ static enum MHD_Result reply_request(struct MHD_Connection *con,
 	struct MHD_Response *response = MHD_create_response_from_buffer(
 		strlen(coninfo->answer), (void *)coninfo->answer,
 		MHD_RESPMEM_PERSISTENT);
-
+	set_mandatory_headers(response);
 	ret = MHD_queue_response(con, coninfo->http_status, response);
 	MHD_destroy_response(response);
 
@@ -856,6 +863,21 @@ static enum MHD_Result reply_request_error(struct MHD_Connection *con,
 	return ret;
 }
 
+/* Reply to an OPTIONS request, need for the CORS stuff to work properly. */
+static enum MHD_Result reply_options(struct MHD_Connection *con)
+{
+	enum MHD_Result ret;
+	struct MHD_Response *response;
+
+	response = MHD_create_response_from_buffer(0, "", MHD_RESPMEM_PERSISTENT);
+	set_mandatory_headers(response);
+	ret = MHD_queue_response(con, MHD_HTTP_OK, response);
+	MHD_destroy_response(response);
+
+	printf("trace: %s done\n", __func__);
+	return ret;
+}
+
 /* Called several times per request. The first time, *REQ_CLS is NULL, the
    other times, it is set to what we set it to the first time, namely a
    pointer to a coninfo structure. */
@@ -864,6 +886,10 @@ enum MHD_Result handle_request(void *cls, struct MHD_Connection *con,
 			       const char *version, const char *data,
 			       size_t *data_size, void **req_cls)
 {
+	if (strcmp(method, "OPTIONS") == 0) {
+		return reply_options(con);
+	}
+
 	if (strcmp(method, "POST") != 0) {
 		return reply_request_error(con, "bad method (%s)", method);
 	}
