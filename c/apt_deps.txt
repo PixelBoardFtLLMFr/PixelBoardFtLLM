@@ -1,5 +1,9 @@
 libcurl4
 libcurl4-doc
+libcurl4-openssl-dev
 libmicrohttpd12
 libjson-c-dev
 libjson-c-doc
+make
+gcc
+pkg-config
