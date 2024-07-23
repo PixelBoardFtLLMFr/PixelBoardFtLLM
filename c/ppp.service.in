@@ -1,0 +1,10 @@
+[Unit]
+Description=PPP Server
+
+[Service]
+ExecStart=@PREFIX@/libexec/ppp_start.sh
+Restart=no
+Type=exec
+
+[Install]
+WantedBy=multi-user.target

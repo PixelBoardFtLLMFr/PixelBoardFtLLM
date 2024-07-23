@@ -1,0 +1,12 @@
+#!/bin/sh
+
+logdir="@HOME@/.local/var/log/ppp_server"
+mkdir -p "$logdir"
+
+if [ $EUID -eq 0 ]
+then
+    echo "ppp_server: should not be run as root" >>"$logdir/error.log"
+    exit 1
+fi
+
+exec @PREFIX@/bin/ppp_server 1>>"$logdir/info.log" 2>>"$logdir/error.log"
