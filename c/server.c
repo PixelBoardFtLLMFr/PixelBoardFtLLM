@@ -43,6 +43,7 @@ int main(int argc, char *argv[])
 		case 'h':
 			print_help();
 			exit(EXIT_SUCCESS);
+		/* TODO: implement maximum request */
 		case 'p':
 			port = atoi(optarg);
 			break;

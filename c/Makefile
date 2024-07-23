@@ -21,7 +21,7 @@ SHAREDIR ?= $(PREFIX)/share/ppp_server
 SRC = server.c llm.c request.c prompt.c
 OBJ = $(subst .c,.o,$(SRC))
 TXT = angle_base.txt arm_example.txt arm_spec.txt eye.txt face.txt head_example.txt head_spec.txt height.txt leg_example.txt leg_spec.txt particle.txt 
-__CFLAGS = -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -DDEFAULT_PORT=$(DEFAULT_PORT) -DCHATGPT_URL=$(CHATGPT_URL) -DDEFAULT_KEY_FILE=$(DEFAULT_KEY_FILE) -DSHAREDIR=$(SHAREDIR) -D_POSIX_C_SOURCE=200809L -D_GNU_SOURCE
+__CFLAGS = -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -DDEFAULT_PORT=$(DEFAULT_PORT) -DCHATGPT_URL=$(CHATGPT_URL) -DDEFAULT_KEY_FILE=$(DEFAULT_KEY_FILE) -DSHAREDIR=\"$(SHAREDIR)\" -D_POSIX_C_SOURCE=200809L -D_GNU_SOURCE
 __LDFLAGS =
 
 compile: ppp_server ppp_start.sh ppp.service
@@ -38,7 +38,7 @@ llm_tester: llm.o llm_tester.o
 fmt:
 	clang-format -i *.c *.h
 
-ppp_code.tar.gz: $(SRC) Makefile $(TXT)
+ppp_code.tar.gz: $(SRC) Makefile $(TXT) ppp.service.in ppp_start.sh.in llm.h prompt.h request.h
 	tar czf $@ $^
 
 dist: ppp_code.tar.gz
