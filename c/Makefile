@@ -14,10 +14,12 @@ JSON_CFLAGS = $(shell pkg-config --cflags json-c)
 JSON_LDFLAGS = $(shell pkg-config --libs json-c)
 LDFLAGS ?= 
 
+SRC = server.c llm.c request.c prompt.c
+OBJ = $(subst .c,.o,$(SRC))
 __CFLAGS = -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -DDEFAULT_PORT=$(DEFAULT_PORT) -DCHATGPT_URL=$(CHATGPT_URL) -DDEFAULT_KEY_FILE=$(DEFAULT_KEY_FILE) -D_POSIX_C_SOURCE=200809L -D_GNU_SOURCE
 __LDFLAGS =
 
-server: server.o llm.o request.o prompt.o
+ppp_server: $(OBJ)
 	@echo -e "  LD\t$@"; $(CC) $(__LDFLAGS) $(CURL_LDFLAGS) $(MHD_LDFLAGS) $(JSON_LDFLAGS) $(LDFLAGS) -o $@ $^
 
 %.o: %.c
@@ -29,4 +31,9 @@ llm_tester: llm.o llm_tester.o
 fmt:
 	clang-format -i *.c *.h
 
-.PHONY: fmt
+ppp_code.tar.gz: $(SRC) Makefile
+	tar czf $@ $^
+
+dist: ppp_code.tar.gz
+
+.PHONY: fmt dist
