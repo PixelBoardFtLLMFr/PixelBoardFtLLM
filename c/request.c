@@ -13,6 +13,12 @@
 #include "prompt.h"
 #include "llm.h"
 
+#ifndef NDEBUG
+#  define TRACE printf("trace: %s\n", __func__)
+#else
+#  define TRACE
+#endif
+
 /* 1KB */
 #define BUFSIZE (1 << 10)
 
@@ -42,6 +48,71 @@ static struct json_object *json_error(const char *msg)
 	struct json_object *txt = json_object_new_string(msg);
 	json_object_object_add(obj, "error", txt);
 	return obj;
+}
+
+/* Give CONINFO 'bad request' status and MSG content, enclosed in JSON. */
+static void coninfo_set_error(struct coninfo *coninfo,
+			      const char *msg)
+{
+	struct json_object *json_err = json_error(msg);
+	coninfo->http_status = MHD_HTTP_BAD_REQUEST;
+	coninfo->answer = strdup(json_object_to_json_string_ext(json_err, JSON_C_TO_STRING_PLAIN));
+	json_object_put(json_err);
+}
+
+/* Set the headers that are mandatory for network traffic to properly go. */
+static void set_mandatory_headers(struct MHD_Response *response)
+{
+	MHD_add_response_header(response, "Access-Control-Allow-Headers", "*");
+	MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
+	MHD_add_response_header(response, "Access-Control-Allow-Methods", "POST, OPTIONS");
+}
+
+/* Reply to the pending request of CON, using the answer and the
+   HTTP status of CONINFO. */
+static enum MHD_Result reply_request(struct MHD_Connection *con,
+				     struct coninfo *coninfo)
+{
+	TRACE;
+	printf("%s: reply text '%s'\n", __func__, coninfo->answer);
+	printf("%s: reply HTTP code '%d'\n", __func__, coninfo->http_status);
+
+	int ret;
+	struct MHD_Response *response;
+
+	response = MHD_create_response_from_buffer(strlen(coninfo->answer),
+						   (void *)coninfo->answer,
+						   MHD_RESPMEM_PERSISTENT);
+	set_mandatory_headers(response);
+	ret = MHD_queue_response(con, coninfo->http_status, response);
+	MHD_destroy_response(response);
+
+	return ret;
+}
+
+/* Build a heap-allocated string from the given format FMT. */
+static char *strf(const char *fmt, ...)
+{
+	char buf[2048];
+	va_list ap;
+
+	TRACE;
+
+	va_start(ap, fmt);
+	vsnprintf(buf, sizeof(buf)-1, fmt, ap);
+	va_end(ap);
+
+	return strdup(buf);
+}
+
+/* Wrapper for reply_request to send formatted error messages. */
+static enum MHD_Result reply_request_error(struct MHD_Connection *con,
+					   struct coninfo *coninfo,
+					   const char *msg)
+{
+	TRACE;
+	coninfo_set_error(coninfo, msg);
+	return reply_request(con, coninfo);
 }
 
 /* Read the file containing the default key and return it. The returned
@@ -81,19 +152,11 @@ static char *get_default_key(void)
 	return key;
 }
 
-/* Set the headers that are mandatory for network traffic to properly go. */
-static void set_mandatory_headers(struct MHD_Response *response)
-{
-	MHD_add_response_header(response, "Access-Control-Allow-Headers", "*");
-	MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
-	MHD_add_response_header(response, "Access-Control-Allow-Methods", "POST, OPTIONS");
-}
-
 /* Send an error thrown by the LLM API to the client. */
 static void forward_llm_error(struct coninfo *coninfo,
 			      struct json_object *json_err)
 {
-	printf("trace: %s\n", __func__);
+	TRACE;
 	json_bool ret;
 	struct json_object *json_buf;
 	struct json_object *json_reply;
@@ -109,7 +172,7 @@ static void forward_llm_error(struct coninfo *coninfo,
 
 	json_reply = json_object_new_object();
 	json_object_object_add(json_reply, "error", json_buf);
-	coninfo->answer = strdup(json_object_to_json_string(json_reply));
+	coninfo->answer = strdup(json_object_to_json_string_ext(json_reply, JSON_C_TO_STRING_PLAIN));
 	json_object_get(json_buf);
 	json_object_put(json_reply);
 }
@@ -686,11 +749,7 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 	ret = json_object_object_get_ex(obj, "input", &json_buf);
 
 	if (!ret) {
-		struct json_object *json_err = json_error(
-			"the given JSON object does not have an 'input' value");
-		coninfo->http_status = MHD_HTTP_BAD_REQUEST;
-		coninfo->answer = strdup(json_object_to_json_string(json_err));
-		json_object_put(json_err);
+		coninfo_set_error(coninfo, "the given JSON object does not have an 'input' value");
 		json_object_put(obj);
 		return MHD_NO;
 	}
@@ -701,11 +760,16 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 	ret = json_object_object_get_ex(obj, "key", &json_buf);
 
 	if (!ret) {
+		coninfo_set_error(coninfo, "the given JSON object does not have a 'key' value");
+		json_object_put(obj);
+		return MHD_NO;
+	}
+
+	key = strdup(json_object_to_json_string(json_buf));
+
+	if (strcmp(key, "\"\"") == 0) {
+		free(key);
 		key = get_default_key();
-		printf("info: using the default key\n");
-		/* TODO: limit usage */
-	} else {
-		key = strdup(json_object_to_json_string(json_buf));
 	}
 
 	json_object_put(obj);
@@ -744,7 +808,7 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 static enum MHD_Result handle_chunk(struct coninfo *coninfo, const char *data,
 				    size_t data_size)
 {
-	printf("trace: %s\n", __func__);
+	TRACE;
 
 	struct json_object *obj =
 		json_tokener_parse_ex(coninfo->tok, data, data_size);
@@ -754,12 +818,8 @@ static enum MHD_Result handle_chunk(struct coninfo *coninfo, const char *data,
 
 	if (json_tokener_get_error(coninfo->tok) != json_tokener_continue) {
 		printf("%s: invalid JSON detected\n", __func__);
-		struct json_object *json_err =
-			json_error(json_tokener_error_desc(
-				json_tokener_get_error(coninfo->tok)));
-		coninfo->answer = strdup(json_object_to_json_string(json_err));
-		coninfo->http_status = MHD_HTTP_BAD_REQUEST;
-		json_object_put(json_err);
+		coninfo_set_error(coninfo, json_tokener_error_desc(
+					  json_tokener_get_error(coninfo->tok)));
 		return MHD_NO;
 	}
 
@@ -769,7 +829,7 @@ static enum MHD_Result handle_chunk(struct coninfo *coninfo, const char *data,
 void cleanup_request(void *cls, struct MHD_Connection *con, void **req_cls,
 		     enum MHD_RequestTerminationCode toe)
 {
-	printf("trace: %s\n", __func__);
+	TRACE;
 
 	if (toe != MHD_REQUEST_TERMINATED_COMPLETED_OK) {
 		printf("warning: connection error %d\n", toe);
@@ -808,72 +868,38 @@ static struct coninfo *coninfo_init(void)
 	return coninfo;
 }
 
-/* Reply to the pending request of CON, using the answer and the
-   HTTP status of CONINFO. */
-static enum MHD_Result reply_request(struct MHD_Connection *con,
-				     struct coninfo *coninfo)
+static enum MHD_Result reply_request_error_early(struct MHD_Connection *con,
+						 void **req_cls,
+						 char *msg)
 {
-	printf("trace: %s\n", __func__);
-	printf("%s: reply text '%s'\n", __func__, coninfo->answer);
-	printf("%s: reply HTTP code '%d'\n", __func__, coninfo->http_status);
+	struct coninfo *coninfo;
+	
+	TRACE;
 
-	/* TODO: handle NULL answer */
+	coninfo = coninfo_init();
+	*req_cls = coninfo;
+	reply_request_error(con, coninfo, msg);
+	free(msg);
 
-	int ret;
-	struct MHD_Response *response = MHD_create_response_from_buffer(
-		strlen(coninfo->answer), (void *)coninfo->answer,
-		MHD_RESPMEM_PERSISTENT);
-	set_mandatory_headers(response);
-	ret = MHD_queue_response(con, coninfo->http_status, response);
-	MHD_destroy_response(response);
-
-	printf("trace: %s done\n", __func__);
-	return ret;
-}
-
-/* Reply to the pending request of CON. No coninfo
-   has to be associated with it yet. */
-static enum MHD_Result reply_request_error(struct MHD_Connection *con,
-					   const char *fmt, ...)
-{
-	va_list ap;
-	int ret;
-	struct json_object *json_err;
-	char msg[512], *json_msg;
-
-	printf("trace: %s\n", __func__);
-
-	va_start(ap, fmt);
-	vsprintf(msg, fmt, ap);
-
-	json_err = json_error(msg);
-	json_msg = strdup(json_object_to_json_string_ext(
-		json_err, JSON_C_TO_STRING_NOSLASHESCAPE));
-	json_object_put(json_err);
-
-	struct MHD_Response *response = MHD_create_response_from_buffer(
-		strlen(json_msg), (void *)json_msg, MHD_RESPMEM_MUST_FREE);
-
-	ret = MHD_queue_response(con, MHD_HTTP_BAD_REQUEST, response);
-	MHD_destroy_response(response);
-
-	printf("trace: %s done\n", __func__);
-	return ret;
+	return reply_request(con, coninfo);
 }
 
 /* Reply to an OPTIONS request, need for the CORS stuff to work properly. */
-static enum MHD_Result reply_options(struct MHD_Connection *con)
+static enum MHD_Result reply_options(struct MHD_Connection *con,
+				     void **req_cls)
 {
 	enum MHD_Result ret;
 	struct MHD_Response *response;
+	struct coninfo *coninfo;
 
-	response = MHD_create_response_from_buffer(0, "", MHD_RESPMEM_PERSISTENT);
-	set_mandatory_headers(response);
-	ret = MHD_queue_response(con, MHD_HTTP_OK, response);
-	MHD_destroy_response(response);
+	TRACE;
 
-	printf("trace: %s done\n", __func__);
-	return ret;
+	coninfo = coninfo_init();
+	coninfo->answer = strdup("");
+	coninfo->http_status = MHD_HTTP_OK;
+	*req_cls = coninfo;
+
+	return reply_request(con, coninfo);
 }
 
 /* Called several times per request. The first time, *REQ_CLS is NULL, the
@@ -885,15 +911,15 @@ enum MHD_Result handle_request(void *cls, struct MHD_Connection *con,
 			       size_t *data_size, void **req_cls)
 {
 	if (strcmp(method, "OPTIONS") == 0) {
-		return reply_options(con);
+		return reply_options(con, req_cls);
 	}
 
 	if (strcmp(method, "POST") != 0) {
-		return reply_request_error(con, "bad method (%s)", method);
+		return reply_request_error_early(con, req_cls, strf("bad method (%s)", method));
 	}
 
 	if (strcmp(url, "/") != 0) {
-		return reply_request_error(con, "bad URL (%s)", url);
+		return reply_request_error_early(con, req_cls, strf("bad URL (%s)", url));
 	}
 
 	if (*req_cls == NULL) {
