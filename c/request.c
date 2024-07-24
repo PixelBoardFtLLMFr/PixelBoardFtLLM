@@ -175,25 +175,24 @@ static struct json_object *isolate_llm_responses(struct coninfo *coninfo,
 	/* check for error */
 	/* I use weird braces because the json_object_object_foreach macro
 	   declares KEY in the current scope */
-	/* clang-format off */
-	{json_object_object_foreach(raw, key, val) {
-		(void) key;
+	json_object_object_foreach(raw, __key, val0) {
+		(void) __key;
 		struct json_object *json_err;
 
-		if (json_object_object_get_ex(val, "error", &json_err)) {
+		if (json_object_object_get_ex(val0, "error", &json_err)) {
 			forward_llm_error(coninfo, json_err);
 			return NULL;
 		}
-	}}
+	}
 
 	/* no error, retrieve information */
 	struct json_object *res = json_object_new_object();
 
-	{json_object_object_foreach(raw, key, val) {
+	json_object_object_foreach(raw, key, val1) {
 		struct json_object *json_buf;
 		json_bool found;
 
-		found = json_object_object_get_ex(val, "choices", &json_buf);
+		found = json_object_object_get_ex(val1, "choices", &json_buf);
 
 		if (!found)
 			goto isolate_parse_err;
@@ -219,8 +218,7 @@ static struct json_object *isolate_llm_responses(struct coninfo *coninfo,
 		/* We must take ownership in order to
 		   keep data after RAW is freed */
 		json_object_get(json_buf);
-	}}
-	/* clang-format on */
+	}
 
 	print_big_json("LLM isolated reply", res);
 	return res;
