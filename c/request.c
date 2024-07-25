@@ -14,9 +14,9 @@
 #include "llm.h"
 
 #ifndef NDEBUG
-#  define TRACE printf("trace: %s\n", __func__)
+#define TRACE printf("trace: %s\n", __func__)
 #else
-#  define TRACE
+#define TRACE
 #endif
 
 /* 1KB */
@@ -51,12 +51,12 @@ static struct json_object *json_error(const char *msg)
 }
 
 /* Give CONINFO 'bad request' status and MSG content, enclosed in JSON. */
-static void coninfo_set_error(struct coninfo *coninfo,
-			      const char *msg)
+static void coninfo_set_error(struct coninfo *coninfo, const char *msg)
 {
 	struct json_object *json_err = json_error(msg);
 	coninfo->http_status = MHD_HTTP_BAD_REQUEST;
-	coninfo->answer = strdup(json_object_to_json_string_ext(json_err, JSON_C_TO_STRING_PLAIN));
+	coninfo->answer = strdup(json_object_to_json_string_ext(
+		json_err, JSON_C_TO_STRING_PLAIN));
 	json_object_put(json_err);
 }
 
@@ -65,7 +65,8 @@ static void set_mandatory_headers(struct MHD_Response *response)
 {
 	MHD_add_response_header(response, "Access-Control-Allow-Headers", "*");
 	MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
-	MHD_add_response_header(response, "Access-Control-Allow-Methods", "POST, OPTIONS");
+	MHD_add_response_header(response, "Access-Control-Allow-Methods",
+				"POST, OPTIONS");
 }
 
 /* Reply to the pending request of CON, using the answer and the
@@ -99,7 +100,7 @@ static char *strf(const char *fmt, ...)
 	TRACE;
 
 	va_start(ap, fmt);
-	vsnprintf(buf, sizeof(buf)-1, fmt, ap);
+	vsnprintf(buf, sizeof(buf) - 1, fmt, ap);
 	va_end(ap);
 
 	return strdup(buf);
@@ -172,7 +173,8 @@ static void forward_llm_error(struct coninfo *coninfo,
 
 	json_reply = json_object_new_object();
 	json_object_object_add(json_reply, "error", json_buf);
-	coninfo->answer = strdup(json_object_to_json_string_ext(json_reply, JSON_C_TO_STRING_PLAIN));
+	coninfo->answer = strdup(json_object_to_json_string_ext(
+		json_reply, JSON_C_TO_STRING_PLAIN));
 	json_object_get(json_buf);
 	json_object_put(json_reply);
 }
@@ -238,8 +240,9 @@ static struct json_object *isolate_llm_responses(struct coninfo *coninfo,
 	/* check for error */
 	/* I use weird braces because the json_object_object_foreach macro
 	   declares KEY in the current scope */
-	json_object_object_foreach(raw, __key, val0) {
-		(void) __key;
+	json_object_object_foreach(raw, __key, val0)
+	{
+		(void)__key;
 		struct json_object *json_err;
 
 		if (json_object_object_get_ex(val0, "error", &json_err)) {
@@ -251,7 +254,8 @@ static struct json_object *isolate_llm_responses(struct coninfo *coninfo,
 	/* no error, retrieve information */
 	struct json_object *res = json_object_new_object();
 
-	json_object_object_foreach(raw, key, val1) {
+	json_object_object_foreach(raw, key, val1)
+	{
 		struct json_object *json_buf;
 		json_bool found;
 
@@ -301,7 +305,7 @@ static json_object *json_string_to_json_array(struct json_object *obj)
 	struct json_object *arr;
 
 	str[strlen(str) - 1] = '\0';
-	arr = json_tokener_parse(str+1);
+	arr = json_tokener_parse(str + 1);
 	json_tokener_free(tok);
 	free(str);
 
@@ -359,7 +363,7 @@ static struct array_dim *json_array_get_dim(struct json_object *obj)
 	enum json_type type = json_object_get_type(obj);
 
 	if (type == json_type_string)
-		 arr = json_string_to_json_array(obj);
+		arr = json_string_to_json_array(obj);
 	else if (type == json_type_array)
 		arr = obj;
 	else
@@ -509,8 +513,10 @@ static void json_array_split(struct json_object **dest)
 	for (int i = 0; i < length; i++) {
 		struct json_object *row = json_object_array_get_idx(*dest, i);
 
-		json_object_array_put_idx(left, i, json_object_array_get_idx(row, 0));
-		json_object_array_put_idx(right, i, json_object_array_get_idx(row, 1));
+		json_object_array_put_idx(left, i,
+					  json_object_array_get_idx(row, 0));
+		json_object_array_put_idx(right, i,
+					  json_object_array_get_idx(row, 1));
 	}
 
 	/* json_object_put(*dest); */
@@ -533,10 +539,8 @@ static int string_array_contains(const char *const *arr, const char *str)
 /* Verify that OBJ[KEY] is in ARR. If it is, it is written to *DEST, else
    DEF is written. */
 static void sanitize_string(const struct json_object *obj,
-			    struct json_object **dest,
-			    const char *key,
-			    const char *const *arr,
-			    const char *def)
+			    struct json_object **dest, const char *key,
+			    const char *const *arr, const char *def)
 {
 	json_object_object_get_ex(obj, key, dest);
 
@@ -558,14 +562,8 @@ sanitize_string_default:
 static void sanitize_face(const struct json_object *obj,
 			  struct json_object **dest)
 {
-	const char *const faces[] = {
-		"neutral",
-		"happy",
-		"sad",
-		"angry",
-		"surprised",
-		NULL
-	};
+	const char *const faces[] = { "neutral", "happy",     "sad",
+				      "angry",	 "surprised", NULL };
 
 	sanitize_string(obj, dest, "FACE", faces, faces[0]);
 }
@@ -575,16 +573,8 @@ static void sanitize_face(const struct json_object *obj,
 static void sanitize_particle(const struct json_object *obj,
 			      struct json_object **dest)
 {
-	const char *const particles[] = {
-		"none",
-		"angry",
-		"heart",
-		"sleepy",
-		"spark",
-		"sweat",
-		"cloud",
-		NULL
-	};
+	const char *const particles[] = { "none",  "angry", "heart", "sleepy",
+					  "spark", "sweat", "cloud", NULL };
 
 	sanitize_string(obj, dest, "PARTICLE", particles, particles[0]);
 }
@@ -608,23 +598,11 @@ static struct json_object *triplet_to_json(const int *triplet)
 static struct json_object *convert_eye_element(struct json_object *obj)
 {
 	const char *json_str = json_object_to_json_string(obj);
-	const char *const colors_str[] = {
-		"blue",
-		"bright",
-		"green",
-		"red",
-		"white",
-		"yellow",
-		NULL
-	};
-	const int colors_int[][3] = {
-		{50, 50, 255},
-		{200, 200, 200},
-		{0,   255, 130},
-		{255, 0,   0},
-		{10,  10,  10},
-		{255, 222, 40}
-	};
+	const char *const colors_str[] = { "blue",  "bright", "green", "red",
+					   "white", "yellow", NULL };
+	const int colors_int[][3] = { { 50, 50, 255 }, { 200, 200, 200 },
+				      { 0, 255, 130 }, { 255, 0, 0 },
+				      { 10, 10, 10 },  { 255, 222, 40 } };
 
 	for (int i = 0; colors_str[i] != NULL; i++) {
 		if (strcmp(json_str, colors_str[i]) == 0)
@@ -642,8 +620,10 @@ static void convert_eye_colors(struct json_object **dest)
 		struct json_object *row = json_object_array_get_idx(arr, i);
 
 		for (int j = 0; j < EYE_SIZE; j++) {
-			struct json_object *old_elem = json_object_array_get_idx(row, j);
-			struct json_object *new_elem = convert_eye_element(old_elem);
+			struct json_object *old_elem =
+				json_object_array_get_idx(row, j);
+			struct json_object *new_elem =
+				convert_eye_element(old_elem);
 			json_object_array_put_idx(row, j, new_elem);
 		}
 	}
@@ -665,8 +645,8 @@ static void sanitize_eye(const struct json_object *obj,
 		return;
 	}
 
-	if ((dim->width != EYE_SIZE) || (dim->height != EYE_SIZE)
-	    || (dim->type != json_type_string)) {
+	if ((dim->width != EYE_SIZE) || (dim->height != EYE_SIZE) ||
+	    (dim->type != json_type_string)) {
 		free(dim);
 		*dest = json_object_new_null();
 		return;
@@ -710,7 +690,6 @@ translate_llm_responses(struct coninfo *coninfo, const struct json_object *raw)
 	json_array_split(&arm);
 	json_array_split(&leg);
 
-
 	struct json_object *face;
 	sanitize_face(isl, &face);
 
@@ -719,7 +698,6 @@ translate_llm_responses(struct coninfo *coninfo, const struct json_object *raw)
 
 	struct json_object *eye;
 	sanitize_eye(isl, &eye);
-
 
 	struct json_object *res = json_object_new_object();
 	json_object_object_add(res, "ARM", arm);
@@ -749,7 +727,9 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 	ret = json_object_object_get_ex(obj, "input", &json_buf);
 
 	if (!ret) {
-		coninfo_set_error(coninfo, "the given JSON object does not have an 'input' value");
+		coninfo_set_error(
+			coninfo,
+			"the given JSON object does not have an 'input' value");
 		json_object_put(obj);
 		return MHD_NO;
 	}
@@ -760,7 +740,9 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 	ret = json_object_object_get_ex(obj, "key", &json_buf);
 
 	if (!ret) {
-		coninfo_set_error(coninfo, "the given JSON object does not have a 'key' value");
+		coninfo_set_error(
+			coninfo,
+			"the given JSON object does not have a 'key' value");
 		json_object_put(obj);
 		return MHD_NO;
 	}
@@ -816,9 +798,9 @@ static enum MHD_Result handle_chunk(struct coninfo *coninfo, const char *data,
 	if (obj) {
 		if (json_object_get_type(obj) == json_type_object) {
 			return process_request(coninfo, obj);
-		}
-		else {
-			coninfo_set_error(coninfo, "given JSON has the wrong type");
+		} else {
+			coninfo_set_error(coninfo,
+					  "given JSON has the wrong type");
 			json_object_put(obj);
 			return MHD_NO;
 		}
@@ -826,8 +808,9 @@ static enum MHD_Result handle_chunk(struct coninfo *coninfo, const char *data,
 
 	if (json_tokener_get_error(coninfo->tok) != json_tokener_continue) {
 		printf("%s: invalid JSON detected\n", __func__);
-		coninfo_set_error(coninfo, json_tokener_error_desc(
-					  json_tokener_get_error(coninfo->tok)));
+		coninfo_set_error(
+			coninfo, json_tokener_error_desc(
+					 json_tokener_get_error(coninfo->tok)));
 		return MHD_NO;
 	}
 
@@ -877,11 +860,10 @@ static struct coninfo *coninfo_init(void)
 }
 
 static enum MHD_Result reply_request_error_early(struct MHD_Connection *con,
-						 void **req_cls,
-						 char *msg)
+						 void **req_cls, char *msg)
 {
 	struct coninfo *coninfo;
-	
+
 	TRACE;
 
 	coninfo = coninfo_init();
@@ -893,8 +875,7 @@ static enum MHD_Result reply_request_error_early(struct MHD_Connection *con,
 }
 
 /* Reply to an OPTIONS request, need for the CORS stuff to work properly. */
-static enum MHD_Result reply_options(struct MHD_Connection *con,
-				     void **req_cls)
+static enum MHD_Result reply_options(struct MHD_Connection *con, void **req_cls)
 {
 	enum MHD_Result ret;
 	struct MHD_Response *response;
@@ -923,11 +904,13 @@ enum MHD_Result handle_request(void *cls, struct MHD_Connection *con,
 	}
 
 	if (strcmp(method, "POST") != 0) {
-		return reply_request_error_early(con, req_cls, strf("bad method (%s)", method));
+		return reply_request_error_early(
+			con, req_cls, strf("bad method (%s)", method));
 	}
 
 	if (strcmp(url, "/") != 0) {
-		return reply_request_error_early(con, req_cls, strf("bad URL (%s)", url));
+		return reply_request_error_early(con, req_cls,
+						 strf("bad URL (%s)", url));
 	}
 
 	if (*req_cls == NULL) {

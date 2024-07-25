@@ -18,7 +18,8 @@ static void print_usage(FILE *stream)
 		"  -m, --max-requests MAX\tallow only MAXrequests per hour\n");
 }
 
-static void print_help(void) {
+static void print_help(void)
+{
 	printf("Pixel Penguin Project a.k.a. PPP\n\n");
 	print_usage(stdout);
 	printf("\nCompiled with :\n");
@@ -60,7 +61,8 @@ int main(int argc, char *argv[])
 				  NULL, MHD_OPTION_END);
 
 	if (!daemon) {
-		fprintf(stderr, "%s: failed to initialize HTTP daemon\n", argv[0]);
+		fprintf(stderr, "%s: failed to initialize HTTP daemon\n",
+			argv[0]);
 		exit(1);
 	}
 
