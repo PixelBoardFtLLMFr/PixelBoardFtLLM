@@ -950,7 +950,7 @@ enum MHD_Result handle_request(void *cls, struct MHD_Connection *con,
 	if (coninfo->answer != NULL)
 		return reply_request(con, coninfo);
 
-	/* should never be reached */
-	printf("error: fell through %s\n", __func__);
-	return MHD_NO;
+	/* incomplete JSON input such as "{" (missing '}') */
+	reply_request_error(con, coninfo, "incomplete JSON data");
+	return MHD_YES;
 }
