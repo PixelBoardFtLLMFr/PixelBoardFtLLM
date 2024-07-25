@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# This script tests the server by invoking it multiple times and
+# submitting several requests.
+
+if [ ! -x "./ppp_server" ]
+then
+    echo 'error: the "./ppp_server" file does not exist or is not executable'
+    exit 1
+fi
+
+port=5555
+
+# Print the whole command before executing it. Since all the programs'
+# outputs are suppressed, this allows seeing what is going on.
+exec_cmd() {
+    echo "$1"
+    sh -c "$1"
+}
+
+exec_cmd "./ppp_server -h >/dev/null"
+exec_cmd "./ppp_server -p $port >ppp.log 2>ppp_err.log"
