@@ -813,8 +813,16 @@ static enum MHD_Result handle_chunk(struct coninfo *coninfo, const char *data,
 	struct json_object *obj =
 		json_tokener_parse_ex(coninfo->tok, data, data_size);
 
-	if (obj)
-		return process_request(coninfo, obj);
+	if (obj) {
+		if (json_object_get_type(obj) == json_type_object) {
+			return process_request(coninfo, obj);
+		}
+		else {
+			coninfo_set_error(coninfo, "given JSON has the wrong type");
+			json_object_put(obj);
+			return MHD_NO;
+		}
+	}
 
 	if (json_tokener_get_error(coninfo->tok) != json_tokener_continue) {
 		printf("%s: invalid JSON detected\n", __func__);
@@ -956,10 +964,8 @@ enum MHD_Result handle_request(void *cls, struct MHD_Connection *con,
 		return MHD_YES;
 	}
 
-	if (coninfo->answer != NULL) {
-		/* reply success */
+	if (coninfo->answer != NULL)
 		return reply_request(con, coninfo);
-	}
 
 	/* should never be reached */
 	printf("error: fell through %s\n", __func__);
