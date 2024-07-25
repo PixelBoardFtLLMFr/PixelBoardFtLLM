@@ -1,5 +1,7 @@
 ppp_server
 *.o
+*.gcda
+*.gcno
 llm_tester
 ppp_code.tar.gz
 ppp_start.sh
