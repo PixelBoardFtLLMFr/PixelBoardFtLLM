@@ -62,7 +62,7 @@ service_install: ppp.service
 	cp ppp.service $(SERVICEDIR)/
 
 uninstall:
-	rm -f $(PREFIX)/bin/ppp_server $(PREFIX)/libexec/ppp_start.sh $(SERVICEDIR)/ppp.service
+	rm -rf $(PREFIX)/bin/ppp_server $(PREFIX)/libexec/ppp_start.sh $(SERVICEDIR)/ppp.service $(SHAREDIR)
 
 clean:
 	rm -f ppp_server $(OBJ) ppp_start.sh ppp.service
