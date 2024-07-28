@@ -1,15 +1,17 @@
 #include <getopt.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+#include <string.h>
 #include <sys/epoll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <netinet/in.h>
-#include <netdb.h>
+#include <unistd.h>
 
-#include "request.h"
 #include "prompt.h"
+#include "request.h"
 #include "trace.h"
 
 struct server {
@@ -197,6 +199,24 @@ static void server_loop(void)
 	exit(EXIT_SUCCESS);
 }
 
+/* Very basic--not to say useless--signal management, mainly for making
+   Valgrind happy during tests. */
+static void handle_sig(int signum)
+{
+	printf("%s received, exiting\n", strsignal(signum));
+	server_destroy();
+	exit(EXIT_SUCCESS);
+}
+
+static void sighandler_init(void)
+{
+	struct sigaction act;
+
+	sigaction(SIGINT, NULL, &act);
+	act.sa_handler = handle_sig;
+	sigaction(SIGINT, &act, NULL);
+}
+
 int main(int argc, char *argv[])
 {
 	char *port = DEFAULT_PORT;
@@ -224,6 +244,7 @@ int main(int argc, char *argv[])
 	}
 
 	server_init(port);
+	sighandler_init();
 	server_loop();
 	/* should not be reached */
 	return EXIT_FAILURE;
