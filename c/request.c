@@ -12,17 +12,14 @@
 #include "request.h"
 #include "prompt.h"
 #include "llm.h"
-
-#ifndef NDEBUG
-#define TRACE printf("trace: %s\n", __func__)
-#else
-#define TRACE
-#endif
+#include "trace.h"
 
 /* 1KB */
 #define BUFSIZE (1 << 10)
 
 #define EYE_SIZE 3
+
+static char *default_key;
 
 /* Information regarding a request being currently processed.  For each
    request, a pointer to a coninfo structure is used by the handle_request
@@ -117,11 +114,13 @@ static enum MHD_Result reply_request_error(struct MHD_Connection *con,
 	return reply_request(con, coninfo);
 }
 
-/* Read the file containing the default key and return it. The returned
-   string is heap-allocated. */
+/* Read the file containing the default key and return
+   it. The result is cached. */
 static char *get_default_key(void)
 {
-	char *key = NULL;
+	if (default_key)
+		return default_key;
+
 	size_t key_size = 0;
 	ssize_t bytes_read;
 	FILE *stream;
@@ -133,7 +132,7 @@ static char *get_default_key(void)
 		exit(EXIT_FAILURE);
 	}
 
-	bytes_read = getline(&key, &key_size, stream);
+	bytes_read = getline(&default_key, &key_size, stream);
 
 	if (bytes_read == -1) {
 		perror(DEFAULT_KEY_FILE);
@@ -148,10 +147,10 @@ static char *get_default_key(void)
 		exit(EXIT_FAILURE);
 	}
 
-	key[bytes_read - 1] = '\0';
+	default_key[bytes_read - 1] = '\0';
 	fclose(stream);
 
-	return key;
+	return default_key;
 }
 
 /* Send an error thrown by the LLM API to the client. */
@@ -771,7 +770,6 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 
 	if (!translated_responses) {
 		free(input);
-		free(key);
 		return MHD_NO;
 	}
 
@@ -781,7 +779,6 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 
 	/* json_object_put(translated_responses); */
 	free(input);
-	free(key);
 
 	return MHD_YES;
 }
@@ -861,33 +858,28 @@ static struct coninfo *coninfo_init(void)
 }
 
 static enum MHD_Result reply_request_error_early(struct MHD_Connection *con,
-						 void **req_cls, char *msg)
+						 struct coninfo *coninfo,
+						 char *msg)
 {
-	struct coninfo *coninfo;
-
 	TRACE;
 
-	coninfo = coninfo_init();
-	*req_cls = coninfo;
-	reply_request_error(con, coninfo, msg);
+	int ret = reply_request_error(con, coninfo, msg);
 	free(msg);
 
-	return reply_request(con, coninfo);
+	return ret;
 }
 
 /* Reply to an OPTIONS request, need for the CORS stuff to work properly. */
-static enum MHD_Result reply_options(struct MHD_Connection *con, void **req_cls)
+static enum MHD_Result reply_options(struct MHD_Connection *con,
+				     struct coninfo *coninfo)
 {
 	enum MHD_Result ret;
 	struct MHD_Response *response;
-	struct coninfo *coninfo;
 
 	TRACE;
 
-	coninfo = coninfo_init();
 	coninfo->answer = strdup("");
 	coninfo->http_status = MHD_HTTP_OK;
-	*req_cls = coninfo;
 
 	return reply_request(con, coninfo);
 }
@@ -900,39 +892,40 @@ enum MHD_Result handle_request(void *cls, struct MHD_Connection *con,
 			       const char *version, const char *data,
 			       size_t *data_size, void **req_cls)
 {
-	if (strcmp(method, "OPTIONS") == 0) {
-		return reply_options(con, req_cls);
-	}
+	TRACE;
 
-	if (strcmp(method, "POST") != 0) {
-		return reply_request_error_early(
-			con, req_cls, strf("bad method (%s)", method));
-	}
-
-	if (strcmp(url, "/") != 0) {
-		return reply_request_error_early(con, req_cls,
-						 strf("bad URL (%s)", url));
-	}
-
-	if (*req_cls == NULL) {
+	if (!(*req_cls)) {
 		/* first iteration */
-		printf("info: initializing handler\n");
+		printf("%s: initializing handler\n", __func__);
+		*req_cls = coninfo_init();
 
-		struct coninfo *coninfo = coninfo_init();
-
-		if (!coninfo) {
+		if (!(*req_cls)) {
 			fprintf(stderr, "%s: failed to initalize handler\n",
 				__func__);
 			return MHD_queue_response(
 				con, MHD_HTTP_INTERNAL_SERVER_ERROR, NULL);
 		}
 
-		*req_cls = (void *)coninfo;
 		return MHD_YES;
 	}
 
 	/* other iterations */
-	printf("info: other iteration\n");
+	printf("%s: other iteration\n", __func__);
+	
+	if (strcmp(method, "OPTIONS") == 0) {
+		return reply_options(con, *req_cls);
+	}
+
+	if (strcmp(method, "POST") != 0) {
+		return reply_request_error_early(
+			con, *req_cls, strf("bad method (%s)", method));
+	}
+
+	if (strcmp(url, "/") != 0) {
+		return reply_request_error_early(con, *req_cls,
+						 strf("bad URL (%s)", url));
+	}
+
 	struct coninfo *coninfo = *req_cls;
 
 	if (*data_size != 0) {

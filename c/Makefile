@@ -1,6 +1,5 @@
-DEFAULT_PORT ?= 4444
+DEFAULT_PORT ?= \"4444\"
 CHATGPT_URL ?= \"https://api.openai.com/v1/chat/completions\"
-DEFAULT_KEY_FILE ?= \"$(shell realpath ./default_key.txt)\"
 
 CURL_CFLAGS ?= $(shell pkg-config --cflags libcurl)
 CURL_LDFLAGS ?= $(shell pkg-config --libs libcurl)
@@ -22,32 +21,33 @@ SRC = server.c llm.c request.c prompt.c
 OBJ = $(subst .c,.o,$(SRC))
 TXT = angle_base.txt arm_example.txt arm_spec.txt eye.txt face.txt head_example.txt head_spec.txt height.txt leg_example.txt leg_spec.txt particle.txt 
 __CFLAGS = -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -DDEFAULT_PORT=$(DEFAULT_PORT) -DCHATGPT_URL=$(CHATGPT_URL) -DDEFAULT_KEY_FILE=$(DEFAULT_KEY_FILE) -DSHAREDIR=\"$(SHAREDIR)\" -D_POSIX_C_SOURCE=200809L -D_GNU_SOURCE
+DEFAULT_KEY_FILE ?= \"$(SHAREDIR)/default_key.txt\"
 __LDFLAGS =
 
 compile: ppp_server ppp_start.sh ppp.service
 
 ppp_server: $(OBJ)
-	@echo -e "  LD\t$@"; $(CC) -o $@ $^ $(__LDFLAGS) $(CURL_LDFLAGS) $(MHD_LDFLAGS) $(JSON_LDFLAGS) $(LDFLAGS)
+	@printf "  LD\t$@\n"; $(CC) -o $@ $^ $(__LDFLAGS) $(CURL_LDFLAGS) $(MHD_LDFLAGS) $(JSON_LDFLAGS) $(LDFLAGS)
 
 %.o: %.c
-	@echo -e "  CC\t$@"; $(CC) -c $(CFLAGS) $(__CFLAGS) $(CURL_CFLAGS) $(MHD_CFLAGS) $(JSON_CFLAGS) -o $@ $<
+	@printf "  CC\t$@\n"; $(CC) -c $(CFLAGS) $(__CFLAGS) $(CURL_CFLAGS) $(MHD_CFLAGS) $(JSON_CFLAGS) -o $@ $<
 
 llm_tester: llm.o llm_tester.o
-	@echo -e "  LD\t$@"; $(CC) -o $@ $^ $(LDFLAGS) $(__LDFLAGS) $(CURL_LDFLAGS) $(JSON_LDFLAGS)
+	@printf "  LD\t$@\n"; $(CC) -o $@ $^ $(LDFLAGS) $(__LDFLAGS) $(CURL_LDFLAGS) $(JSON_LDFLAGS)
 
 fmt:
 	clang-format -i *.c *.h
 
-ppp_code.tar.gz: $(SRC) Makefile $(TXT) ppp.service.in ppp_start.sh.in llm.h prompt.h request.h apt_deps.txt
+ppp_code.tar.gz: $(SRC) Makefile $(TXT) ppp.service.in ppp_start.sh.in llm.h prompt.h request.h trace.h apt_deps.txt
 	tar czf $@ $^
 
 dist: ppp_code.tar.gz
 
 ppp_start.sh: ppp_start.sh.in
-	@echo -e "  SED\t$@"; sed 's:@PREFIX@:$(PREFIX):g' <$< | sed 's:@HOME@:$(HOME):g' >$@
+	@printf "  SED\t$@\n"; sed 's:@PREFIX@:$(PREFIX):g' <$< | sed 's:@HOME@:$(HOME):g' >$@
 
 ppp.service: ppp.service.in
-	@echo -e "  SED\t$@"; sed 's:@PREFIX@:$(PREFIX):g' <$< >$@
+	@printf "  SED\t$@\n"; sed 's:@PREFIX@:$(PREFIX):g' <$< >$@
 
 install: ppp_server ppp_start.sh $(TXT)
 	mkdir -p $(PREFIX)/bin
@@ -57,6 +57,10 @@ install: ppp_server ppp_start.sh $(TXT)
 	chmod +x $(PREFIX)/libexec/ppp_start.sh
 	mkdir -p $(SHAREDIR)
 	cp $(TXT) $(SHAREDIR)/
+	@printf "\n\n"
+	@printf "Installation done. Make sure to copy the default ChatGPT API "
+	@printf "key at\n$(DEFAULT_KEY_FILE).\nIf you happen to forget the "
+	@printf "default key location, run \"ppp_server --help\".\n"
 
 service_install: ppp.service
 	cp ppp.service $(SERVICEDIR)/
