@@ -20,7 +20,7 @@
 
 #define EYE_SIZE 3
 
-static char *default_key;
+char *default_key;
 
 /* Information regarding a request being currently processed.  For each
    request, a pointer to a coninfo structure is used by the handle_request
@@ -472,8 +472,9 @@ static void json_array_add_padding(struct json_object **arr, int final_len)
 	last = json_object_array_get_idx(*arr, current_len - 1);
 
 	while (current_len < final_len) {
-		json_object_array_add(*arr, last);
-		/* json_object_get(last); */
+		struct json_object *buf = NULL;
+		json_object_deep_copy(last, &buf, NULL);
+		json_object_array_add(*arr, buf);
 		current_len++;
 	}
 }
@@ -486,8 +487,11 @@ static void fill_zeros(struct json_object **arr_dest,
 	print_big_json("LLM bullshit", *arr_dest);
 	struct json_object *line = json_object_new_array_ext(wanted_width);
 
-	for (int i = 0; i < wanted_width; i++)
-		json_object_array_put_idx(line, i, json_object_new_int(0));
+	for (int i = 0; i < wanted_width; i++) {
+		struct json_object *new = json_object_new_int(0);
+		/* json_object_get(new); */
+		json_object_array_put_idx(line, i, new);
+	}
 
 	*arr_dest = json_object_new_array_ext(1);
 	json_object_array_put_idx(*arr_dest, 0, line);
@@ -517,9 +521,6 @@ static void sanitize_array(const struct json_object *obj, const char *key,
 		return;
 	}
 
-	/* struct json_object *old_arr = *arr_dest; */
-	/* *arr_dest = json_string_to_json_array(old_arr); */
-	/* json_object_put(old_arr); */
 	*arr_dest = json_string_to_json_array(*arr_dest);
 }
 
@@ -543,12 +544,12 @@ static void json_array_split(struct json_object **dest)
 		struct json_object *row = json_object_array_get_idx(*dest, i);
 
 		json_object_array_put_idx(left, i,
-					  json_object_array_get_idx(row, 0));
+					  json_object_get(json_object_array_get_idx(row, 0)));
 		json_object_array_put_idx(right, i,
-					  json_object_array_get_idx(row, 1));
+					  json_object_get(json_object_array_get_idx(row, 1)));
 	}
 
-	/* json_object_put(*dest); */
+	json_object_put(*dest);
 	*dest = json_object_new_object();
 	json_object_object_add(*dest, "left", left);
 	json_object_object_add(*dest, "right", right);
@@ -757,7 +758,7 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 
 	struct json_object *json_buf;
 	json_bool ret;
-	char *key, *input;
+	char *key = NULL, *input = NULL;
 
 	/* verify "input" */
 	ret = json_object_object_get_ex(obj, "input", &json_buf);
@@ -783,6 +784,7 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 
 	key = strdup(json_object_to_json_string(json_buf));
 	json_object_put(obj);
+	obj = NULL;
 
 	if (strcmp(key, "\"\"") == 0) {
 		free(key);
@@ -817,7 +819,8 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 	coninfo->answer =
 		strdup(json_object_to_json_string(translated_responses));
 
-	/* json_object_put(translated_responses); */
+	printf("info: freeing translated responses\n");
+	json_object_put(translated_responses); /* should not crash */
 	free(input);
 
 	return MHD_YES;

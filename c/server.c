@@ -28,6 +28,7 @@ struct server {
 };
 
 static struct server server = { 0 };
+extern char *default_key;
 
 static void print_usage(FILE *stream)
 {
@@ -73,19 +74,21 @@ static void server_destroy(void)
 {
 	prompt_destroy();
 
+	if (default_key)
+		free(default_key);
+
 	if (server.sockfd)
 		close(server.sockfd);
 
 	if (server.epfd)
+		close(server.epfd);
 
-		if (server.daemon)
-			MHD_stop_daemon(server.daemon);
+	if (server.daemon)
+		MHD_stop_daemon(server.daemon);
 }
 
 static void server_init(const char *port)
 {
-	prompt_init();
-
 	server.sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	if (server.sockfd == -1) {
@@ -116,6 +119,8 @@ static void server_init(const char *port)
 			break;
 		}
 	}
+
+	freeaddrinfo(result);
 
 	if (!bind_done) {
 		fprintf(stderr, "bind: failure, try using another port\n");
@@ -154,6 +159,8 @@ static void server_init(const char *port)
 		fprintf(stderr, "MHD_start_daemon: initialization failed\n");
 		exit(EXIT_FAILURE);
 	}
+
+	prompt_init();
 }
 
 static void new_connection(void)
