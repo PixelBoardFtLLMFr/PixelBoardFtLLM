@@ -25,10 +25,13 @@ static char *default_key;
    request, a pointer to a coninfo structure is used by the handle_request
    and handle_chunk functions to process the request. */
 struct coninfo {
+	/* maximum number of requests in an hour */
+	int max_requests;
 	/* JSON parser */
 	struct json_tokener *tok;
 	/* answer to the request, non-NULL if processing is done */
 	char *answer;
+	/* HTTP status of reply */
 	int http_status;
 };
 
@@ -304,19 +307,18 @@ static void strip_json_array_string(char *str)
 	char *clone = strdup(str);
 
 	for (i = 0; i < len; i++) {
-		if ((i < len-1) && (clone[i] == '\\') && (clone[i+1] == 'n')) {
+		if ((i < len - 1) && (clone[i] == '\\') &&
+		    (clone[i + 1] == 'n')) {
 			offset += 2;
 			i++;
-		}
-		else if (clone[i] == '\\') {
+		} else if (clone[i] == '\\') {
 			offset++;
-		}
-		else {
-			str[i-offset] = clone[i];
+		} else {
+			str[i - offset] = clone[i];
 		}
 	}
 
-	str[i-offset] = '\0';
+	str[i - offset] = '\0';
 	free(clone);
 }
 
@@ -325,7 +327,8 @@ static void strip_json_array_string(char *str)
 static json_object *json_string_to_json_array(struct json_object *obj)
 {
 	struct json_tokener *tok = json_tokener_new();
-	char *str = strdup(json_object_to_json_string_ext(obj, JSON_C_TO_STRING_PLAIN));
+	char *str = strdup(
+		json_object_to_json_string_ext(obj, JSON_C_TO_STRING_PLAIN));
 	struct json_object *arr;
 
 	str[strlen(str) - 1] = '\0';
@@ -629,10 +632,10 @@ static struct json_object *convert_eye_element(struct json_object *obj)
 				      { 0, 255, 130 }, { 255, 0, 0 },
 				      { 10, 10, 10 },  { 255, 222, 40 } };
 
-	json_str[strlen(json_str)-1] = '\0';
+	json_str[strlen(json_str) - 1] = '\0';
 
 	for (int i = 0; colors_str[i] != NULL; i++) {
-		if (strcmp(json_str+1, colors_str[i]) == 0) {
+		if (strcmp(json_str + 1, colors_str[i]) == 0) {
 			free(json_str);
 			return triplet_to_json(colors_int[i]);
 		}
@@ -938,12 +941,13 @@ enum MHD_Result handle_request(void *cls, struct MHD_Connection *con,
 				con, MHD_HTTP_INTERNAL_SERVER_ERROR, NULL);
 		}
 
+		((struct coninfo *)(*req_cls))->max_requests = (intptr_t)cls;
 		return MHD_YES;
 	}
 
 	/* other iterations */
 	printf("%s: other iteration\n", __func__);
-	
+
 	if (strcmp(method, "OPTIONS") == 0) {
 		return reply_options(con, *req_cls);
 	}

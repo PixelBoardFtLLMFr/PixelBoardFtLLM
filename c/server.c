@@ -3,6 +3,7 @@
 #include <netinet/in.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/epoll.h>
@@ -15,13 +16,19 @@
 #include "trace.h"
 
 struct server {
+	/* maximum number of requests per client and per hour */
+	int max_requests;
+	/* epoll(7) main file descriptor */
 	int epfd;
+	/* listening socket file descriptor */
 	int sockfd;
+	/* listening port */
 	int port;
+	/* daemon that manages requests */
 	struct MHD_Daemon *daemon;
 };
 
-static struct server server = {0};
+static struct server server = { 0 };
 
 static void print_usage(FILE *stream)
 {
@@ -49,11 +56,11 @@ static void print_help(void)
 static void epoll_add_fd(int fd)
 {
 	int ret;
-	struct epoll_event epevent = {0};
+	struct epoll_event epevent = { 0 };
 
 	epevent.events = EPOLLIN;
 	epevent.data.fd = fd;
-	
+
 	ret = epoll_ctl(server.epfd, EPOLL_CTL_ADD, fd, &epevent);
 
 	if (ret == -1) {
@@ -71,16 +78,16 @@ static void server_destroy(void)
 		close(server.sockfd);
 
 	if (server.epfd)
-		
 
-	if (server.daemon)
-		MHD_stop_daemon(server.daemon);
+		if (server.daemon)
+			MHD_stop_daemon(server.daemon);
 }
 
-static void server_init(const char *port)
-{	
+static void server_init(const char *port, int max_requests)
+{
 	prompt_init();
 
+	server.max_requests = max_requests;
 	server.sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	if (server.sockfd == -1) {
@@ -91,7 +98,7 @@ static void server_init(const char *port)
 	int ret;
 	int bind_done = 0;
 	struct addrinfo *result, *rp;
-	struct addrinfo hints = {0};
+	struct addrinfo hints = { 0 };
 	hints.ai_flags = AI_PASSIVE;
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
@@ -105,7 +112,7 @@ static void server_init(const char *port)
 
 	for (rp = result; rp != NULL; rp = rp->ai_next) {
 		ret = bind(server.sockfd, rp->ai_addr, rp->ai_addrlen);
-		
+
 		if (ret == 0) {
 			bind_done = 1;
 			break;
@@ -123,7 +130,7 @@ static void server_init(const char *port)
 		perror("listen");
 		exit(EXIT_FAILURE);
 	}
-	
+
 	printf("Listening on port %s\n", port);
 
 	server.epfd = epoll_create(1);
@@ -135,10 +142,15 @@ static void server_init(const char *port)
 
 	epoll_add_fd(server.sockfd);
 
-	server.daemon = MHD_start_daemon(MHD_USE_EPOLL | MHD_USE_NO_LISTEN_SOCKET, atoi(port), NULL,
-					 NULL, &handle_request, NULL,
-					 MHD_OPTION_NOTIFY_COMPLETED, &cleanup_request,
-					 NULL, MHD_OPTION_END);
+	/* clang-format off */
+	server.daemon = MHD_start_daemon(MHD_USE_EPOLL | MHD_USE_NO_LISTEN_SOCKET,
+					 atoi(port),
+					 NULL, NULL,
+					 &handle_request, (void*)(intptr_t)server.max_requests,
+					 MHD_OPTION_NOTIFY_COMPLETED,
+					 &cleanup_request, NULL,
+					 MHD_OPTION_END);
+	/* clang-format on */
 
 	if (!server.daemon) {
 		fprintf(stderr, "MHD_start_daemon: initialization failed\n");
@@ -187,7 +199,7 @@ static void server_loop(void)
 		else
 			handle_data(&epevent);
 	}
-		
+
 	server_destroy();
 
 	if (fdcount == -1) {
@@ -195,13 +207,13 @@ static void server_loop(void)
 		server_destroy();
 		exit(EXIT_FAILURE);
 	}
-	
+
 	exit(EXIT_SUCCESS);
 }
 
 /* Very basic--not to say useless--signal management, mainly for making
    Valgrind happy during tests. */
-static void handle_sig(int signum)
+static void handle_sigint(int signum)
 {
 	printf("%s received, exiting\n", strsignal(signum));
 	server_destroy();
@@ -213,15 +225,15 @@ static void sighandler_init(void)
 	struct sigaction act;
 
 	sigaction(SIGINT, NULL, &act);
-	act.sa_handler = handle_sig;
+	act.sa_handler = handle_sigint;
 	sigaction(SIGINT, &act, NULL);
 }
 
 int main(int argc, char *argv[])
 {
 	char *port = DEFAULT_PORT;
-	int max_requests = -1;
 	int opt, ind;
+	int max_requests = -1;
 	const struct option opts[] = { { "help", no_argument, NULL, 'h' },
 				       { "port", required_argument, NULL, 'p' },
 				       { "max-requests", required_argument,
@@ -233,7 +245,9 @@ int main(int argc, char *argv[])
 		case 'h':
 			print_help();
 			exit(EXIT_SUCCESS);
-		/* TODO: implement maximum request */
+		case 'm':
+			max_requests = atoi(optarg);
+			break;
 		case 'p':
 			port = optarg;
 			break;
@@ -243,7 +257,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	server_init(port);
+	server_init(port, max_requests);
 	sighandler_init();
 	server_loop();
 	/* should not be reached */
