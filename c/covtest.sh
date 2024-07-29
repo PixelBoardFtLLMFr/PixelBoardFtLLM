@@ -19,4 +19,5 @@ exec_cmd() {
 }
 
 exec_cmd "./ppp_server -h >/dev/null"
+exec_cmd "./ppp_server -D >/dev/null 2>&1"
 exec_cmd "./ppp_server -p $port >ppp.log 2>ppp_err.log"
