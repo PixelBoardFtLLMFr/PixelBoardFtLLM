@@ -69,6 +69,6 @@ uninstall:
 	rm -rf $(PREFIX)/bin/ppp_server $(PREFIX)/libexec/ppp_start.sh $(SERVICEDIR)/ppp.service $(SHAREDIR)
 
 clean:
-	rm -f ppp_server ppp_start.sh ppp.service *.o *.gcno *.gcov *.gcda
+	rm -f ppp_server llm_tester ppp_start.sh ppp.service ppp_code.tar.gz *.o *.gcno *.gcov *.gcda
 
 .PHONY: fmt dist install compile clean install service_install uninstall

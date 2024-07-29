@@ -296,15 +296,40 @@ isolate_parse_err:
 	return NULL;
 }
 
+/* Removes all the '\n' and '\' in STR. */
+static void strip_json_array_string(char *str)
+{
+	int i, offset = 0;
+	const int len = strlen(str);
+	char *clone = strdup(str);
+
+	for (i = 0; i < len; i++) {
+		if ((i < len-1) && (clone[i] == '\\') && (clone[i+1] == 'n')) {
+			offset += 2;
+			i++;
+		}
+		else if (clone[i] == '\\') {
+			offset++;
+		}
+		else {
+			str[i-offset] = clone[i];
+		}
+	}
+
+	str[i-offset] = '\0';
+	free(clone);
+}
+
 /* Convert the JSON string OBJ representing an array to a JSON array.
    Return NULL is the given JSON string does not represent an array. */
 static json_object *json_string_to_json_array(struct json_object *obj)
 {
 	struct json_tokener *tok = json_tokener_new();
-	char *str = strdup(json_object_to_json_string(obj));
+	char *str = strdup(json_object_to_json_string_ext(obj, JSON_C_TO_STRING_PLAIN));
 	struct json_object *arr;
 
 	str[strlen(str) - 1] = '\0';
+	strip_json_array_string(str + 1);
 	arr = json_tokener_parse(str + 1);
 	json_tokener_free(tok);
 	free(str);
@@ -597,18 +622,23 @@ static struct json_object *triplet_to_json(const int *triplet)
    color OBJ as a JSON string. */
 static struct json_object *convert_eye_element(struct json_object *obj)
 {
-	const char *json_str = json_object_to_json_string(obj);
+	char *json_str = strdup(json_object_to_json_string(obj));
 	const char *const colors_str[] = { "blue",  "bright", "green", "red",
 					   "white", "yellow", NULL };
 	const int colors_int[][3] = { { 50, 50, 255 }, { 200, 200, 200 },
 				      { 0, 255, 130 }, { 255, 0, 0 },
 				      { 10, 10, 10 },  { 255, 222, 40 } };
 
+	json_str[strlen(json_str)-1] = '\0';
+
 	for (int i = 0; colors_str[i] != NULL; i++) {
-		if (strcmp(json_str, colors_str[i]) == 0)
+		if (strcmp(json_str+1, colors_str[i]) == 0) {
+			free(json_str);
 			return triplet_to_json(colors_int[i]);
+		}
 	}
 
+	free(json_str);
 	return NULL;
 }
 
@@ -627,6 +657,8 @@ static void convert_eye_colors(struct json_object **dest)
 			json_object_array_put_idx(row, j, new_elem);
 		}
 	}
+
+	*dest = arr;
 }
 
 /* Verify that the eye OBJ["EYE"] has the right 3x3 shape, and that
@@ -652,7 +684,7 @@ static void sanitize_eye(const struct json_object *obj,
 		return;
 	}
 
-	/* free(dim); */
+	free(dim);
 	convert_eye_colors(dest);
 }
 
