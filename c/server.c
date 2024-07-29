@@ -11,13 +11,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "flow.h"
 #include "prompt.h"
 #include "request.h"
 #include "trace.h"
 
 struct server {
-	/* maximum number of requests per client and per hour */
-	int max_requests;
 	/* epoll(7) main file descriptor */
 	int epfd;
 	/* listening socket file descriptor */
@@ -83,11 +82,10 @@ static void server_destroy(void)
 			MHD_stop_daemon(server.daemon);
 }
 
-static void server_init(const char *port, int max_requests)
+static void server_init(const char *port)
 {
 	prompt_init();
 
-	server.max_requests = max_requests;
 	server.sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	if (server.sockfd == -1) {
@@ -146,7 +144,7 @@ static void server_init(const char *port, int max_requests)
 	server.daemon = MHD_start_daemon(MHD_USE_EPOLL | MHD_USE_NO_LISTEN_SOCKET,
 					 atoi(port),
 					 NULL, NULL,
-					 &handle_request, (void*)(intptr_t)server.max_requests,
+					 &handle_request, NULL,
 					 MHD_OPTION_NOTIFY_COMPLETED,
 					 &cleanup_request, NULL,
 					 MHD_OPTION_END);
@@ -257,7 +255,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	server_init(port, max_requests);
+	flow_init(max_requests);
+	server_init(port);
 	sighandler_init();
 	server_loop();
 	/* should not be reached */

@@ -1,14 +1,15 @@
 #include <json_object.h>
 #include <json_tokener.h>
 #include <linkhash.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/queue.h>
 #include <sys/select.h>
 #include <sys/socket.h>
-#include <sys/types.h>
-#include <stdarg.h>
 
+#include "flow.h"
 #include "request.h"
 #include "prompt.h"
 #include "llm.h"
@@ -25,8 +26,8 @@ static char *default_key;
    request, a pointer to a coninfo structure is used by the handle_request
    and handle_chunk functions to process the request. */
 struct coninfo {
-	/* maximum number of requests in an hour */
-	int max_requests;
+	struct sockaddr *clientaddr;
+	int using_default_key;
 	/* JSON parser */
 	struct json_tokener *tok;
 	/* answer to the request, non-NULL if processing is done */
@@ -765,8 +766,7 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 		coninfo_set_error(
 			coninfo,
 			"the given JSON object does not have an 'input' value");
-		json_object_put(obj);
-		return MHD_NO;
+		goto process_err;
 	}
 
 	input = strdup(json_object_to_json_string(json_buf));
@@ -778,18 +778,25 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 		coninfo_set_error(
 			coninfo,
 			"the given JSON object does not have a 'key' value");
-		json_object_put(obj);
-		return MHD_NO;
+		goto process_err;
 	}
 
 	key = strdup(json_object_to_json_string(json_buf));
+	json_object_put(obj);
 
 	if (strcmp(key, "\"\"") == 0) {
 		free(key);
 		key = get_default_key();
+		coninfo->using_default_key = 1;
+	} else {
+		coninfo->using_default_key = 0;
 	}
 
-	json_object_put(obj);
+	if (!flow_allow(coninfo->clientaddr)) {
+		coninfo_set_error(coninfo,
+				  "reached maximum number of requests per hour");
+		goto process_err;
+	}
 
 	printf("debug: input=%s\n", input);
 	printf("debug: key=%s\n", key);
@@ -803,10 +810,8 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 	json_object_put(raw_responses);
 	raw_responses = NULL;
 
-	if (!translated_responses) {
-		free(input);
-		return MHD_NO;
-	}
+	if (!translated_responses)
+		goto process_err;
 
 	coninfo->http_status = MHD_HTTP_OK;
 	coninfo->answer =
@@ -816,6 +821,18 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 	free(input);
 
 	return MHD_YES;
+
+process_err:
+	if (obj)
+		json_object_put(obj);
+
+	if (input)
+		free(input);
+
+	if (!coninfo->using_default_key)
+		free(key);
+
+	return MHD_NO;
 }
 
 /* Handle the chunks of data. Only take care of the JSON
@@ -871,7 +888,7 @@ void cleanup_request(void *cls, struct MHD_Connection *con, void **req_cls,
 	free(coninfo);
 }
 
-static struct coninfo *coninfo_init(void)
+static struct coninfo *coninfo_init(struct MHD_Connection *con)
 {
 	struct coninfo *coninfo = calloc(1, sizeof(*coninfo));
 
@@ -888,6 +905,8 @@ static struct coninfo *coninfo_init(void)
 		free(coninfo);
 		return NULL;
 	}
+
+	coninfo->clientaddr = *(struct sockaddr **)MHD_get_connection_info(con, MHD_CONNECTION_INFO_CLIENT_ADDRESS);
 
 	return coninfo;
 }
@@ -932,7 +951,7 @@ enum MHD_Result handle_request(void *cls, struct MHD_Connection *con,
 	if (!(*req_cls)) {
 		/* first iteration */
 		printf("%s: initializing handler\n", __func__);
-		*req_cls = coninfo_init();
+		*req_cls = coninfo_init(con);
 
 		if (!(*req_cls)) {
 			fprintf(stderr, "%s: failed to initalize handler\n",
@@ -941,7 +960,6 @@ enum MHD_Result handle_request(void *cls, struct MHD_Connection *con,
 				con, MHD_HTTP_INTERNAL_SERVER_ERROR, NULL);
 		}
 
-		((struct coninfo *)(*req_cls))->max_requests = (intptr_t)cls;
 		return MHD_YES;
 	}
 

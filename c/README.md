@@ -59,3 +59,18 @@ See [this page](https://platform.openai.com/docs/api-reference/chat/create).
 
 A `.clang-format` file is present. It is the Linux Kernel one. You can format
 all the sources by running `make fmt`.
+
+# Maintaining
+
+Here is an overview of the current file structure.
+
+- `server.c` is the entry point of the program. It also contains the main
+loop.
+- `prompt.[ch]` provides utils to build the prompts to send to the LLM.
+- `llm.[ch]` manages the ChatGPT API.
+- `request.[ch]` does the request management, it reads the requests' content,
+and reply.
+- `flow.[ch]` does the flow management, *i.e.* ensures that not too many LLM
+API key uses are made.
+- `llm_tester.c` not used to build the server. It is just a program that tests
+the LLM interaction.
