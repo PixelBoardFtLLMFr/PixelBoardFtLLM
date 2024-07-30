@@ -74,6 +74,7 @@ static void epoll_add_fd(int fd)
 static void server_destroy(void)
 {
 	prompt_destroy();
+	flow_destroy();
 
 	if (default_key)
 		free(default_key);

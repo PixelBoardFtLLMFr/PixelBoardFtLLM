@@ -159,6 +159,7 @@ void flow_destroy(void)
 
 	while (!STAILQ_EMPTY(&client_list)) {
 		client = STAILQ_FIRST(&client_list);
+		STAILQ_REMOVE(&client_list, client, client, c_next);
 		client_destroy(client);
 	}
 }
