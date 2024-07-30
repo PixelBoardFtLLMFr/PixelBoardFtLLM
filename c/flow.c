@@ -24,7 +24,7 @@ struct client {
 STAILQ_HEAD(client_list, client);
 
 static int max_requests = -1;
-static struct client_list client_list;
+static struct client_list client_list = {0};
 static time_t now = 0;
 
 static void refresh_now(void)
