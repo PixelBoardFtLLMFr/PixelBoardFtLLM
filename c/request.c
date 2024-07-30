@@ -69,6 +69,7 @@ static void set_mandatory_headers(struct MHD_Response *response)
 	MHD_add_response_header(response, "Access-Control-Allow-Methods",
 				"POST, OPTIONS");
 	MHD_add_response_header(response, "Content-Type", "application/json");
+	MHD_add_response_header(response, "Server", "PPP");
 }
 
 /* Reply to the pending request of CON, using the answer and the
