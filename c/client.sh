@@ -6,7 +6,7 @@ port=5555
 
 # Send an HTTP request and verify the HTTP response's status.
 request_assert_status() {
-    cmd="curl --output /dev/null --silent -w %{http_code}\\n --data $1 http://localhost:$port/"
+    cmd="curl --output /dev/null --silent --insecure -w %{http_code}\\n --data $1 https://localhost:$port/"
     # manually print the whole command
     echo "$cmd"
     status=$($cmd)
@@ -27,11 +27,11 @@ exec_cmd() {
 }
 
 # wrong method
-exec_cmd "curl --silent --output /dev/null http://localhost:$port/"
+exec_cmd "curl --silent --insecure --output /dev/null https://localhost:$port/"
 # wrong endpoint
-exec_cmd "curl --silent --data test http://localhost:$port/bad/url"
+exec_cmd "curl --silent --insecure --data test https://localhost:$port/bad/url"
 # OPTIONS request
-exec_cmd "curl -X OPTIONS http://localhost:$port/"
+exec_cmd "curl --insecure -X OPTIONS https://localhost:$port/"
 # missing input
 request_assert_status \{\} 400
 # incomplete JSON
