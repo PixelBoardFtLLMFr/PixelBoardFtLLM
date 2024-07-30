@@ -24,7 +24,7 @@ struct client {
 STAILQ_HEAD(client_list, client);
 
 static int max_requests = -1;
-static struct client_list client_list = {0};
+static struct client_list client_list = { 0 };
 static time_t now = 0;
 
 static void refresh_now(void)
@@ -36,7 +36,7 @@ static void refresh_now(void)
    created more than an hour ago. */
 static int stamp_gone(const struct stamp *stamp)
 {
-	return now >= stamp->s_date + 60*60;
+	return now >= stamp->s_date + 60 * 60;
 }
 
 static struct stamp *stamp_init(void)
@@ -63,7 +63,8 @@ static void client_clear_stamps(struct client *client)
 		stamp = STAILQ_FIRST(&client->c_stamplist);
 
 		if (stamp_gone(stamp)) {
-			STAILQ_REMOVE(&client->c_stamplist, stamp, stamp, s_next);
+			STAILQ_REMOVE(&client->c_stamplist, stamp, stamp,
+				      s_next);
 			stamp_destroy(stamp);
 			client->c_stampcount--;
 		} else {
@@ -128,7 +129,8 @@ static struct client *client_get(const struct sockaddr *clientaddr)
 		return NULL;
 	}
 
-	STAILQ_FOREACH(client, &client_list, c_next) {
+	STAILQ_FOREACH(client, &client_list, c_next)
+	{
 		if (client_matches(client, clientaddr_in)) {
 			found = 1;
 			break;

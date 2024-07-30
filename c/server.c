@@ -97,7 +97,7 @@ static void server_destroy(void)
 	if (server.key_pem)
 		free(server.key_pem);
 
-	if(server.cert_pem)
+	if (server.cert_pem)
 		free(server.cert_pem);
 }
 
@@ -106,7 +106,7 @@ static void server_destroy(void)
 static char *load_file(const char *path)
 {
 	FILE *stream = fopen(path, "r");
-	char buf[1 << 16] = {0};
+	char buf[1 << 16] = { 0 };
 
 	if (!stream)
 		goto load_file_err;
@@ -121,7 +121,7 @@ static char *load_file(const char *path)
 
 load_file_err:
 	perror(path);
-	
+
 	if (stream)
 		fclose(stream);
 

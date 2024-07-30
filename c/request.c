@@ -544,10 +544,12 @@ static void json_array_split(struct json_object **dest)
 	for (int i = 0; i < length; i++) {
 		struct json_object *row = json_object_array_get_idx(*dest, i);
 
-		json_object_array_put_idx(left, i,
-					  json_object_get(json_object_array_get_idx(row, 0)));
-		json_object_array_put_idx(right, i,
-					  json_object_get(json_object_array_get_idx(row, 1)));
+		json_object_array_put_idx(
+			left, i,
+			json_object_get(json_object_array_get_idx(row, 0)));
+		json_object_array_put_idx(
+			right, i,
+			json_object_get(json_object_array_get_idx(row, 1)));
 	}
 
 	json_object_put(*dest);
@@ -796,8 +798,8 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 	}
 
 	if (!flow_allow(coninfo->clientaddr)) {
-		coninfo_set_error(coninfo,
-				  "reached maximum number of requests per hour");
+		coninfo_set_error(
+			coninfo, "reached maximum number of requests per hour");
 		goto process_err;
 	}
 
@@ -910,7 +912,8 @@ static struct coninfo *coninfo_init(struct MHD_Connection *con)
 		return NULL;
 	}
 
-	coninfo->clientaddr = *(struct sockaddr **)MHD_get_connection_info(con, MHD_CONNECTION_INFO_CLIENT_ADDRESS);
+	coninfo->clientaddr = *(struct sockaddr **)MHD_get_connection_info(
+		con, MHD_CONNECTION_INFO_CLIENT_ADDRESS);
 
 	return coninfo;
 }
