@@ -63,8 +63,7 @@ static void client_clear_stamps(struct client *client)
 		stamp = STAILQ_FIRST(&client->c_stamplist);
 
 		if (stamp_gone(stamp)) {
-			STAILQ_REMOVE(&client->c_stamplist, stamp, stamp,
-				      s_next);
+			STAILQ_REMOVE_HEAD(&client->c_stamplist, s_next);
 			stamp_destroy(stamp);
 			client->c_stampcount--;
 		} else {
@@ -102,6 +101,7 @@ static void client_destroy(struct client *client)
 
 	while (client->c_stampcount > 0) {
 		stamp = STAILQ_FIRST(&client->c_stamplist);
+		STAILQ_REMOVE_HEAD(&client->c_stamplist, s_next);
 		stamp_destroy(stamp);
 		client->c_stampcount--;
 	}
@@ -161,7 +161,7 @@ void flow_destroy(void)
 
 	while (!STAILQ_EMPTY(&client_list)) {
 		client = STAILQ_FIRST(&client_list);
-		STAILQ_REMOVE(&client_list, client, client, c_next);
+		STAILQ_REMOVE_HEAD(&client_list, c_next);
 		client_destroy(client);
 	}
 }

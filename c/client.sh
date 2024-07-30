@@ -44,3 +44,5 @@ request_assert_status \{\"input\":\"\",\"key\":\"invalid_key\"\} 400
 request_assert_status \{\"input\":\"dance\",\"key\":\"\"\} 200
 request_assert_status \{\"input\":\"love\",\"key\":\"\"\} 200
 request_assert_status \{\"input\":\"fly\",\"key\":\"\"\} 200
+# maximum number of requests reached
+request_assert_status \{\"input\":\"fly\",\"key\":\"\"\} 400
