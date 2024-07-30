@@ -10,8 +10,9 @@ void flow_init(int max_requests);
 /* Free flow control resources. */
 void flow_destroy(void);
 
-/* Returns non-zero if the given client is allowed
-   to perform a request. */
-int flow_allow(struct sockaddr *clientaddr);
+/* Returns zero if the given client is not allowed to perform a request,
+   a positive number if it is allowed, and a negative number if an error
+   occured. */
+int flow_allow(const struct sockaddr *clientaddr);
 
 #endif

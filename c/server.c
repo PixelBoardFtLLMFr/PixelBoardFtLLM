@@ -39,7 +39,8 @@ static void print_usage(FILE *stream)
 		"  -p, --port PORT\t\tlisten on port number PORT, defaults to %s\n",
 		DEFAULT_PORT);
 	fprintf(stream,
-		"  -m, --max-requests MAX\tallow only MAXrequests per hour\n");
+		"  -m, --max-requests MAX\tallow only MAX requests per hour, \
+defaults to 20\n");
 }
 
 static void print_help(void)
@@ -238,7 +239,7 @@ int main(int argc, char *argv[])
 {
 	char *port = DEFAULT_PORT;
 	int opt, ind;
-	int max_requests = -1;
+	int max_requests = 20;
 	const struct option opts[] = { { "help", no_argument, NULL, 'h' },
 				       { "port", required_argument, NULL, 'p' },
 				       { "max-requests", required_argument,
