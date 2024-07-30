@@ -24,7 +24,7 @@ __CFLAGS = -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -DDEFAULT_PO
 DEFAULT_KEY_FILE ?= \"$(SHAREDIR)/default_key.txt\"
 __LDFLAGS =
 
-compile: ppp_server ppp_start.sh ppp.service
+compile: ppp_server ppp_start.sh ppp.service tls/server.key tls/server.pem
 
 ppp_server: $(OBJ)
 	@printf "  LD\t$@\n"; $(CC) -o $@ $^ $(__LDFLAGS) $(CURL_LDFLAGS) $(MHD_LDFLAGS) $(JSON_LDFLAGS) $(LDFLAGS)
@@ -38,10 +38,19 @@ llm_tester: llm.o llm_tester.o
 fmt:
 	clang-format -i *.c *.h
 
-ppp_code.tar.gz: $(SRC) Makefile $(TXT) ppp.service.in ppp_start.sh.in llm.h prompt.h request.h trace.h flow.h apt_deps.txt
+ppp_code.tar.gz: $(SRC) Makefile $(TXT) ppp.service.in ppp_start.sh.in llm.h prompt.h request.h trace.h flow.h apt_deps.txt client.sh spammer.sh covtest.sh
 	tar czf $@ $^
 
 dist: ppp_code.tar.gz
+
+tls:
+	mkdir -p $@
+
+tls/server.key: tls
+	@printf "  GEN\t$@\n"; openssl genrsa -out $@ 1024
+
+tls/server.pem: tls/server.key tls
+	@printf "  GEN\t$@\n"; openssl req -days 365 -out $@ -new -x509 -key $<
 
 ppp_start.sh: ppp_start.sh.in
 	@printf "  SED\t$@\n"; sed 's:@PREFIX@:$(PREFIX):g' <$< | sed 's:@HOME@:$(HOME):g' >$@
@@ -57,6 +66,7 @@ install: ppp_server ppp_start.sh $(TXT)
 	chmod +x $(PREFIX)/libexec/ppp_start.sh
 	mkdir -p $(SHAREDIR)
 	cp $(TXT) $(SHAREDIR)/
+	cp -r ./tls $(SHAREDIR)/
 	@printf "\n\n"
 	@printf "Installation done. Make sure to copy the default ChatGPT API "
 	@printf "key at\n$(DEFAULT_KEY_FILE).\nIf you happen to forget the "
