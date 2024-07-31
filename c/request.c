@@ -575,7 +575,7 @@ static void sanitize_string(const struct json_object *obj,
 			    struct json_object **dest, const char *key,
 			    const char *const *arr, const char *def)
 {
-	char *str;
+	char *str = NULL;
 
 	json_object_object_get_ex(obj, key, dest);
 
