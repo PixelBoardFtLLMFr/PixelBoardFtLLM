@@ -7,7 +7,6 @@ option is the best since it will use much less disk space on the machine. Beware
 that the archive is poorly made, everything is at the top-level, make sure to
 extract it in an empty build directoy.
 
-
 # Dependencies
 
 The following libraries are needed to compile the server :
@@ -20,7 +19,8 @@ and the following programs are needed :
 
 - C compiler (*e.g.* GCC);
 - make;
-- pkg-config.
+- pkg-config;
+- openssl.
 
 The correponding packages are listed in the `*_deps.txt` files, such as
 `apt_deps.txt` for the `apt` package manager. You can install them using the
@@ -42,7 +42,8 @@ To install the project on the system, run `make install` (no administrator
 privileges required), and optionnaly `make service_install` (administrator
 privileges required) to be able to run the server using Systemd, the service
 name is "ppp". To prevent security issues, the service shall be run as a
-non-privileged user, using `systemctl --user`.
+non-privileged user, using `systemctl --user`. If you are not sure about the
+final location of some files, such as the TLS stuff, run `ppp_server --help`.
 
 # Running
 

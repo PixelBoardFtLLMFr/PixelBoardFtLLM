@@ -45,8 +45,8 @@ static void print_usage(FILE *stream)
 		"  -p, --port PORT\t\tlisten on port number PORT, defaults to %s\n",
 		DEFAULT_PORT);
 	fprintf(stream,
-		"  -m, --max-requests MAX\tallow only MAX requests per hour, \
-defaults to 20\n");
+		"  -m, --max-requests MAX\tallow only MAX requests per client \
+per hour,\n\t\t\t\tdefaults to 20\n");
 }
 
 static void print_help(void)
@@ -55,9 +55,11 @@ static void print_help(void)
 	print_usage(stdout);
 	printf("\nCompiled with :\n");
 	printf("  ChatGPT URL\t\t%s\n", CHATGPT_URL);
-	printf("  Share Directory\t%s\n", SHAREDIR);
 	printf("  Default Port\t\t%s\n", DEFAULT_PORT);
+	printf("  Share Directory\t%s\n", SHAREDIR);
 	printf("  Default Key File\t%s\n", DEFAULT_KEY_FILE);
+	printf("  TLS key\t\t%s\n", TLSKEYFILE);
+	printf("  TLS certificate\t%s\n", TLSCERTFILE);
 }
 
 static void epoll_add_fd(int fd)
