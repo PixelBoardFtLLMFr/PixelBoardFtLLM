@@ -24,10 +24,10 @@ __CFLAGS = -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -DDEFAULT_PO
 DEFAULT_KEY_FILE ?= \"$(SHAREDIR)/default_key.txt\"
 __LDFLAGS =
 
-compile: ppp_server ppp_start.sh ppp.service tls/server.key tls/server.pem
+compile: ppp_server ppp_start.sh ppp.service
 
-ppp_server: $(OBJ)
-	@printf "  LD\t$@\n"; $(CC) -o $@ $^ $(__LDFLAGS) $(CURL_LDFLAGS) $(MHD_LDFLAGS) $(JSON_LDFLAGS) $(LDFLAGS)
+ppp_server: $(OBJ) tls/server.key tls/server.pem
+	@printf "  LD\t$@\n"; $(CC) -o $@ $(OBJ) $(__LDFLAGS) $(CURL_LDFLAGS) $(MHD_LDFLAGS) $(JSON_LDFLAGS) $(LDFLAGS)
 
 %.o: %.c
 	@printf "  CC\t$@\n"; $(CC) -c $(CFLAGS) $(__CFLAGS) $(CURL_CFLAGS) $(MHD_CFLAGS) $(JSON_CFLAGS) -o $@ $<
@@ -44,13 +44,15 @@ ppp_code.tar.gz: $(SRC) Makefile $(TXT) ppp.service.in ppp_start.sh.in llm.h pro
 dist: ppp_code.tar.gz
 
 tls:
-	mkdir -p $@
+	@mkdir -p $@
 
 tls/server.key: tls
-	@printf "  GEN\t$@\n"; openssl genrsa -out $@ 1024
+	@printf "  GEN\t$@\n"
+	@test -f $@ || openssl genrsa -out $@ 1024
 
 tls/server.pem: tls/server.key tls
-	@printf "  GEN\t$@\n"; openssl req -days 365 -out $@ -new -x509 -key $<
+	@printf "  GEN\t$@\n"
+	@test -f $@ || openssl req -days 365 -out $@ -new -x509 -key $<
 
 ppp_start.sh: ppp_start.sh.in
 	@printf "  SED\t$@\n"; sed 's:@PREFIX@:$(PREFIX):g' <$< | sed 's:@HOME@:$(HOME):g' >$@
@@ -79,6 +81,6 @@ uninstall:
 	rm -rf $(PREFIX)/bin/ppp_server $(PREFIX)/libexec/ppp_start.sh $(SERVICEDIR)/ppp.service $(SHAREDIR)
 
 clean:
-	rm -f ppp_server llm_tester ppp_start.sh ppp.service ppp_code.tar.gz *.o *.gcno *.gcov *.gcda
+	rm -rf ppp_server llm_tester ppp_start.sh ppp.service ppp_code.tar.gz *.o *.gcno *.gcov *.gcda tls 
 
 .PHONY: fmt dist install compile clean install service_install uninstall
