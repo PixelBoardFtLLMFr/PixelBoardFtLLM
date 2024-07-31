@@ -194,7 +194,7 @@ int flow_allow(const struct sockaddr *clientaddr)
 {
 	struct client *client;
 
-	calls = (calls+1)%CALL_LOOP;
+	calls = (calls + 1) % CALL_LOOP;
 
 	if (calls == 0) {
 		client_clear_all();
