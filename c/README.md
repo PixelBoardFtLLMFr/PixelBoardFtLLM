@@ -41,7 +41,8 @@ variables, see the Makefile content. To build the test program `llm_tester`, run
 To install the project on the system, run `make install` (no administrator
 privileges required), and optionnaly `make service_install` (administrator
 privileges required) to be able to run the server using Systemd, the service
-name is "ppp".
+name is "ppp". To prevent security issues, the service shall be run as a
+non-privileged user, using `systemctl --user`.
 
 # Running
 
