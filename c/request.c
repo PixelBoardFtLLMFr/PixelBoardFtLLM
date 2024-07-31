@@ -575,18 +575,29 @@ static void sanitize_string(const struct json_object *obj,
 			    struct json_object **dest, const char *key,
 			    const char *const *arr, const char *def)
 {
+	char *str;
+	
 	json_object_object_get_ex(obj, key, dest);
 
 	if (json_object_get_type(*dest) != json_type_string)
 		goto sanitize_string_default;
 
-	if (!string_array_contains(arr, json_object_to_json_string(*dest)))
+	str = strdup(json_object_to_json_string(*dest));
+	str[strlen(str)-1] = '\0';
+
+	if (!string_array_contains(arr, str+1))
 		goto sanitize_string_default;
 
+	/* explicitely take ownership, as
+	   OBJ will be freed before *DEST */
 	json_object_get(*dest);
+	free(str);
 	return;
 
 sanitize_string_default:
+	if (str)
+		free(str);
+	
 	*dest = json_object_new_string(def);
 }
 
