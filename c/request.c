@@ -830,8 +830,8 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 		goto process_err;
 
 	coninfo->http_status = MHD_HTTP_OK;
-	coninfo->answer =
-		strdup(json_object_to_json_string(translated_responses));
+	coninfo->answer = strdup(json_object_to_json_string_ext(
+		translated_responses, JSON_C_TO_STRING_PLAIN));
 
 	printf("info: freeing translated responses\n");
 	json_object_put(translated_responses); /* should not crash */
