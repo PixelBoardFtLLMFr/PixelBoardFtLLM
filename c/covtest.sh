@@ -3,7 +3,7 @@
 # This script tests the server by invoking it multiple times and
 # submitting several requests.
 
-if [ ! -x "./ppp_server" ]
+if [ ! -x './ppp_server' ]
 then
     echo 'error: the "./ppp_server" file does not exist or is not executable'
     exit 1
@@ -18,6 +18,14 @@ exec_cmd() {
     sh -c "$1"
 }
 
-exec_cmd "./ppp_server --help >/dev/null"
-exec_cmd "./ppp_server -D >/dev/null 2>&1"
-exec_cmd "./ppp_server --port $port -m 3 >ppp.log 2>ppp_err.log"
+# Send SIGINTs to all child processes. Namely, to the last ppp_server process.
+handle_sigint() {
+    kill -INT 0
+    exit 0
+}
+
+trap handle_sigint INT
+
+exec_cmd './ppp_server --help >/dev/null'
+exec_cmd './ppp_server -D >/dev/null 2>&1'
+exec_cmd "./ppp_server --port $port -m 4 >ppp.log 2>ppp_err.log"
