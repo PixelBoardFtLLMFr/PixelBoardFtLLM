@@ -30,6 +30,13 @@ def light_off(ser, delay):
     for i in range(5):
         light_up_column(ser, i, "#000000", delay)
 
+def blink(ser):
+    display_france(ser, 0)
+    time.sleep(0.3)
+    light_off(ser,0)
+    time.sleep(0.3)
+
+
 arg_parser = argparse.ArgumentParser(prog="tester", description="Test the pixel board.")
 arg_parser.add_argument("-p", "--port", action='store', default="/dev/ttyACM0",
                         help="pixel board serial port")
@@ -44,11 +51,12 @@ arg_parser.add_argument("-o", "--off", action='store_true', default=False,
                         help="turn off the pixel board")
 arg_parser.add_argument("-d", "--delay", action='store', default=0,
                         type=float, help="delay between tiles")
+arg_parser.add_argument("-b", "--blink", action='store_true', default=False,
+                        help="display the French flag blinking")
 
 args = arg_parser.parse_args()
 
-ser = serial.Serial(args.port)
-ser.baudrate = 9600
+ser = serial.Serial(args.port, baudrate=9600, writeTimeout = 0)
 
 if args.off:
     light_off(ser, args.delay)
@@ -56,6 +64,11 @@ if args.off:
 
 if args.france:
     display_france(ser, args.delay)
+    exit(0)
+
+if args.blink:
+    while True:
+        blink(ser)
     exit(0)
 
 indices = [int(x) for x in args.index.split("-")]
