@@ -49,7 +49,7 @@ class PixelBoard:
                        for j in range(self.height)]
 
         try:
-            self.serial = serial.Serial(port=self.port)
+            self.serial = serial.Serial(port=self.port, baudrate= 9600, writeTimeout=0)
             self._clear_serial()
             utils.debug("Connected to pixel board")
         except Exception as e:
