@@ -16,6 +16,9 @@
 #include "request.h"
 #include "trace.h"
 
+#define TLSKEYFILE SHAREDIR "/tls/server.key"
+#define TLSCERTFILE SHAREDIR "/tls/server.pem"
+
 struct server {
 	/* epoll(7) main file descriptor */
 	int epfd;
@@ -25,6 +28,9 @@ struct server {
 	int port;
 	/* daemon that manages requests */
 	struct MHD_Daemon *daemon;
+	/* TLS */
+	char *key_pem;
+	char *cert_pem;
 };
 
 static struct server server = { 0 };
@@ -39,7 +45,8 @@ static void print_usage(FILE *stream)
 		"  -p, --port PORT\t\tlisten on port number PORT, defaults to %s\n",
 		DEFAULT_PORT);
 	fprintf(stream,
-		"  -m, --max-requests MAX\tallow only MAXrequests per hour\n");
+		"  -m, --max-requests MAX\tallow only MAX requests per client \
+per hour,\n\t\t\t\tdefaults to 20\n");
 }
 
 static void print_help(void)
@@ -48,9 +55,11 @@ static void print_help(void)
 	print_usage(stdout);
 	printf("\nCompiled with :\n");
 	printf("  ChatGPT URL\t\t%s\n", CHATGPT_URL);
-	printf("  Share Directory\t%s\n", SHAREDIR);
 	printf("  Default Port\t\t%s\n", DEFAULT_PORT);
+	printf("  Share Directory\t%s\n", SHAREDIR);
 	printf("  Default Key File\t%s\n", DEFAULT_KEY_FILE);
+	printf("  TLS key\t\t%s\n", TLSKEYFILE);
+	printf("  TLS certificate\t%s\n", TLSCERTFILE);
 }
 
 static void epoll_add_fd(int fd)
@@ -73,6 +82,7 @@ static void epoll_add_fd(int fd)
 static void server_destroy(void)
 {
 	prompt_destroy();
+	flow_destroy();
 
 	if (default_key)
 		free(default_key);
@@ -85,6 +95,39 @@ static void server_destroy(void)
 
 	if (server.daemon)
 		MHD_stop_daemon(server.daemon);
+
+	if (server.key_pem)
+		free(server.key_pem);
+
+	if (server.cert_pem)
+		free(server.cert_pem);
+}
+
+/* Return a heap-allocated string having the content of PATH,
+   or NULL if an error occurred. */
+static char *load_file(const char *path)
+{
+	FILE *stream = fopen(path, "r");
+	char buf[1 << 16] = { 0 };
+
+	if (!stream)
+		goto load_file_err;
+
+	fread(buf, 1, sizeof(buf) - 1, stream);
+
+	if (!feof(stream))
+		goto load_file_err;
+
+	fclose(stream);
+	return strdup(buf);
+
+load_file_err:
+	perror(path);
+
+	if (stream)
+		fclose(stream);
+
+	return NULL;
 }
 
 static void server_init(const char *port)
@@ -93,6 +136,7 @@ static void server_init(const char *port)
 
 	if (server.sockfd == -1) {
 		perror("socket");
+		server_destroy();
 		exit(EXIT_FAILURE);
 	}
 
@@ -108,6 +152,7 @@ static void server_init(const char *port)
 
 	if (ret != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(ret));
+		server_destroy();
 		exit(EXIT_FAILURE);
 	}
 
@@ -124,6 +169,7 @@ static void server_init(const char *port)
 
 	if (!bind_done) {
 		fprintf(stderr, "bind: failure, try using another port\n");
+		server_destroy();
 		exit(EXIT_FAILURE);
 	}
 
@@ -131,6 +177,7 @@ static void server_init(const char *port)
 
 	if (ret == -1) {
 		perror("listen");
+		server_destroy();
 		exit(EXIT_FAILURE);
 	}
 
@@ -140,27 +187,39 @@ static void server_init(const char *port)
 
 	if (server.epfd == -1) {
 		perror("epoll_create");
+		server_destroy();
 		exit(EXIT_FAILURE);
 	}
 
 	epoll_add_fd(server.sockfd);
 
+	server.key_pem = load_file(TLSKEYFILE);
+	server.cert_pem = load_file(TLSCERTFILE);
+
+	if ((!server.key_pem) || (!server.cert_pem)) {
+		server_destroy();
+		exit(EXIT_FAILURE);
+	}
+
 	/* clang-format off */
-	server.daemon = MHD_start_daemon(MHD_USE_EPOLL | MHD_USE_NO_LISTEN_SOCKET,
+	server.daemon = MHD_start_daemon(MHD_USE_EPOLL
+					 | MHD_USE_NO_LISTEN_SOCKET
+					 | MHD_USE_TLS,
 					 atoi(port),
 					 NULL, NULL,
 					 &handle_request, NULL,
 					 MHD_OPTION_NOTIFY_COMPLETED,
 					 &cleanup_request, NULL,
+					 MHD_OPTION_HTTPS_MEM_KEY, server.key_pem,
+					 MHD_OPTION_HTTPS_MEM_CERT, server.cert_pem,
 					 MHD_OPTION_END);
 	/* clang-format on */
 
 	if (!server.daemon) {
 		fprintf(stderr, "MHD_start_daemon: initialization failed\n");
+		server_destroy();
 		exit(EXIT_FAILURE);
 	}
-
-	prompt_init();
 }
 
 static void new_connection(void)
@@ -238,7 +297,7 @@ int main(int argc, char *argv[])
 {
 	char *port = DEFAULT_PORT;
 	int opt, ind;
-	int max_requests = -1;
+	int max_requests = 20;
 	const struct option opts[] = { { "help", no_argument, NULL, 'h' },
 				       { "port", required_argument, NULL, 'p' },
 				       { "max-requests", required_argument,
@@ -262,6 +321,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	prompt_init();
 	flow_init(max_requests);
 	server_init(port);
 	sighandler_init();

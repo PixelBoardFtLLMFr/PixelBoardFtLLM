@@ -26,8 +26,8 @@ __LDFLAGS =
 
 compile: ppp_server ppp_start.sh ppp.service
 
-ppp_server: $(OBJ)
-	@printf "  LD\t$@\n"; $(CC) -o $@ $^ $(__LDFLAGS) $(CURL_LDFLAGS) $(MHD_LDFLAGS) $(JSON_LDFLAGS) $(LDFLAGS)
+ppp_server: $(OBJ) tls/server.key tls/server.pem
+	@printf "  LD\t$@\n"; $(CC) -o $@ $(OBJ) $(__LDFLAGS) $(CURL_LDFLAGS) $(MHD_LDFLAGS) $(JSON_LDFLAGS) $(LDFLAGS)
 
 %.o: %.c
 	@printf "  CC\t$@\n"; $(CC) -c $(CFLAGS) $(__CFLAGS) $(CURL_CFLAGS) $(MHD_CFLAGS) $(JSON_CFLAGS) -o $@ $<
@@ -38,10 +38,21 @@ llm_tester: llm.o llm_tester.o
 fmt:
 	clang-format -i *.c *.h
 
-ppp_code.tar.gz: $(SRC) Makefile $(TXT) ppp.service.in ppp_start.sh.in llm.h prompt.h request.h trace.h flow.h apt_deps.txt
+ppp_code.tar.gz: $(SRC) Makefile $(TXT) ppp.service.in ppp_start.sh.in llm.h prompt.h request.h trace.h flow.h apt_deps.txt client.sh spammer.sh covtest.sh
 	tar czf $@ $^
 
 dist: ppp_code.tar.gz
+
+tls:
+	@mkdir -p $@
+
+tls/server.key: tls
+	@printf "  GEN\t$@\n"
+	@test -f $@ || openssl genrsa -out $@ 1024
+
+tls/server.pem: tls/server.key tls
+	@printf "  GEN\t$@\n"
+	@test -f $@ || openssl req -days 365 -out $@ -new -x509 -key $<
 
 ppp_start.sh: ppp_start.sh.in
 	@printf "  SED\t$@\n"; sed 's:@PREFIX@:$(PREFIX):g' <$< | sed 's:@HOME@:$(HOME):g' >$@
@@ -57,6 +68,7 @@ install: ppp_server ppp_start.sh $(TXT)
 	chmod +x $(PREFIX)/libexec/ppp_start.sh
 	mkdir -p $(SHAREDIR)
 	cp $(TXT) $(SHAREDIR)/
+	cp -r ./tls $(SHAREDIR)/
 	@printf "\n\n"
 	@printf "Installation done. Make sure to copy the default ChatGPT API "
 	@printf "key at\n$(DEFAULT_KEY_FILE).\nIf you happen to forget the "
@@ -69,6 +81,6 @@ uninstall:
 	rm -rf $(PREFIX)/bin/ppp_server $(PREFIX)/libexec/ppp_start.sh $(SERVICEDIR)/ppp.service $(SHAREDIR)
 
 clean:
-	rm -f ppp_server llm_tester ppp_start.sh ppp.service ppp_code.tar.gz *.o *.gcno *.gcov *.gcda
+	rm -rf ppp_server llm_tester ppp_start.sh ppp.service ppp_code.tar.gz *.o *.gcno *.gcov *.gcda tls 
 
 .PHONY: fmt dist install compile clean install service_install uninstall

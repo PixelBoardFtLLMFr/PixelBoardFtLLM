@@ -102,6 +102,10 @@ void prompt_init(void)
 
 void prompt_destroy(void)
 {
+	if (!angle_base)
+		/* not initialized */
+		return;
+
 	free(angle_base);
 
 	free(arm_spec);

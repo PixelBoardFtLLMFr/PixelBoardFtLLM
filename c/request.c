@@ -69,6 +69,7 @@ static void set_mandatory_headers(struct MHD_Response *response)
 	MHD_add_response_header(response, "Access-Control-Allow-Methods",
 				"POST, OPTIONS");
 	MHD_add_response_header(response, "Content-Type", "application/json");
+	MHD_add_response_header(response, "Server", "PPP");
 }
 
 /* Reply to the pending request of CON, using the answer and the
@@ -543,10 +544,12 @@ static void json_array_split(struct json_object **dest)
 	for (int i = 0; i < length; i++) {
 		struct json_object *row = json_object_array_get_idx(*dest, i);
 
-		json_object_array_put_idx(left, i,
-					  json_object_get(json_object_array_get_idx(row, 0)));
-		json_object_array_put_idx(right, i,
-					  json_object_get(json_object_array_get_idx(row, 1)));
+		json_object_array_put_idx(
+			left, i,
+			json_object_get(json_object_array_get_idx(row, 0)));
+		json_object_array_put_idx(
+			right, i,
+			json_object_get(json_object_array_get_idx(row, 1)));
 	}
 
 	json_object_put(*dest);
@@ -572,18 +575,29 @@ static void sanitize_string(const struct json_object *obj,
 			    struct json_object **dest, const char *key,
 			    const char *const *arr, const char *def)
 {
+	char *str = NULL;
+
 	json_object_object_get_ex(obj, key, dest);
 
 	if (json_object_get_type(*dest) != json_type_string)
 		goto sanitize_string_default;
 
-	if (!string_array_contains(arr, json_object_to_json_string(*dest)))
+	str = strdup(json_object_to_json_string(*dest));
+	str[strlen(str) - 1] = '\0';
+
+	if (!string_array_contains(arr, str + 1))
 		goto sanitize_string_default;
 
+	/* explicitely take ownership, as
+	   OBJ will be freed before *DEST */
 	json_object_get(*dest);
+	free(str);
 	return;
 
 sanitize_string_default:
+	if (str)
+		free(str);
+
 	*dest = json_object_new_string(def);
 }
 
@@ -795,8 +809,8 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 	}
 
 	if (!flow_allow(coninfo->clientaddr)) {
-		coninfo_set_error(coninfo,
-				  "reached maximum number of requests per hour");
+		coninfo_set_error(
+			coninfo, "reached maximum number of requests per hour");
 		goto process_err;
 	}
 
@@ -816,8 +830,8 @@ static enum MHD_Result process_request(struct coninfo *coninfo,
 		goto process_err;
 
 	coninfo->http_status = MHD_HTTP_OK;
-	coninfo->answer =
-		strdup(json_object_to_json_string(translated_responses));
+	coninfo->answer = strdup(json_object_to_json_string_ext(
+		translated_responses, JSON_C_TO_STRING_PLAIN));
 
 	printf("info: freeing translated responses\n");
 	json_object_put(translated_responses); /* should not crash */
@@ -909,7 +923,8 @@ static struct coninfo *coninfo_init(struct MHD_Connection *con)
 		return NULL;
 	}
 
-	coninfo->clientaddr = *(struct sockaddr **)MHD_get_connection_info(con, MHD_CONNECTION_INFO_CLIENT_ADDRESS);
+	coninfo->clientaddr = *(struct sockaddr **)MHD_get_connection_info(
+		con, MHD_CONNECTION_INFO_CLIENT_ADDRESS);
 
 	return coninfo;
 }
