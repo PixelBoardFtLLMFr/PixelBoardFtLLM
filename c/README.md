@@ -76,3 +76,44 @@ and reply.
 API key uses are made.
 - `llm_tester.c` not used to build the server. It is just a program that tests
 the LLM interaction.
+
+# API Reference
+
+The API is the following.
+
+- Only *POST* and *OPTIONS* requests are accepted, the latter is for
+CORS-related purposes.
+- The server only replies to HTTPS requests, not to insecure HTTP requests.
+- The only valid endpoint is `/`.
+- The data is transferred in the JSON format.
+- *POST* data should contain at least two keys: `key` and `input`. `key`
+should either be empty or contain the user ChatGPT API key. If it is empty,
+our default key is used, and the request limitation per hour is taken into
+account. `input` should contain the user input, *e.g.* "hello". Any other key
+will be ignored.
+- All responses to *POST* requests have one of these two forms. Zeros stand for
+any integer.
+
+```json
+{"error":"$ERROR_MSG"}
+```
+
+```json
+{
+  "ARM": {
+		   "left":  [0, 0, ...],
+		   "right": [0, 0, ...]
+		 },
+  "LEG": {
+		   "left":  [0, 0, ...],
+		   "right": [0, 0, ...]
+		 },
+  "HEAD":   [[0], [0], ...],
+  "HEIGHT": [[0], [0], ...],
+  "FACE": "$FACIAL_EXPRESSION",
+  "PARTICLE": "$PARTICLE",
+  "EYE": [[[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+		  [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+		  [[0, 0, 0], [0, 0, 0], [0, 0, 0]]]
+}
+```
