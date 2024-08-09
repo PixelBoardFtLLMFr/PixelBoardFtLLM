@@ -1,0 +1,9 @@
+The two sprite sheet animations depict the same cute blue penguin character, but they showcase different actions. 
+
+1. **Motion**: The first sprite sheet appears to depict a walking or waddling motion, characterized by the penguin's legs moving in a sequence that suggests forward movement. The second sprite sheet displays the penguin with its wings raised, indicating a flapping or jumping action, possibly suggesting joy or excitement.
+
+2. **Visual Elements**: Both animations maintain the same character design and color palette, which is consistent and helps reinforce their similarity. However, the body posture and movements differ significantly between the two.
+
+3. **Emotion**: The emotions conveyed through the actions are different. The waddling motion of the first sheet gives a sense of a casual walk, while the flapping or jumping of the second sheet connotes energy or playfulness.
+
+Based on these observations, the similarity of the two sprite sheet animations can be rated as ***0.5***. They share the same character design, but the actions and the corresponding expressions are distinctly different.

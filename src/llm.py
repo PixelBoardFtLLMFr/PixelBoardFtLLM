@@ -1,5 +1,5 @@
 import asyncio
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, OpenAI
 import ast
 import numpy as np
 import penguin
@@ -81,8 +81,7 @@ Output:[[10, -50], [20, -30], [30, -20], [40, -10], [50, 0], [40, -10], [30, -20
 """
 
 head_example = """Input:hello
-Output:[[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]]
-"""
+Output:[[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]]"""
 
 head_prompt = """
 You are responsible for moving the head. When in neutral position, the angle is
@@ -372,7 +371,17 @@ def interprete_as_nparray(code_as_str):
 
     return res
 
-class Llm:
+class LLM:
+    def __init__(self, keyfile, version) -> None:
+        pass
+
+    def push_prompt(self, system, user, key):
+        pass
+
+    def execute_prompts(self):
+        pass
+
+class AsyncOpenAILLM(LLM):
     def __init__(self, keyfile, version):
         self.version = "gpt-" + version
 
@@ -430,3 +439,41 @@ class Llm:
         print()
         print(prompt1)
         print("> ", responses[1])
+
+# --------------------------------------->
+
+class LMStudioLLM(LLM):
+    def __init__(self, keyfile, version):
+        self.version = "gpt-" + version
+
+        port = "3000"
+        self.client = OpenAI(base_url=f"http://localhost:{port}/v1", api_key="lm-studio")
+        self.prompts = []
+
+    def push_prompt(self, system, user, key):
+        """
+        Push a prompt to be executed by execute_prompts. SYSTEM and USER are the
+        two components of the prompt, KEY can be used later to retrieve the LLM
+        response from the result of execute_prompts.
+
+        push_prompt("", "Hello there !", "mykey")
+        results = execute_prompts()
+        results["mykey"]
+        >>> <the LLM response to the prompt 'Hello there !'>
+        """
+        self.prompts.append((system, user, key))
+
+    def execute_prompts(self):
+        responses=[]
+        for (system, user, _) in self.prompts:
+            response=self.client.chat.completions.create(model=self.version,
+                                                         messages= [{"role" : "system", "content" : system},
+                                                                    {"role" : "user", "content" : user}]
+                                                        )
+            responses.append(response)
+        
+        results = {}
+        for i in range(len(responses)):
+            results[self.prompts[i][2]] = responses[i].choices[0].message.content
+        self.prompts = []
+        return results

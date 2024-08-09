@@ -1,0 +1,8 @@
+python ./src/anim_similarity.py -p1 "./sprites/run_1.png" -p2 "./sprites/run_1.png" -t "./similarities/run_1--run_1.txt"
+python ./src/anim_similarity.py -p1 "./sprites/run_1.png" -p2 "./sprites/run_2.png" -t "./similarities/run_1--run_2.txt"
+python ./src/anim_similarity.py -p1 "./sprites/run_1.png" -p2 "./sprites/run_3.png" -t "./similarities/run_1--run_3.txt"
+python ./src/anim_similarity.py -p1 "./sprites/run_2.png" -p2 "./sprites/run_3.png" -t "./similarities/run_2--run_3.txt"
+python ./src/anim_similarity.py -p1 "./sprites/run_1.png" -p2 "./sprites/dance_angry_1.png" -t "./similarities/run_1--dance_angry_1.txt"
+python ./src/anim_similarity.py -p1 "./sprites/run_1.png" -p2 "./sprites/run_1_difforder.png" -t "./similarities/run_1--run_1_difforder.txt"
+python ./src/anim_similarity.py -p1 "./sprites/run_1.png" -p2 "./sprites/run_1-2_0.2-0.8.png" -t "./similarities/run_1--run_1-2_0.2-0.8.png.txt"
+python ./src/anim_similarity.py -p1 "./sprites/run_1.png" -p2 "./sprites/run_1-2_0.5-0.5.png" -t "./similarities/run_1--run_1-2_0.5-0.5.png.txt"

@@ -57,7 +57,7 @@ def llm_get_information(myllm, user_input):
     myllm.push_prompt(llm.eye_prompt, user_prompt, "EYE")
 
     ## Height
-    myllm.push_prompt(llm.height_prompt, user_prompt, "HEIGHT")
+    # myllm.push_prompt(llm.height_prompt, user_prompt, "HEIGHT")
 
 
     # Executing Prompts ...
@@ -98,11 +98,12 @@ def llm_get_information(myllm, user_input):
     ## Particle
     res["PARTICLE"] = responses["PARTICLE"].lower()
 
-    utils.debug("Height : ", responses["HEIGHT"])
 
-    height = llm.interprete_as_nparray(responses["HEIGHT"])
+    # height = llm.interprete_as_nparray(responses["HEIGHT"])
+    # res["HEIGHT"] = height if not height is None else [[0]]
+    res["HEIGHT"]=[[0]]
 
-    res["HEIGHT"] = height if not height is None else [[0]]
+    # utils.debug("Height : ", responses["HEIGHT"])
 
     ## Eye
     utils.debug("Processing eye")
@@ -124,11 +125,12 @@ def draw_canvas(canvas, img):
     canvas.create_image(0, 0, anchor=tk.NW, image=tk_img)
     canvas.image = tk_img
 
-def draw_all(canvas, penguin, simulator, board, angles):
+def draw_all(canvas, penguin, simulator, board, angles, frame):
     pixels = penguin.do_draw(*angles)
-    simulator_img = simulator.do_draw(pixels)
+    simulator_img = simulator.do_draw(pixels)    
     draw_canvas(canvas, simulator_img)
     draw_pixel_board(board, pixels)
+    simulator_img.save(f"./sprites/{frame}.png")
 
 def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
     global animating, adjust_th, stt
@@ -172,7 +174,7 @@ def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
     ## Angles
     utils.debug(f"\rFrame {index+1}/{frame_count}", end="")
     mypenguin.set_size(mypenguin.size, llm_data["HEIGHT"][index][0] if index < len(llm_data["HEIGHT"]) else 0)
-    draw_all(canvas, mypenguin, simulator, board, angles[index])
+    draw_all(canvas, mypenguin, simulator, board, angles[index], index)
     canvas.after(int(dt*1000),
                  lambda:
                  draw_next_frame(canvas, penguin, simulator, board, llm_data, index+1))
@@ -256,7 +258,7 @@ def speech_loop():
             mypenguin.set_eye(None)
             mypenguin.set_fe("neutral")
             mypenguin.set_particle("question")
-            draw_all(canvas, mypenguin, simulator, board, [0]*5)
+            draw_all(canvas, mypenguin, simulator, board, [0]*5, -1)
             input_missed = 0
 
 
@@ -286,7 +288,8 @@ arg_parser.add_argument("-t", "--test", action='store_true', default=False,
 
 args = arg_parser.parse_args()
 utils.init(args.debug)
-myllm = llm.Llm(args.keyfile, args.llm_version)
+myllm = llm.AsyncOpenAILLM(keyfile=args.keyfile, version=args.llm_version)
+# myllm = llm.LMStudioLLM(keyfile=args.keyfile, version=args.llm_version)
 
 if args.test:
     myllm.test()
@@ -346,7 +349,7 @@ for i in range(len(Lang.langs)):
     rb = tk.Radiobutton(app, text=name, value=code, variable=lang_var)
     rb.grid(column=1, row=i+3)
 
-draw_all(canvas, mypenguin, simulator, board, [20, -20, 0, 0, 0])
+draw_all(canvas, mypenguin, simulator, board, [20, -20, 0, 0, 0], -1)
 
 if args.quick:
     user_input.set(args.quick)
