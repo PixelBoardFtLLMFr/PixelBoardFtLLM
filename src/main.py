@@ -59,6 +59,8 @@ def llm_get_information(myllm, user_input):
     ## Height
     myllm.push_prompt(llm.height_prompt, user_prompt, "HEIGHT")
 
+    ## Dialogue 
+    myllm.push_prompt(llm.dialogue_prompt, user_prompt, "DIALOGUE")
 
     # Executing Prompts ...
     utils.debug("Executing prompts...")
@@ -107,6 +109,10 @@ def llm_get_information(myllm, user_input):
     ## Eye
     utils.debug("Processing eye")
     res["EYE"] = llm.interprete_eye(responses["EYE"])
+
+    ## Dialogue
+    utils.debug("Generating Dialogue")
+    res["DIALOGUE"] = responses["DIALOGUE"].lower()
     utils.debug("LLM data processing done")
 
     # RES is a dictionary containing all the results
@@ -180,6 +186,7 @@ def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
 def set_submiting():
     global submitting
     submitting = True
+    show_output()
 
 def set_mic_status(activated):
     global recording, speak_label
@@ -189,7 +196,7 @@ def set_mic_status(activated):
 def switch_mic_status():
     global recording
     set_mic_status(not recording)
-
+    
 def process_input(*_):
     """
     Process the user input. If an animation is currently running, do nothing.
@@ -233,6 +240,7 @@ def process_speech(*_):
         return
     
     user_input.set(text)
+    show_output()
     
     animating = True
     input_missed = 0
@@ -340,11 +348,20 @@ switch_button.grid(column=1, row=3, sticky='N')
 quit_button = tk.Button(app, text="Quit", command=app.destroy)
 quit_button.grid(column=1, row=row_count-1, sticky='SE')
 
+def show_output():
+    output_text.delete(1.0, tk.END)  # Clear the text box first
+    output_text.insert(tk.END, llm_get_information(myllm, user_input.get())["DIALOGUE"])
+
+output_text = tk.Text(app, height=2, width=25)
+output_text.grid(column=1, row = 4, sticky='N')
+
+
+
 lang_var = tk.StringVar(app, "en-US")
 for i in range(len(Lang.langs)):
     name, code = Lang.langs[i]
     rb = tk.Radiobutton(app, text=name, value=code, variable=lang_var)
-    rb.grid(column=1, row=i+3)
+    rb.grid(column=1, row=i+4)
 
 draw_all(canvas, mypenguin, simulator, board, [20, -20, 0, 0, 0])
 
