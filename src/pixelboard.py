@@ -47,7 +47,6 @@ class PixelBoard:
         self.pixels = [[(0, 0, 0)
                         for i in range(self.width)]
                        for j in range(self.height)]
-
         try:
             self.serial = serial.Serial(port=self.port, baudrate= 9600, writeTimeout=0)
             self._clear_serial()

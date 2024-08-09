@@ -358,6 +358,8 @@ def interprete_as_nparray(code_as_str):
 
     try:
         res = np.array(ast.literal_eval(code_as_str))
+        if res != None:
+            res = res.astype(int)
         shape = np.shape(res)
         if len(shape) != 2:
             print(f"interprete_as_nparray: warning: LLM returned illegal array : {res}")

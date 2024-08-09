@@ -346,7 +346,7 @@ for i in range(len(Lang.langs)):
     rb = tk.Radiobutton(app, text=name, value=code, variable=lang_var)
     rb.grid(column=1, row=i+3)
 
-draw_all(canvas, mypenguin, simulator, board, [20, -20, 0, 0, 0])
+draw_all(canvas, mypenguin, simulator, board, [20, 20, 0, 0, 0])
 
 if args.quick:
     user_input.set(args.quick)
