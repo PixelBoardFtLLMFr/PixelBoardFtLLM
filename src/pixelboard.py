@@ -61,10 +61,18 @@ class PixelBoard:
         pixel_index = self.pixel_matrix[y%TILE_HEIGHT][x%TILE_WIDTH]
         return tile_index*TILE_HEIGHT*TILE_WIDTH + pixel_index
 
+    # def _send_to_serial(self, serial_str):
+    #     if self.serial:
+    #         serial_str += "499,#000000\n"
+    #         self.serial.write(serial_str.encode("ascii"))
+    
     def _send_to_serial(self, serial_str):
-        if self.serial:
-            serial_str += "499,#000000\n"
-            self.serial.write(serial_str.encode("ascii"))
+        try:
+            if self.serial:
+                serial_str += "499,#000000\n"
+                self.serial.write(serial_str.encode("ascii"))
+        except Exception as error:
+            print(f'error: _send_to_serial\n{error}')
 
     def _write_pixels(self, coords):
         output = ""

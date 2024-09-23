@@ -218,10 +218,11 @@ def interprete_as_nparray(code_as_str):
             utils.debug("interprete_as_nparray: warning: LLM produced an empty array, returning zeros")
             res = np.array([[0] * shape[1]])
     except SyntaxError:
+        res=None
         print(f"interprete_as_nparray: invalid syntax '{code_as_str}'")
     except Exception as e:
+        res=None
         print(f"interprete_as_nparray: error while parsing '{code_as_str}'; {e}")
-
     return res
 
 class Llm:
