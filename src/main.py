@@ -36,6 +36,7 @@ def llm_get_information(myllm, user_input):
     information is needed from the LLM. Return a dictionary containing all the
     information produced.
     """
+    print('processing-----------------------------------------')
     # Preparing Prompts ...
     # put results here, this variable is returned by the function
     res = {}
@@ -115,6 +116,8 @@ def llm_get_information(myllm, user_input):
     res["DIALOGUE"] = responses["DIALOGUE"].lower()
     utils.debug("LLM data processing done")
 
+    show_output(res["DIALOGUE"])
+
     # RES is a dictionary containing all the results
     return res
 
@@ -186,7 +189,7 @@ def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
 def set_submiting():
     global submitting
     submitting = True
-    show_output()
+    show_output('')
 
 def set_mic_status(activated):
     global recording, speak_label
@@ -240,7 +243,7 @@ def process_speech(*_):
         return
     
     user_input.set(text)
-    show_output()
+    show_output('')
     
     animating = True
     input_missed = 0
@@ -248,7 +251,8 @@ def process_speech(*_):
 
     llm_data = llm_get_information(myllm, text)
 
-    draw_next_frame(canvas, mypenguin, simulator, board, llm_data, 0)
+    draw_next_frame(canvas, mypenguin, simulator, board, llm_data, 0)    
+    speak_label.config(bg="red")
 
 def speech_loop():
     global running, submitting, input_missed, mypenguin, canvas, simulator, board, recording
@@ -348,9 +352,9 @@ switch_button.grid(column=1, row=3, sticky='N')
 quit_button = tk.Button(app, text="Quit", command=app.destroy)
 quit_button.grid(column=1, row=row_count-1, sticky='SE')
 
-def show_output():
+def show_output(msg:str):
     output_text.delete(1.0, tk.END)  # Clear the text box first
-    output_text.insert(tk.END, llm_get_information(myllm, user_input.get())["DIALOGUE"])
+    output_text.insert(tk.END, msg)
 
 output_text = tk.Text(app, height=2, width=25)
 output_text.grid(column=1, row = 4, sticky='N')
