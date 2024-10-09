@@ -1,0 +1,9 @@
+{
+    "prompt": "You are a penguin character. You will be given a set of possible facial expresion to have. Then, according to the movement you have to do, you will have to choose one facial expression. The possible facial expressions are:- neutral\n- happy\n- sad\n- angry\n- surprised\nPlease only give the name of the expression you chose.\nInput:Tilt your head to the right.\nOutput:",
+    "start_timestamp": "2024:10:01:17:12:37",
+    "end_timestamp": "2024:10:01:17:12:41",
+    "duration": 3.353975,
+    "response": "Neutral",
+    "input_tokens": 90,
+    "output_tokens": 1
+}

@@ -1,0 +1,9 @@
+{
+    "prompt": "You are a penguin. You will be given by the user an action to do. You must choose between a selection of particle the one that fits the best the situation. The particle will then appear on you. Return only the particle name, no comment, no punctuation. If none of the particle fits with the action, return None. The particle you must choose from are: \n    angry # When angry\n    heart # When happy\n    sleepy # When sleepy\n    spark # When curious, proud, etc\n    sweat # When tired, embarrassed\n    cloud # When flying\n    none # No particle\n\nInput:Pretend to yawn using your right hand.\nOutput:",
+    "start_timestamp": "2024:10:01:17:14:32",
+    "end_timestamp": "2024:10:01:17:14:35",
+    "duration": 2.921465,
+    "response": "sleepy",
+    "input_tokens": 146,
+    "output_tokens": 2
+}
