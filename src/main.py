@@ -251,8 +251,7 @@ def process_speech(*_):
 
     llm_data = llm_get_information(myllm, text)
 
-    draw_next_frame(canvas, mypenguin, simulator, board, llm_data, 0)    
-    speak_label.config(bg="red")
+    draw_next_frame(canvas, mypenguin, simulator, board, llm_data, 0)
 
 def speech_loop():
     global running, submitting, input_missed, mypenguin, canvas, simulator, board, recording
