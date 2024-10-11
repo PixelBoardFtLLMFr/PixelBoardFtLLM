@@ -232,6 +232,7 @@ class Llm:
         key_stream = open(keyfile, 'r')
         key = str(key_stream.readline().strip())
         self.client = AsyncOpenAI(api_key=key)
+        self.loop = asyncio.get_event_loop()
 
         self.prompts = []
 
@@ -270,7 +271,8 @@ class Llm:
         Execute all the prompts previously queued by using push_prompt in
         parallel.
         """
-        return asyncio.run(self._execute_prompts_async())
+        return self.loop.run_until_complete(self._execute_prompts_async())
+        # return asyncio.run(self._execute_prompts_async())
 
     def test(self):
         prompt0 = "This is a test prompt, are you alive ?"
