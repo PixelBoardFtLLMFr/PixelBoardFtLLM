@@ -1,9 +1,11 @@
 import serial
 import utils
+import time
 
 # Pixels on a single tile
 TILE_WIDTH = 4
 TILE_HEIGHT = 5
+RETRY_TIMEOUT = 1
 
 def tuple_to_hex(pixel):
     """
@@ -55,6 +57,14 @@ class PixelBoard:
             self.serial = None
             utils.debug(e)
             utils.debug("Not connected to pixel board")
+
+    def reset_board(self):
+        self.serial.setDTR(False)
+        time.sleep(RETRY_TIMEOUT)  # Wait for the reset duration
+        self.serial.setDTR(True)
+        self.serial.close()  # Close the serial connection        
+        time.sleep(RETRY_TIMEOUT) # Wait a bit before reopening the connection to allow the Arduino to reinitialize        
+        self.serial=serial.Serial(port=self.port, baudrate= 9600, writeTimeout=0) # Reopen the serial connection
 
     def _coords_to_idx(self, x, y):
         tile_index = self.tile_matrix[y//TILE_HEIGHT][x//TILE_WIDTH]

@@ -213,7 +213,8 @@ def process_input(*_):
 
     animating = True
     utils.debug(text)
-
+    
+    board.reset_board()
     llm_data = llm_get_information(myllm, text)
 
     draw_next_frame(canvas, mypenguin, simulator, board, llm_data, 0)
