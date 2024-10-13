@@ -12,6 +12,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import itertools
 
+def sort_by_filename(filenames:list[str])->list[str]:
+    return sorted(filenames, key=lambda x: int(fm.get_file_name_without_extension(x).split('-')[0]))
+
 def stat_test(data1, data2):
     _, p1 = stats.shapiro(data1)
     _, p2 = stats.shapiro(data2)
@@ -22,12 +25,10 @@ def stat_test(data1, data2):
     # print(">>> Shapiro p for data2:", p2)
     
     if is_normal:
-        print("ttest _____________")
         _, p = stats.ttest_rel(data1, data2)
         eff_size = dabest.effsize.cohens_h(data1, data2)
         eff_desc = "small" if eff_size <= 0.2 else "medium" if eff_size <= 0.5 else "large"
     else:
-        print("wilcoxon _____________")
         val = pg.wilcoxon(data1, data2, alternative='two-sided')
         p = val['p-val'].values[0]
         eff_size = val['RBC'].values[0]
@@ -119,7 +120,7 @@ def evaluate_segmented_data(arms, legs, head, y_pos, fe, vfx)->int:
         print(traceback.format_exc())
     return 0
 
-def evaluate_compiled_data(data)->int:
+def evaluate_combined_data(data)->int:
     try:
         myjson=data['response']
         myjson=myjson.replace("```", "")
@@ -142,10 +143,10 @@ def evaluate_compiled_data(data)->int:
     return 0
 
 def correct_rate_evaluation():
-    compiled=fm.get_files_with_extensions(directory="./responses/compiled", extensions=["json"])
-    compiled=[fm.read_json(path=c) for c in compiled]
+    combined=sort_by_filename(filenames=fm.get_files_with_extensions(directory="./responses/combined", extensions=["json"]))
+    combined=[fm.read_json(path=c) for c in combined]
     segmented=[]
-    for i in range(len(compiled)):
+    for i in range(len(combined)):
         t_segmented={"arms": fm.read_json(path=f"./responses/segmented/{(i+1)}-arms.json"),
                      "legs": fm.read_json(path=f"./responses/segmented/{(i+1)}-legs.json"),
                      "head": fm.read_json(path=f"./responses/segmented/{(i+1)}-head.json"),
@@ -154,19 +155,19 @@ def correct_rate_evaluation():
                      "visual_effect": fm.read_json(path=f"./responses/segmented/{(i+1)}-visual_effect.json")}
         segmented.append(t_segmented)
     
-    header=["n", "segmented", "compiled"]
+    header=["n", "segmented", "combined"]
     rows=[]
     s_rates=[]
     c_rates=[]
     # print(len(segmented))
-    for i in range(len(compiled)):
+    for i in range(len(combined)):
         s_correct=evaluate_segmented_data(arms=segmented[i]["arms"]["response"],
                                           legs=segmented[i]["legs"]["response"],
                                           head=segmented[i]["head"]["response"],
                                           y_pos=segmented[i]["y_position"]["response"],
                                           fe=segmented[i]["facial_expression"]["response"],
                                           vfx=segmented[i]["visual_effect"]["response"])
-        c_correct=evaluate_compiled_data(data=compiled[i])
+        c_correct=evaluate_combined_data(data=combined[i])
 
         s_rates.append(s_correct)
         c_rates.append(c_correct)
@@ -181,18 +182,18 @@ def correct_rate_evaluation():
     pass
 
 def response_time_evaluation():
-    segmented=fm.get_files_with_extensions(directory="./responses/segmented", extensions=["json"])
+    segmented=sort_by_filename(fm.get_files_with_extensions(directory="./responses/segmented", extensions=["json"]))
     segmented=[s for s in segmented if "arms" in s]
-    compiled=fm.get_files_with_extensions(directory="./responses/compiled", extensions=["json"])
+    combined=sort_by_filename(fm.get_files_with_extensions(directory="./responses/combined", extensions=["json"]))
 
-    header=["n", "segmented", "compiled"]
+    header=["n", "segmented", "combined"]
     rows=[]
 
     s_durations=[]
     c_durations=[]
     for i in range(len(segmented)):
         s_data=fm.read_json(segmented[i])
-        c_data=fm.read_json(compiled[i])
+        c_data=fm.read_json(combined[i])
         # print(s_data)
 
         s_duration=s_data['duration']
@@ -208,7 +209,10 @@ def response_time_evaluation():
     rows.append(["effect_size", eff_size, eff_desc])
 
     fm.write_csv(path=os.path.join("evaluation", "response_time.csv"), data=rows, header=header)
-    
+    draw_response_time_figures(s_durations=s_durations, c_durations=c_durations)
+    pass
+
+def draw_response_time_figures(s_durations:list, c_durations:list):
     plt.figure(figsize=(8,6))
     means = [np.mean(s_durations), np.mean(c_durations)]
     std_devs = [np.std(s_durations), np.std(c_durations)]
@@ -225,7 +229,6 @@ def response_time_evaluation():
     plt.text((x1 + x2) / 2, y, '*', fontsize=20, ha='center', va='bottom', color='black')  # Asterisk above the line
     # plt.title('Box Plot with Mean and Standard Deviation')
     plt.show()
-    pass
 
 if __name__=="__main__":
     response_time_evaluation()

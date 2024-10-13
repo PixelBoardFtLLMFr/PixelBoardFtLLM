@@ -45,20 +45,22 @@ def llm_get_information(myllm, user_input):
     user_prompt = f"The requested motion is: {user_input}"
 
     for kind in limb_prompt_types:
-        myllm.push_prompt(llm.build_prompt(kind), user_prompt, f"ANGLE{kind}")
+        myllm.push_prompt(llm.build_prompt(kind), user_prompt, kind)
 
     ## Facial Expression
-    myllm.push_prompt(llm.build_prompt(llm.PromptType.FACE), user_prompt, "FE")
+    myllm.push_prompt(llm.build_prompt(llm.PromptType.FE), user_prompt, llm.PromptType.FE)
 
     ## Particle
-    myllm.push_prompt(llm.particle_prompt, user_prompt, "PARTICLE")
+    myllm.push_prompt(llm.particle_prompt, user_prompt, llm.PromptType.PARTICLE)
 
     ## Eye
-    myllm.push_prompt(llm.eye_prompt, user_prompt, "EYE")
+    myllm.push_prompt(llm.eye_prompt, user_prompt, llm.PromptType.EYE)
 
     ## Height
-    # myllm.push_prompt(llm.height_prompt, user_prompt, "HEIGHT")
-
+    myllm.push_prompt(llm.height_prompt, user_prompt, llm.PromptType.HEIGHT)
+    
+    ## Dialogue
+    myllm.push_prompt(llm.height_prompt, user_prompt, llm.PromptType.DIALOGUE)
 
     # Executing Prompts ...
     utils.debug("Executing prompts...")
@@ -99,8 +101,8 @@ def llm_get_information(myllm, user_input):
     res["PARTICLE"] = responses["PARTICLE"].lower()
 
 
-    # height = llm.interprete_as_nparray(responses["HEIGHT"])
-    # res["HEIGHT"] = height if not height is None else [[0]]
+    height = llm.interprete_as_nparray(responses["HEIGHT"])
+    res["HEIGHT"] = height if not height is None else [[0]]
     res["HEIGHT"]=[[0]]
 
     # utils.debug("Height : ", responses["HEIGHT"])
