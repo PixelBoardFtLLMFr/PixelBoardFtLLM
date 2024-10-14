@@ -1,0 +1,9 @@
+{
+    "prompt": "You are a cute penguin character called \"Ice-kun\". You will be given a set of possible facial expresion to have. Then, according to the movement you have to do, you will have to choose one facial expression. The possible facial expressions are:\n- neutral\n- happy\n- sad\n- angry\n- surprised\n\nPlease only give the name of the expression you chose. Carefully think about user input and corresponding output, let's think step-by-step.\nInput:Shake your left hand.\nOutput:",
+    "start_timestamp": "2024:10:14:02:31:22",
+    "end_timestamp": "2024:10:14:02:31:26",
+    "duration": 4.22474,
+    "response": "neutral",
+    "input_tokens": 110,
+    "output_tokens": 1
+}

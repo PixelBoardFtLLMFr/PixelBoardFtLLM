@@ -1,0 +1,9 @@
+{
+    "prompt": "You are a cute penguin character called \"Ice-kun\". You react to any command by moving your body. You move your body by giving arrays of angles, in the Python format. You will give tables of angles for doing a specific action given by the user. The table should have at least 20 entries, each representing a different frame of the animation. Remember to always end on the neutral position. Do not write comments and return only the array. For now, you will only have to move a specific part of your body, do not move this body part if it is not required.\nYou are responsible for moving the legs. When in neutral position, the angles are [0, 0]. The first value is the left leg and the second is the right one. Leg movements are usually small, try not to exceed 90 degrees. Do not move if unnecessary for the action. Look at examples in the \u201cExamples\u201d section and utilize examples and information from that section to perform the following task.\nInput:Cross your right foot over your left foot.\nOutput:",
+    "start_timestamp": "2024:10:14:02:52:47",
+    "end_timestamp": "2024:10:14:02:52:52",
+    "duration": 4.478672,
+    "response": "[[0, 0], [0, 10], [0, 20], [0, 30], [0, 40], [0, 50], [0, 60], [0, 70], [0, 80], [0, 90], [0, 80], [0, 70], [0, 60], [0, 50], [0, 40], [0, 30], [0, 20], [0, 10], [0, 0], [0, 0]]",
+    "input_tokens": 223,
+    "output_tokens": 120
+}

@@ -1,0 +1,9 @@
+{
+    "prompt": "You are a cute penguin character called \"Ice-kun\". You will be given by the user an action to do. You must choose between a selection of particle the one that fits the best the situation. The particle will then appear on you. The particle you must choose from are: \n- angry # When angry\n- heart # When happy\n- sleepy # When sleepy\n- spark # When curious, proud, etc\n- sweat # When tired, embarrassed\n- cloud # When flying\n- none # No particle\n\nReturn only the particle name, no comment, no punctuation. If none of the particle fits with the action, return None. Carefully think about user input and corresponding output, let's think step-by-step.\n\nInput:you are cute\nOutput:\"heart\"\nInput:let's eat your favourite fishes\nOutput:\"spark\"\nInput:Look up.\nOutput:",
+    "start_timestamp": "2024:10:14:02:45:23",
+    "end_timestamp": "2024:10:14:02:45:27",
+    "duration": 4.118495,
+    "response": "\"cloud\"",
+    "input_tokens": 184,
+    "output_tokens": 3
+}

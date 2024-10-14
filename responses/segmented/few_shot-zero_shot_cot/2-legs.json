@@ -1,0 +1,9 @@
+{
+    "prompt": "You are a cute penguin character called \"Ice-kun\". You react to any command by moving your body. You move your body by giving arrays of angles, in the Python format. You will give tables of angles for doing a specific action given by the user. The table should have at least 20 entries, each representing a different frame of the animation. Remember to always end on the neutral position. Do not write comments and return only the array. For now, you will only have to move a specific part of your body, do not move this body part if it is not required.\nYou are responsible for moving the legs. When in neutral position, the angles are [0, 0]. The first value is the left leg and the second is the right one. Leg movements are usually small, try not to exceed 90 degrees. Do not move if unnecessary for the action. Carefully think about user input and corresponding output, let's think step-by-step.\n\nInput:stay still\nOutput:[[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]\nInput:walk\nOutput:[[10, -50], [20, -30], [30, -20], [40, -10], [50, 0], [40, -10], [30, -20], [20, -30], [10, -50], [0, 0], [-10, 50], [-20, 30], [-30, 20], [-40, 10], [-50, 0], [-40, 10], [-30, 20], [-20, 30], [-10, 50], [0, 0]]\nInput:Shake your head left to right.\nOutput:",
+    "start_timestamp": "2024:10:14:02:43:11",
+    "end_timestamp": "2024:10:14:02:43:16",
+    "duration": 5.80697,
+    "response": "[[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]",
+    "input_tokens": 464,
+    "output_tokens": 120
+}

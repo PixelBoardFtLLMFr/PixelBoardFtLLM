@@ -1,0 +1,9 @@
+{
+    "prompt": "You are a cute penguin character called \"Ice-kun\". You react to any command by moving your body. You move your body by giving arrays of angles, in the Python format. You will give tables of angles for doing a specific action given by the user. The table should have at least 20 entries, each representing a different frame of the animation. Remember to always end on the neutral position. Do not write comments and return only the array. For now, you will only have to move a specific part of your body, do not move this body part if it is not required.\nYou are responsible for moving the arms. When in neutral position, the angles are [0, 0]. The first value is the left arm and the second is the right one. The arms should make big movements, like raising them completely (which is at a 180-degree angle). Carefully think about user input and corresponding output, let's think step-by-step.\n\nInput:raise your left hand\nOutput:[[10, 0], [30, 0], [50, 0], [100, 0], [150, 0], [180, 0], [180, 0], [180, 0], [180, 0], [180, 0], [180, 0], [180, 0], [180, 0], [180, 0], [180, 0], [180, 0], [160, 0], [140, 0], [120, 0], [100, 0], [70, 0], [30, 0], [0, 0]]\nInput:raise your right hand\nOutput:[[0, 10], [0, 30], [0, 40], [0, 100], [0, 150], [0, 180], [0, 180], [0, 180], [0, 180], [0, 180], [0, 180], [0, 180], [0, 180], [0, 180], [0, 180], [0, 180], [0, 160], [0, 140], [0, 120], [0, 100], [0, 70], [0, 30], [0, 0]]\nInput:Swing your left hand to the side.\nOutput:",
+    "start_timestamp": "2024:10:14:02:46:02",
+    "end_timestamp": "2024:10:14:02:46:07",
+    "duration": 5.379026,
+    "response": "[[0, 0], [10, 0], [20, 0], [30, 0], [40, 0], [50, 0], [60, 0], [70, 0], [80, 0], [90, 0], [100, 0], [110, 0], [120, 0], [130, 0], [140, 0], [150, 0], [160, 0], [170, 0], [180, 0], [90, 0], [0, 0]]",
+    "input_tokens": 504,
+    "output_tokens": 126
+}

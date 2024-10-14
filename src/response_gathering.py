@@ -3,18 +3,20 @@ import llm
 import argparse
 import os
 
-compared_pes = [[llm.PEType.ZERO_SHOT],
-                [llm.PEType.ZERO_SHOT_COT],
-                [llm.PEType.FEW_SHOT],
-                [llm.PEType.FEW_SHOT, llm.PEType.ZERO_SHOT_COT],
-                [llm.PEType.NULL_SHOT],
+# compared_pes = [[llm.PEType.ZERO_SHOT],
+#                 [llm.PEType.ZERO_SHOT_COT],
+#                 [llm.PEType.FEW_SHOT],
+#                 [llm.PEType.FEW_SHOT, llm.PEType.ZERO_SHOT_COT],
+#                 [llm.PEType.NULL_SHOT],
+#                 [llm.PEType.NULL_SHOT_COT]]
+compared_pes = [[llm.PEType.NULL_SHOT],
                 [llm.PEType.NULL_SHOT_COT]]
 segmented_pts = [llm.PromptType.ARM,
-                          llm.PromptType.LEG,
-                          llm.PromptType.HEAD,
-                          llm.PromptType.HEIGHT,
-                          llm.PromptType.FE,
-                          llm.PromptType.PARTICLE]
+                llm.PromptType.LEG,
+                llm.PromptType.HEAD,
+                llm.PromptType.HEIGHT,
+                llm.PromptType.FE,
+                llm.PromptType.PARTICLE]
 
 def get_pe_dir(pes:list[str])->str:    
     dirname=pes[0]
@@ -88,7 +90,7 @@ def main():
     args = arg_parser.parse_args()
     myllm = llm.Llm(keyfile =args.keyfile, model_name=args.modelname)
     instructions = fm.read_text('./instructions/chatgpt.txt').splitlines()
-    run_segmented_prompts(instructions=instructions, myllm=myllm)
+    # run_segmented_prompts(instructions=instructions, myllm=myllm)
     run_combined_prompts(instructions=instructions, myllm=myllm)
     pass
 

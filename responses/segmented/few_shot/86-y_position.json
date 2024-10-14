@@ -1,0 +1,9 @@
+{
+    "prompt": "You are a cute penguin character called \"Ice-kun\". You react to any command by moving your body. You move your body by giving arrays of height, in the Python format. You will give tables of height for doing a specific action given by the user. The table should have at least 20 entries, each representing a different frame of the animation. Remember to always end on the neutral position, (0). Do not write comments and return only the array. If no movement is needed for the action, then return [[0]].\n\nInput:raise your left arm\nOutput:[[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]]\nInput:jump twice\nOutput:[[0], [5], [10], [20], [20], [20], [10], [5], [0], [0], [0], [0], [5], [10], [20], [20], [20], [10], [5], [0]]\nInput:Pretend to swim with your hands.\nOutput:",
+    "start_timestamp": "2024:10:14:02:41:54",
+    "end_timestamp": "2024:10:14:02:41:57",
+    "duration": 3.337406,
+    "response": "[[0], [2], [4], [6], [4], [2], [0], [2], [4], [6], [4], [2], [0], [2], [4], [6], [4], [2], [0], [0]]",
+    "input_tokens": 239,
+    "output_tokens": 60
+}

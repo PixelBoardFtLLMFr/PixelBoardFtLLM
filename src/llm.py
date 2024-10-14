@@ -4,6 +4,9 @@ import ast
 import numpy as np
 import utils
 import file_manager as fm
+import os
+import time
+import random
 from datetime import datetime
 from colors import *
 
@@ -358,18 +361,30 @@ class Llm:
 # /////////////////// evaluation
     async def eval_execute_prompts_async(self):
         results = {}
-        start_time=datetime.now()
-        for i in range(len(self.prompts)):
-            results[self.prompts[i][1]]={"prompt": self.prompts[i][0],
-                                         "start_timestamp": fm.get_timestamp()}
+        max_trial=5
+        trial=0
+        
+        while trial<max_trial:
+            try:
+                start_time=datetime.now()
+                for i in range(len(self.prompts)):
+                    results[self.prompts[i][1]]={"prompt": self.prompts[i][0],
+                                                "start_timestamp": fm.get_timestamp()}
+                responses = await asyncio.gather(*[self.client.chat.completions.create(
+                    model=self.model_name,
+                    messages= [{"role" : "user", "content" : prompt}],
+                    temperature=0
+                ) for (prompt, _) in self.prompts])
+                duration=datetime.now()-start_time
+                trial=max_trial+1 # success
+            except Exception as error:
+                msg=f"({start_time})\n\n{str(error)}"
+                error_filename=fm.get_timestamp().replace(":", "")
+                fm.write_text(path=os.path.join("errors", f"{error_filename}.txt"), content=msg)
+                time.sleep(random.uniform(7.0, 10.0))
+                trial=trial+1 # error
 
-        responses = await asyncio.gather(*[self.client.chat.completions.create(
-            model=self.model_name,
-            messages= [{"role" : "user", "content" : prompt}],
-            temperature=0
-        ) for (prompt, _) in self.prompts])
 
-        duration=datetime.now()-start_time
         for i in range(len(responses)):
             results[self.prompts[i][1]]["end_timestamp"]=fm.get_timestamp()
             results[self.prompts[i][1]]["duration"]=duration.total_seconds()
