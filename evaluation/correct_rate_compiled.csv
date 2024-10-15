@@ -1,0 +1,4 @@
+Strategy,Zero Shot,Zero Shot Cot,Null Shot,Null Shot Cot,Few Shot,Few Shot + Zero Shot Cot,Overall
+Combined,0.01,0,0,0,0.97,0.97,0.33
+Segmented,0,0,0,0,0.99,1,0.33
+Overall,0.01,0,0,0,0.98*,0.98*,
