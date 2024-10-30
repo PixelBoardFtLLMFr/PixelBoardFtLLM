@@ -253,6 +253,8 @@ class Penguin:
             self._draw_angry_eyes()
         elif self.fe == "surprised":
             self._draw_surprised_eyes()
+        else:
+            self._draw_neutral_eyes()
 
         self.draw.rectangle([self.body_x + 2*self.dx + 1,
                              self.body_y - self.dy,
