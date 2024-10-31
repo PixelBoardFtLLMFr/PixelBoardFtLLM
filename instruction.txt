@@ -1,0 +1,100 @@
+Nod your head once.
+Shake your head left to right.
+Wave your right hand.
+Wave your left hand.
+Flap both hands simultaneously.
+Stomp your right foot.
+Stomp your left foot.
+Raise both hands.
+Lower both hands.
+Tilt your head to the right.
+Tilt your head to the left.
+Lift your right foot.
+Lift your left foot.
+March in place.
+Clap your hands once.
+Clap your hands twice.
+Rotate your head in a circle.
+Wiggle your right foot.
+Wiggle your left foot.
+Pat your head with your right hand.
+Pat your head with your left hand.
+Stretch your hands outward.
+Bring your hands together.
+Shake your right hand.
+Shake your left hand.
+Tap your right foot twice.
+Tap your left foot twice.
+Look up.
+Look down.
+Pretend to sneeze with your hands.
+Stretch your right hand upward.
+Stretch your left hand upward.
+Point your right hand forward.
+Point your left hand forward.
+Swing your right hand to the side.
+Swing your left hand to the side.
+Scratch your head with your right hand.
+Scratch your head with your left hand.
+Nod your head three times.
+Kick with your right foot.
+Kick with your left foot.
+Cross your hands in front of you.
+Uncross your hands.
+Cover your eyes with your hands.
+Uncover your eyes.
+Pretend to yawn using your right hand.
+Pretend to yawn using your left hand.
+Cross your right foot over your left foot.
+Cross your left foot over your right foot.
+Stretch both feet outward.
+Bring both feet back together.
+Stretch your right hand to the right.
+Stretch your left hand to the left.
+Pat your belly with your right hand.
+Pat your belly with your left hand.
+Look to the right.
+Look to the left.
+Spin your head in the opposite direction.
+Swing your right foot forward.
+Swing your left foot forward.
+Place your hands on your hips.
+Raise your hands above your head.
+Lower your hands to your sides.
+Clap your hands above your head.
+Tap your right foot three times.
+Tap your left foot three times.
+Pretend to shiver with your hands.
+Pretend to warm your hands.
+Pretend to pick something up with your right hand.
+Pretend to pick something up with your left hand.
+Pretend to eat something with your right hand.
+Pretend to eat something with your left hand.
+Point both hands forward.
+Point both hands upward.
+Point both hands downward.
+March in place faster.
+March in place slower.
+Pretend to push something with your right hand.
+Pretend to push something with your left hand.
+Cross your right hand over your left hand.
+Cross your left hand over your right hand.
+Pretend to dance with your hands.
+Pretend to dance with your feet.
+Clap your hands in front of you.
+Clap your hands behind your back.
+Pretend to swim with your hands.
+Pretend to swim with your feet.
+Stretch your right foot forward.
+Stretch your left foot forward.
+Shake your head rapidly.
+Pretend to be surprised with your hands.
+Pretend to be scared with your hands.
+Pretend to be excited with your hands.
+Wave both hands frantically.
+Jump up using both feet.
+Crouch down using both feet.
+Pretend to sleep using your hands.
+Pretend to wake up with your hands.
+Pretend to hold something heavy with both hands.
+Pretend to balance on one foot.

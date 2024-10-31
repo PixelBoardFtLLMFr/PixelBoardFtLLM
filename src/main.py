@@ -11,7 +11,28 @@ import utils
 import penguin
 import pixelboardsimulator as pbs
 import pixelboard
+import random
 from speech import SpeechToText, Lang
+
+prompt_type=[llm.PromptType.ARM,
+             llm.PromptType.LEG,
+             llm.PromptType.HEAD,
+             llm.PromptType.HEIGHT,
+             llm.PromptType.FE,
+             llm.PromptType.PARTICLE,
+             llm.PromptType.EYE,
+             llm.PromptType.DIALOGUE]
+limb_type=[llm.PromptType.ARM,
+           llm.PromptType.LEG,
+           llm.PromptType.HEAD]
+pe=[llm.PEType.FEW_SHOT, llm.PEType.ZERO_SHOT_COT]
+
+instructions = open("instruction.txt", 'r').readlines()
+print(len(instructions))
+def random_instructions():    
+    inst=random.choice(instructions)
+    # print(f"----{inst}")
+    return inst
 
 def array_setlength(array, newlen):
     """
@@ -30,61 +51,38 @@ def array_setlength(array, newlen):
             res = np.append(res, np.array([array[currlen-1]]), axis=0)
         return res
 
-def llm_get_information(myllm, user_input):
+def llm_get_information(myllm, instruction):
     """
     Get different pieces of information from MYLLM. Edit this function if more
     information is needed from the LLM. Return a dictionary containing all the
     information produced.
     """
-    print('processing-----------------------------------------')
+    print(f'processing-->{instruction}')
     # Preparing Prompts ...
     # put results here, this variable is returned by the function
     res = {}
     utils.debug("Preparing prompts...")
-    ## Angles
-    limb_prompt_types = [llm.PromptType.ARM, llm.PromptType.LEG, llm.PromptType.HEAD]
-    user_prompt = f"The requested motion is: {user_input}"
-
-    for kind in limb_prompt_types:
-        myllm.push_prompt(llm.build_prompt(kind), user_prompt, f"ANGLE{kind}")
-
-    ## Facial Expression
-    myllm.push_prompt(llm.build_prompt(llm.PromptType.FACE), user_prompt, "FE")
-
-    ## Particle
-    myllm.push_prompt(llm.particle_prompt, user_prompt, "PARTICLE")
-
-    ## Eye
-    myllm.push_prompt(llm.eye_prompt, user_prompt, "EYE")
-
-    ## Height
-    myllm.push_prompt(llm.height_prompt, user_prompt, "HEIGHT")
-
-    ## Dialogue 
-    myllm.push_prompt(llm.dialogue_prompt, user_prompt, "DIALOGUE")
+    for pt in prompt_type:
+        myllm.push_prompt(llm.build_prompt(kind=pt, pes=pe), instruction, pt)
 
     # Executing Prompts ...
     utils.debug("Executing prompts...")
     responses = myllm.execute_prompts()
 
-
     # Processing Responses ...
-    utils.debug("Processing reponses...")
-    ## Facial Expression
-    res["FE"] = responses["FE"].lower()
+    utils.debug("Processing reponses...")    
     
-    ## Angles
     angles = {}
     utils.debug("Processing angles")
-    for kind in limb_prompt_types:
-        __res_or_die__ = llm.interprete_as_nparray(responses[f"ANGLE{kind}"])
+    for kind in limb_type:
+        __res_or_die__ = llm.interprete_as_nparray(responses[kind])
         if __res_or_die__ is None:
-            angles[kind] = [[0] * (1 if kind == llm.PromptType.HEAD else 2)]
+            angles[kind] = [[0] * (1 if kind == llm.PromptType.HEAD or kind == llm.PromptType.HEIGHT else 2)]
             utils.debug("llm_get_information: filling with zeros")
         else:
             angles[kind] = __res_or_die__
 
-    myarr = [np.shape(angles[kind])[0] for kind in limb_prompt_types]
+    myarr = [np.shape(angles[kind])[0] for kind in limb_type]
     maxlen = max(*myarr)
 
     angles[llm.PromptType.ARM] = array_setlength(angles[llm.PromptType.ARM], maxlen)
@@ -97,28 +95,15 @@ def llm_get_information(myllm, user_input):
                             axis=1)
 
     res["ANGLES"] = angles
+    res["FE"] = responses[llm.PromptType.FE].lower()    
+    res["PARTICLE"] = responses[llm.PromptType.PARTICLE].lower()
 
-    ## Particle
-    res["PARTICLE"] = responses["PARTICLE"].lower()
-
-    utils.debug("Height : ", responses["HEIGHT"])
-
-    height = llm.interprete_as_nparray(responses["HEIGHT"])
-
-    res["HEIGHT"] = height if not height is None else [[0]]
-
-    ## Eye
-    utils.debug("Processing eye")
-    res["EYE"] = llm.interprete_eye(responses["EYE"])
-
-    ## Dialogue
-    utils.debug("Generating Dialogue")
-    res["DIALOGUE"] = responses["DIALOGUE"].lower()
-    utils.debug("LLM data processing done")
-
+    height = llm.interprete_as_nparray(responses[llm.PromptType.HEIGHT])
+    res["HEIGHT"] = height if height is not None else [[0]]
+    res["EYE"] = llm.interprete_eye(responses[llm.PromptType.EYE])
+    res["DIALOGUE"] = responses[llm.PromptType.DIALOGUE]
     show_output(res["DIALOGUE"])
 
-    # RES is a dictionary containing all the results
     return res
 
 def draw_pixel_board(board, pixels):
@@ -126,7 +111,7 @@ def draw_pixel_board(board, pixels):
     i_min = (pixels_width - board.width) // 2
     i_max = (pixels_width + board.width) // 2
     pixels_cropped = [row[i_min:i_max] for row in pixels]
-    board.draw_pixels(pixels_cropped)
+    return board.draw_pixels(pixels_cropped)
 
 def draw_canvas(canvas, img):
     tk_img = PIL.ImageTk.PhotoImage(img)
@@ -137,21 +122,22 @@ def draw_all(canvas, penguin, simulator, board, angles):
     pixels = penguin.do_draw(*angles)
     simulator_img = simulator.do_draw(pixels)
     draw_canvas(canvas, simulator_img)
-    draw_pixel_board(board, pixels)
+    return draw_pixel_board(board, pixels)
 
 def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
     global animating, adjust_th, stt
     angles = llm_data["ANGLES"]
     frame_count = len(angles)
 
-    if index == frame_count:
+    if index >= frame_count:
         # Animation done
         utils.debug()
         animating = False
-        user_input.set(prompt_str)
+        user_input.set(random_instructions())
         adjust_th.join()
+        time.sleep(random.uniform(1, 3))
+        set_submiting()
         return
-
 
     if index == 0:
         # First frame
@@ -169,7 +155,7 @@ def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
         utils.debug(f"LLM generated {frame_count} frames, "
                     + f"animation will last {frame_count*dt:.2f} s")
         ## Eye
-        if not llm_data["EYE"] is None:
+        if llm_data["EYE"] is not None:
             utils.debug("LLM-generated eyes :")
             utils.debug(llm_data["EYE"])
         penguin.set_eye(llm_data["EYE"])
@@ -181,10 +167,17 @@ def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
     ## Angles
     utils.debug(f"\rFrame {index+1}/{frame_count}", end="")
     mypenguin.set_size(mypenguin.size, llm_data["HEIGHT"][index][0] if index < len(llm_data["HEIGHT"]) else 0)
-    draw_all(canvas, mypenguin, simulator, board, angles[index])
+    is_success = draw_all(canvas, mypenguin, simulator, board, angles[index])
+
+    # if not is_success:
+    #     next_frame = frame_count+1
+    # else:
+    #     next_frame = index+1
+
+    next_frame = index+1
     canvas.after(int(dt*1000),
                  lambda:
-                 draw_next_frame(canvas, penguin, simulator, board, llm_data, index+1))
+                 draw_next_frame(canvas, penguin, simulator, board, llm_data, next_frame))
 
 def set_submiting():
     global submitting
@@ -214,7 +207,7 @@ def process_input(*_):
     animating = True
     utils.debug(text)
     
-    board.reset_board()
+    # board.reset_board()
     llm_data = llm_get_information(myllm, text)
 
     draw_next_frame(canvas, mypenguin, simulator, board, llm_data, 0)
@@ -284,8 +277,8 @@ arg_parser.add_argument("-s", "--penguin-size", action='store', default=25,
                         type=int, help="size of penguin, defaults to 25")
 arg_parser.add_argument("-p", "--port", action='store', default="/dev/ttyACM0",
                         help="pixel board port, defaults to /dev/ttyACM0")
-arg_parser.add_argument("-v", "--llm-version", action='store', default="3.5-turbo",
-                        choices=["3.5-turbo", "4-turbo"], help="ChatGPT version to use")
+arg_parser.add_argument("-v", "--llm-version", action='store', default="gpt-3.5-turbo",
+                        choices=["gpt-3.5-turbo", "gpt-4-turbo", "gpt-4o-mini"], help="ChatGPT version to use")
 arg_parser.add_argument("-x", "--scale", action='store', default=32,
                         type=int, help="scale of pixel board, "
                         + "has to be a mutiple of 5, defaults to 30")
@@ -336,7 +329,7 @@ canvas_size = args.scale*args.penguin_size
 canvas = tk.Canvas(app, width=canvas_size, height=canvas_size, bg="#000000")
 canvas.grid(column=0, row=0, rowspan=row_count)
 
-user_input = tk.StringVar(app, value=prompt_str)
+user_input = tk.StringVar(app, value=random_instructions())
 user_entry = tk.Entry(app, textvariable=user_input)
 user_entry.grid(column=1, row=0, sticky='S')
 
@@ -383,3 +376,4 @@ speech_thread.start()
 app.mainloop()
 running = False
 speech_thread.join()
+# set_submiting()
