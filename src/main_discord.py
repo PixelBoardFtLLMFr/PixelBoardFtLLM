@@ -140,10 +140,6 @@ def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
         ## Particle
         particle = llm_data["PARTICLE"]
         penguin.set_particle(particle)
-        ## Angles
-        if np.sum(angles) == 0:
-            utils.debug("no movement, removing particle")
-            penguin.set_particle("none")
 
         utils.debug(f"LLM generated {frame_count} frames, "
                     + f"animation will last {frame_count*dt:.2f} s")
@@ -155,7 +151,7 @@ def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
 
     utils.debug(f"\rFrame {index+1}/{frame_count}", end="")
     mypenguin.set_size(mypenguin.size, llm_data["HEIGHT"][index][0] if index < len(llm_data["HEIGHT"]) else 0)
-    is_success = draw_all(canvas, mypenguin, simulator, board, angles[index])
+    draw_all(canvas, mypenguin, simulator, board, angles[index])
 
     next_frame = index+1
     canvas.after(int(dt*1000),

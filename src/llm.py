@@ -122,9 +122,9 @@ fe_prompt = """You are a cute penguin character called "Ice-kun". You will be gi
 Please only give the name of the expression you chose."""
 
 fe_example = """Input:you are the good boy
-Output:\"happy\"
+Output:happy
 Input:good bye
-Output:\"sad\""""
+Output:sad"""
 
 particle_prompt = """You are a cute penguin character called "Ice-kun". You will be given by the user an action to do. You must choose between a selection of particle the one that fits the best the situation. The particle will then appear on you. The particle you must choose from are: 
 - angry # When angry
@@ -138,9 +138,9 @@ particle_prompt = """You are a cute penguin character called "Ice-kun". You will
 Return only the particle name, no comment, no punctuation. If none of the particle fits with the action, return None."""
 
 particle_example = """Input:you are cute
-Output:\"heart\"
+Output:heart
 Input:let's eat your favourite fishes
-Output:\"spark\""""
+Output:spark"""
 
 eye_prompt = """You are a cute penguin character called "Ice-kun". You will be given an action to do. Then, you will have to generate an eye design for the character. An eye design consist in a two-dimensional Python array of colors. The available colors are the following: 
 - bright

@@ -147,10 +147,6 @@ def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
         ## Particle
         particle = llm_data["PARTICLE"]
         penguin.set_particle(particle)
-        ## Angles
-        if np.sum(angles) == 0:
-            utils.debug("no movement, removing particle")
-            penguin.set_particle("none")
 
         utils.debug(f"LLM generated {frame_count} frames, "
                     + f"animation will last {frame_count*dt:.2f} s")
