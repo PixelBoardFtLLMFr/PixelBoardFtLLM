@@ -11,6 +11,7 @@ import pingouin as pg
 import matplotlib.pyplot as plt
 import seaborn as sns
 import itertools
+import re
 
 pes=["zero_shot",
      "zero_shot_cot",
@@ -23,6 +24,13 @@ p_threshold=0.001
 
 def sort_by_filename(filenames:list[str])->list[str]:
     return sorted(filenames, key=lambda x: int(fm.get_file_name_without_extension(x).split('-')[0]))
+
+def clean_string(msg:str)->str:
+    msg=msg.replace("```", "")
+    msg=msg.replace("python", "")
+    msg=msg.replace("Python", "")
+    return msg
+    
 
 def stat_test(data1, data2):
     _, p1 = stats.shapiro(data1)
@@ -62,6 +70,9 @@ def stat_test(data1, data2):
 
 def evaluate_angles(angles_str:str, target_length:int, min_val, max_val):
     try:
+        # pattern=r'\[\[.*?\]\]'
+        # angles_str=re.findall(pattern, angles_str)[0]
+        angles_str=clean_string(angles_str)
         angles=ast.literal_eval(angles_str)
         flattened_array = list(itertools.chain.from_iterable(angles))
 
@@ -143,9 +154,10 @@ def evaluate_segmented_data(arms, legs, head, y_pos, fe, vfx)->int:
 def evaluate_combined_data(data)->int:
     try:
         myjson=data['response']
-        myjson=myjson.replace("```", "")
-        myjson=myjson.replace("python", "")
-        myjson=myjson.replace("Python", "")
+        myjson=clean_string(myjson)
+        # myjson=myjson.replace("```", "")
+        # myjson=myjson.replace("python", "")
+        # myjson=myjson.replace("Python", "")
         myjson=json.loads(myjson)
 
         judgement, reason=evaluate_angles(angles_str=str(myjson["arms"]), target_length=2, min_val=-180, max_val=180)
@@ -497,8 +509,8 @@ def compile_response_time():
     pass
 
 if __name__=="__main__":
-    # prepare_correct_rate_data()
-    # prepare_response_time_data()
+    prepare_correct_rate_data()
+    prepare_response_time_data()
     compile_correct_rate()
     compile_response_time()
     pass
