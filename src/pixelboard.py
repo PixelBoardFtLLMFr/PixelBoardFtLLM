@@ -62,27 +62,19 @@ class PixelBoard:
             utils.debug("Not connected to pixel board")
     
     def initialize_board(self):
-        # self.serial = serial.Serial(port=self.port, baudrate= 9600, writeTimeout=1, rtscts=False, dsrdtr=False, xonxoff=False)
         self.serial = serial.Serial(port=self.port, baudrate= 9600, writeTimeout=None)
         self._clear_serial()
 
     def reset_board(self):
-        if self.serial:
-            self.serial.close()
+        if self.serial is None:
+            return
             
+        self.serial.close()
+
         usb_com.reset_usb()
         self.initialize_board()
         self._clear_serial()
         print("reset complete")
-        # if self.serial is None:
-        #     return
-        # self.serial.close()
-        # self.serial.setDTR(False)
-        # time.sleep(RETRY_TIMEOUT)  # Wait for the reset duration
-        # self.serial.setDTR(True)
-        # self.serial.close()  # Close the serial connection        
-        # time.sleep(RETRY_TIMEOUT) # Wait a bit before reopening the connection to allow the Arduino to reinitialize
-        # self.initialize_board()
         pass
 
     def _coords_to_idx(self, x, y):
@@ -98,7 +90,6 @@ class PixelBoard:
                 self.serial.write(serial_str.encode("ascii"))
                 success = True
         except Exception as error:
-            # print(f'error: _send_to_serial\n{error}')
             print(traceback.format_exc())
             success = False
         
