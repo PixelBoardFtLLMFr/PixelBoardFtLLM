@@ -198,7 +198,10 @@ def process_discord_message():
     utils.debug(text)
     
     llm_data = llm_get_information(myllm, text)
-    bot.set_reply_message(message=llm_data["DIALOGUE"], cmd=dc_bot.ReplyCommand.REPLY)
+
+    reply_msg=llm_data["DIALOGUE"].splitlines()
+    reply_msg=reply_msg[0]
+    bot.set_reply_message(message=reply_msg, cmd=dc_bot.ReplyCommand.REPLY)
     print("start waiting")
     while bot.is_processing:
         time.sleep(2)
