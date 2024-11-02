@@ -9,11 +9,11 @@ import penguin
 import pixelboardsimulator as pbs
 import pixelboard
 import random
-import discord
+import dc_bot
 import threading as th
 import os
 from dotenv import load_dotenv
-from dc_client import DCClient
+from dc_bot import DCBot
 
 prompt_type=[llm.PromptType.ARM,
              llm.PromptType.LEG,
@@ -186,36 +186,32 @@ def process_ui_input():
     draw_next_frame(canvas, mypenguin, simulator, board, llm_data, 0)
 
 def process_discord_message():
-    global user_input, canvas, animating, myllm, mypenguin, simulator, board, dt, dclient
+    global user_input, canvas, animating, myllm, mypenguin, simulator, board, dt, bot
     if animating:
         return
     
-    text = dclient.cleaned_message
+    text = bot.cleaned_message
     user_input.set("Animating ...")
 
     animating = True
-    dclient.enabled = False
 
     utils.debug(text)
     
     llm_data = llm_get_information(myllm, text)
-    dclient.reply_message(llm_data["DIALOGUE"])
+    bot.set_reply_message(message=llm_data["DIALOGUE"], cmd=dc_bot.ReplyCommand.REPLY)
     print("start waiting")
-    while dclient.is_sending:
-        time.sleep(0.001)
+    while bot.is_processing:
+        time.sleep(2)
     print("done waiting")
-
     draw_next_frame(canvas, mypenguin, simulator, board, llm_data, 0)
-    dclient.clear_message()
-    dclient.enabled = True
 
 def main_loop():
-    global running, ui_submitting, dc_submitting, dclient
+    global running, ui_submitting, dc_submitting, bot
     
     running = True
-    dclient.run()
+    bot.run()
     while running:
-        dc_submitting = dclient is not None and dclient.is_running and dclient.enabled and dclient.message is not None
+        dc_submitting = bot is not None and bot.is_running and bot.message is not None
         if ui_submitting:
             process_ui_input()
             ui_submitting = False
@@ -306,7 +302,7 @@ if args.quick:
 ui_submitting = False
 dc_submitting = False
 
-dclient = DCClient(token = os.getenv("DISCORD_TOKEN"))
+bot = DCBot(token = os.getenv("DISCORD_TOKEN"))
 main_thread = th.Thread(target=main_loop, daemon=True)
 main_thread.start()
 app.mainloop()
