@@ -164,7 +164,7 @@ Output:[[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]]
 Input:jump twice
 Output:[[0], [5], [10], [20], [20], [20], [10], [5], [0], [0], [0], [0], [5], [10], [20], [20], [20], [10], [5], [0]]"""
 
-dialogue_prompt ="""You are a cute penguin character called "Ice-kun". You will be given either an action, like dance or jump, or a simple phrase like "say hi". You must respond accordingly to what you are given as if you were in a conversation, but in a very short sentence, no more than 5 words long at a time."""
+dialogue_prompt ="""You are a cute penguin character called "Ice-kun". You will be given either an action, like dance or jump, or a simple phrase like "say hi". You must respond accordingly to what you are given as if you were in a conversation, but in a very short sentence, no more than 5 words long at a time. Reply in the same language of the input."""
 
 def get_example(kind)->str:    
     if kind == PromptType.ARM:

@@ -129,6 +129,7 @@ def draw_next_frame(canvas, penguin, simulator, board, llm_data, index):
         # Animation done
         utils.debug()
         animating = False
+        bot.set_animating(animating)
         user_input.set("")
         return
 
@@ -168,17 +169,25 @@ def dc_submit():
     global dc_submitting
     dc_submitting = True
     show_output('')
+
+def set_board_first_state(token:str):
+    global board
+    if token == board_enable_token:
+        draw_all(canvas, mypenguin, simulator, board, [20, 20, 0, 0, 0])
+        print("aneb")
+    elif token == board_disable_token:
+        board._clear_serial()
+        print("disab")
     
 def process_ui_input():
-    global user_input, canvas, animating, myllm, mypenguin, simulator, board, dt
-    print("pui1")
+    global user_input, canvas, animating, myllm, mypenguin, simulator, board, dt, bot
     if animating:
         return
-    print("pui2")
     text = user_input.get()
     user_input.set("Animating ...")
 
     animating = True
+    bot.set_animating(animating)
     utils.debug(text)
     
     llm_data = llm_get_information(myllm, text)
@@ -189,11 +198,13 @@ def process_discord_message():
     global user_input, canvas, animating, myllm, mypenguin, simulator, board, dt, bot
     if animating:
         return
-    
-    text = bot.cleaned_message
+
+    msg_pair = bot.get_unprocessed_message()
+    text = bot.get_cleaned_message(msg_pair[0])
     user_input.set("Animating ...")
 
     animating = True
+    bot.set_animating(animating)
 
     utils.debug(text)
     
@@ -201,11 +212,10 @@ def process_discord_message():
 
     reply_msg=llm_data["DIALOGUE"].splitlines()
     reply_msg=reply_msg[0]
-    bot.set_reply_message(message=reply_msg, cmd=dc_bot.ReplyCommand.REPLY)
-    print("start waiting")
-    while bot.is_processing:
-        time.sleep(2)
-    print("done waiting")
+    msg_pair[1] = reply_msg
+    time.sleep(3)
+    while bot.is_sending:
+        time.sleep(1)
     draw_next_frame(canvas, mypenguin, simulator, board, llm_data, 0)
 
 def main_loop():
@@ -214,13 +224,16 @@ def main_loop():
     running = True
     bot.run()
     while running:
-        dc_submitting = bot is not None and bot.is_running and bot.message is not None
+        dc_submitting = bot is not None and bot.is_running and bot.get_unprocessed_message() is not None
+        dc_resetting = bot is not None and bot.is_running and bot.communication_token is not None
         if ui_submitting:
             process_ui_input()
             ui_submitting = False
         elif dc_submitting:
             process_discord_message()
-
+        elif dc_resetting:
+            set_board_first_state(bot.communication_token)
+            bot.communication_token = None
 
 ppp_desc = "Pixel Penguin Project a.k.a. PPP"
 prompt_str = "Hello, how are you ?"
@@ -305,8 +318,9 @@ if args.quick:
 ui_submitting = False
 dc_submitting = False
 
-bot = DCBot(token = os.getenv("DISCORD_TOKEN"))
+bot = DCBot(token=os.getenv("DISCORD_TOKEN"), channel_id=int(os.getenv("DISCORD_CHANNEL_ID")))
+board_disable_token = os.getenv("BOARD_DISABLE_TOKEN")
+board_enable_token = os.getenv("BOARD_ENABLE_TOKEN")
 main_thread = th.Thread(target=main_loop, daemon=True)
 main_thread.start()
 app.mainloop()
-# set_submiting()
