@@ -29,7 +29,6 @@ limb_type=[llm.PromptType.ARM,
 pe=[llm.PEType.FEW_SHOT, llm.PEType.ZERO_SHOT_COT]
 
 instructions = open("instruction.txt", 'r').readlines()
-print(len(instructions))
 def random_instructions():    
     inst=random.choice(instructions)
     return inst
@@ -163,7 +162,6 @@ def ui_submit():
     global ui_submitting
     ui_submitting = True
     show_output('')
-    print("hoho")
 
 def dc_submit():
     global dc_submitting
@@ -171,13 +169,12 @@ def dc_submit():
     show_output('')
 
 def set_board_first_state(token:str):
-    global board
+    global board, mypenguin
     if token == board_enable_token:
         draw_all(canvas, mypenguin, simulator, board, [20, 20, 0, 0, 0])
-        print("aneb")
     elif token == board_disable_token:
-        board._clear_serial()
-        print("disab")
+        emp_pixels = [[(0, 0, 0) for _ in range(mypenguin.size)] for _ in range(mypenguin.size)]
+        draw_pixel_board(board, emp_pixels)
     
 def process_ui_input():
     global user_input, canvas, animating, myllm, mypenguin, simulator, board, dt, bot
