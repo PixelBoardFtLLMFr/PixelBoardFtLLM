@@ -269,13 +269,13 @@ arg_parser.add_argument("-d", "--debug", action='store_const',
                         const=True, default=False, help="run in debug mode")
 arg_parser.add_argument("-k", "--keyfile", action='store', default="./key.txt",
                         help="file that contain LLM API key, defaults to ./key.txt")
-arg_parser.add_argument("-s", "--penguin-size", action='store', default=25,
+arg_parser.add_argument("-s", "--penguin_size", action='store', default=25,
                         type=int, help="size of penguin, defaults to 25")
 arg_parser.add_argument("-p", "--port", action='store', default="/dev/ttyACM0",
                         help="pixel board port, defaults to /dev/ttyACM0")
-arg_parser.add_argument("-v", "--llm-version", action='store', default="gpt-3.5-turbo",
+arg_parser.add_argument("-v", "--llm_version", action='store', default="gpt-3.5-turbo",
                         choices=["gpt-3.5-turbo", "gpt-4-turbo", "gpt-4o-mini"], help="ChatGPT version to use")
-arg_parser.add_argument("-x", "--scale", action='store', default=32,
+arg_parser.add_argument("-x", "--scale", action='store', default=30,
                         type=int, help="scale of pixel board, "
                         + "has to be a mutiple of 5, defaults to 30")
 arg_parser.add_argument("-f", "--framerate", action='store', default=1,

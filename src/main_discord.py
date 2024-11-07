@@ -169,7 +169,7 @@ def dc_submit():
     show_output('')
 
 def set_board_first_state(token:str):
-    global board, mypenguin
+    global board, mypenguin, board_enable_token, board_disable_token
     if token == board_enable_token:
         draw_all(canvas, mypenguin, simulator, board, [20, 20, 0, 0, 0])
     elif token == board_disable_token:
@@ -215,21 +215,44 @@ def process_discord_message():
         time.sleep(1)
     draw_next_frame(canvas, mypenguin, simulator, board, llm_data, 0)
 
+def process_discord_dance():
+    global user_input, canvas, animating, myllm, mypenguin, simulator, board, dt, bot, welcome_dance_token, bye_dance_token
+    if animating:
+        return
+
+    text = "Do a happy meet-again dance." if bot.communication_token == bye_dance_token else "Do a joyful welcome dance."
+    user_input.set("Animating ...")
+
+    animating = True
+    bot.set_animating(animating)
+
+    utils.debug(text)
+    
+    llm_data = llm_get_information(myllm, text)
+
+    time.sleep(3)
+    while bot.is_sending:
+        time.sleep(1)
+    draw_next_frame(canvas, mypenguin, simulator, board, llm_data, 0)
+
 def main_loop():
-    global running, ui_submitting, dc_submitting, bot
+    global running, ui_submitting, dc_submitting, bot, board_enable_token, board_disable_token, welcome_dance_token, bye_dance_token
     
     running = True
     bot.run()
     while running:
         dc_submitting = bot is not None and bot.is_running and bot.get_unprocessed_message() is not None
-        dc_resetting = bot is not None and bot.is_running and bot.communication_token is not None
+        dc_direct_cmd = bot is not None and bot.is_running and bot.communication_token is not None
         if ui_submitting:
             process_ui_input()
             ui_submitting = False
         elif dc_submitting:
             process_discord_message()
-        elif dc_resetting:
-            set_board_first_state(bot.communication_token)
+        elif dc_direct_cmd:
+            if bot.communication_token == board_enable_token or bot.communication_token == board_disable_token:
+                set_board_first_state(bot.communication_token)
+            elif bot.communication_token == welcome_dance_token or bot.communication_token == bye_dance_token:
+                process_discord_dance()
             bot.communication_token = None
 
 ppp_desc = "Pixel Penguin Project a.k.a. PPP"
@@ -240,11 +263,11 @@ arg_parser.add_argument("-d", "--debug", action='store_const',
                         const=True, default=False, help="run in debug mode")
 arg_parser.add_argument("-k", "--keyfile", action='store', default="./key.txt",
                         help="file that contain LLM API key, defaults to ./key.txt")
-arg_parser.add_argument("-s", "--penguin-size", action='store', default=25,
+arg_parser.add_argument("-s", "--penguin_size", action='store', default=25,
                         type=int, help="size of penguin, defaults to 25")
 arg_parser.add_argument("-p", "--port", action='store', default="/dev/ttyACM0",
                         help="pixel board port, defaults to /dev/ttyACM0")
-arg_parser.add_argument("-v", "--llm-version", action='store', default="gpt-3.5-turbo",
+arg_parser.add_argument("-v", "--llm_version", action='store', default="gpt-3.5-turbo",
                         choices=["gpt-3.5-turbo", "gpt-4-turbo", "gpt-4o-mini"], help="ChatGPT version to use")
 arg_parser.add_argument("-x", "--scale", action='store', default=32,
                         type=int, help="scale of pixel board, "
@@ -318,6 +341,8 @@ dc_submitting = False
 bot = DCBot(token=os.getenv("DISCORD_TOKEN"), channel_id=int(os.getenv("DISCORD_CHANNEL_ID")))
 board_disable_token = os.getenv("BOARD_DISABLE_TOKEN")
 board_enable_token = os.getenv("BOARD_ENABLE_TOKEN")
+welcome_dance_token = os.getenv("WELCOME_DANCE_TOKEN")
+bye_dance_token = os.getenv("BYE_DANCE_TOKEN")
 main_thread = th.Thread(target=main_loop, daemon=True)
 main_thread.start()
 app.mainloop()

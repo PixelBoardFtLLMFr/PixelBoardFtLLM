@@ -32,7 +32,7 @@ class DCBot:
         self._ready_messages = self.read_txt('ready_commands.txt')
         self._bye_messages = self.read_txt('bye_commands.txt')
         self._instruction_messages = self.read_txt('instruction_commands.txt')
-        self._board_enable_token, self._board_disable_token = self._init_important_tokens()
+        self._board_enable_token, self._board_disable_token, self._welcome_dance_token, self._bye_dance_token = self._init_important_tokens()
         self._com_token = None
         self._active_times = self._init_active_times()
         pass
@@ -81,14 +81,15 @@ class DCBot:
     
     def _init_important_tokens(self):
         load_dotenv()
-        return (os.getenv("BOARD_ENABLE_TOKEN"), os.getenv("BOARD_DISABLE_TOKEN"))
+        return (os.getenv("BOARD_ENABLE_TOKEN"), os.getenv("BOARD_DISABLE_TOKEN"), os.getenv("WELCOME_DANCE_TOKEN"), os.getenv("BYE_DANCE_TOKEN"))
     
     def _str_to_dtime(self, time_str:str)->dtime:
         splitted = time_str.split(':')
         return dtime(hour=int(splitted[0]), minute=int(splitted[1]))
     
     def _get_random_ready_msg(self):
-        return " ".join([random.choice(self._ready_messages), self._get_random_instruction_msg()])
+        return random.choice(self._ready_messages)
+        # return " ".join([random.choice(self._ready_messages), self._get_random_instruction_msg()])
 
     def _get_random_bye_msg(self):
         return random.choice(self._bye_messages).format(t=self._get_next_active_time())
@@ -152,24 +153,34 @@ class DCBot:
     def _start_bot(self):
         self._client.run(token=self._token)
         pass
-
-    def set_reply_message(self, message:str, cmd:int):
-        self._reply_message = message
-        self._reply_command = cmd
     
     async def set_active(self, active:bool):
         if self._active == active: # no need for update
             return
         
-        self._active = active
+        if active:
+            await self._client.change_presence(status = discord.Status.online)
+
+        self._com_token = self._bye_dance_token if not active else self._welcome_dance_token
+        self._sending = True
+        msg = self._get_random_bye_msg() if not active else self._get_random_ready_msg()
+        print(msg)
+        await self._channel.send(content = msg)
+        self._sending = False
+        await asyncio.sleep(random.uniform(2, 4))
+        while self._animating: # wait until finish animating
+            await asyncio.sleep(0.01)
+        self._com_token = "" # safenet
+        await asyncio.sleep(2)
+        
         if not active:
-            self._cached_messages.append([None, self._get_random_bye_msg()])
             self._com_token = self._board_disable_token
             await self._client.change_presence(status = discord.Status.invisible)
         else:
-            self._cached_messages.append([None, self._get_random_ready_msg()])
             self._com_token = self._board_enable_token
-            await self._client.change_presence(status = discord.Status.online)
+            await self._channel.send(content = self._get_random_instruction_msg())
+        
+        self._active = active
         pass
 
 # ==> main loop is here
@@ -183,6 +194,9 @@ class DCBot:
                     await asyncio.sleep(1)
             elif self._active != cur_active:
                 await self.set_active(cur_active)
+                continue
+
+            if not self._active:
                 continue
 
             s_idx = next((idx for idx, msg in enumerate(self._cached_messages) if msg[1] is not None), -1)
@@ -236,6 +250,7 @@ class DCBot:
             return
         
         if message.content.startswith(self.bot_tag):
+            print(message)
             self._cached_messages.append([message, None])
 
 if __name__ == "__main__":
