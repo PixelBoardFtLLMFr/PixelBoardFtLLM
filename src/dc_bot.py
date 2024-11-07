@@ -100,9 +100,12 @@ class DCBot:
         cur_time = datetime.now().time()
         next_time = next((a_t for a_t in self._active_times if cur_time < a_t['min']), None)
         if next_time is None: # we have reach the end of the show
-            return f"tomorrow, at {self._active_times[0]['min'].hour}:{self._active_times[0]['min'].minute}"
+            time_str = self._active_times[0]['min'].strftime("%H:%M")
+            return f"tomorrow, at {time_str}"
         else:
-            return f"{next_time['min'].hour}:{next_time['min'].minute}"
+            time_str = next_time['min'].strftime("%H:%M")
+            print(time_str)
+            return f"{time_str}"
         
     def _has_unprocessed_message(self):
         return self.get_unprocessed_message() is not None    
