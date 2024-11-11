@@ -11,9 +11,10 @@ from datetime import datetime, timedelta
 from datetime import time as dtime
 
 class DCPuppetBot:
-    def __init__(self, interval:int, token:str, channel_id:int)->None:
+    def __init__(self, interval:int, token:str, channel_id:int, main_bot_id:int)->None:
         self._token = token
         self._channel_id = channel_id
+        self._main_bot_id = main_bot_id
         intents = discord.Intents.default()
         intents.message_content = True
         self._client = discord.Client(intents=intents)
@@ -109,7 +110,8 @@ class DCPuppetBot:
             await asyncio.sleep(self._interval)
             is_active = self.get_current_active()
             if is_active:
-                await self.send_message(message=random.choice(self._commands))
+                message = f'{self.mentions(client_id=self._main_bot_id)}{random.choice(self._commands)}'
+                await self.send_message(message=message)
         pass
 # ==> main loop is here
 
@@ -123,7 +125,7 @@ class DCPuppetBot:
 
 if __name__ == "__main__":
     load_dotenv()
-    mybot = DCPuppetBot(interval=90, token=os.getenv('DISCORD_PUPPET_TOKEN'), channel_id=int(os.getenv('DISCORD_CHANNEL_ID')))
+    mybot = DCPuppetBot(interval=90, token=os.getenv('DISCORD_PUPPET_TOKEN'), channel_id=int(os.getenv('DISCORD_CHANNEL_ID')), main_bot_id=int(os.getenv('DISCORD_ICEKUN_ID')))
     mybot.run()
     while True:
         time.sleep(1)
