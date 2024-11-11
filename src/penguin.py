@@ -352,8 +352,13 @@ class Penguin:
                     pixel = img.getpixel((x, y))
                     if pixel[3] != 0:
                         # non-transparent
-                        final_y = (y0 + y + self.particle_pos) % self.size
-                        self.image.putpixel((min(x0 + x, self.size - 1), final_y), pixel)
+                        if self.particle == "cloud":
+                            final_y = (y0 + y + self.particle_pos) % self.size
+                            self.image.putpixel((min(x0 + x, self.size - 1), final_y), pixel)
+                        else:
+                            final_y = y0 + y + self.particle_pos
+                            if 0 <= final_y < self.size:
+                                self.image.putpixel((min(x0 + x, self.size - 1), final_y), pixel)
 
     def get_pixels(self):
         """
