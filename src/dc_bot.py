@@ -159,12 +159,13 @@ class DCBot:
             return
         
         if active:
+            self._com_token = self._board_enable_token
+            await asyncio.sleep(1)
             await self._client.change_presence(status = discord.Status.online)
 
         self._com_token = self._bye_dance_token if not active else self._welcome_dance_token
         self._sending = True
         msg = self._get_random_bye_msg() if not active else self._get_random_ready_msg()
-        print(msg)
         await self._channel.send(content = msg)
         self._sending = False
         await asyncio.sleep(random.uniform(2, 4))
@@ -175,9 +176,9 @@ class DCBot:
         
         if not active:
             self._com_token = self._board_disable_token
+            await asyncio.sleep(1)
             await self._client.change_presence(status = discord.Status.invisible)
         else:
-            self._com_token = self._board_enable_token
             await self._channel.send(content = self._get_random_instruction_msg())
         
         self._active = active
